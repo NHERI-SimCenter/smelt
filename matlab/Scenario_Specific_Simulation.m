@@ -37,10 +37,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 %-------------------------------------------------------------------------- 
 
+% Sets seed for random number generator based on current time
  rng('shuffle')                                                          ;
  
 %--------------------------------------------------------------------------
 
+% Factors for site condition based on Vs
  S_S = 0                                                                 ;
 
  S_M = 0                                                                 ;
@@ -59,6 +61,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 %--------------------------------------------------------------------------
  
+% Normalize input parameters
  M  =  M/6                                                               ;
  
  R  = (R+5)/30                                                           ;
@@ -67,10 +70,12 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 %--------------------------------------------------------------------------
 
+% Coefficients of linear regression, given on page 12, Eq-25.
  XX = [ 1 , M , log(R) , M*log(R) , S_S*log(V) , S_M*log(V) , S_H*log(V) ]  ;
 
 %--------------------------------------------------------------------------
-
+% Restricted maximum likelihood method regression coefficients of
+% normal model parameters--see page 13, Table 3
  Beta = [ ...
 -1.1417	1.0917	1.9125	-0.9696	0.0971	0.3476	-0.6740
 1.8052	-1.8381	-3.5874	3.7895	0.3236	0.5497	0.2876
@@ -93,11 +98,15 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 %--------------------------------------------------------------------------
 
+% Variance of model parameters--see page 13, Table 3, last
+% column. Note that entry orders are different order than in Table 3
  Var = [ 0.90 , 0.80 , 0.78 , 0.74 , 0.66 , 0.73 , 0.72 , 0.70 , 0.69 ...
          0.78 , 0.90 , 0.90 , 0.90 , 0.90 , 0.80 , 0.90 , 0.35 , 0.80  ] ;
      
 %--------------------------------------------------------------------------
 
+% Estimated correlation matrix from page 24, Table A1. Again,
+% notice ordering in different compared to paper.
  Corr = [ ...
 1.0000	0.0382	-0.0912	-0.0701	-0.0214	-0.0849	-0.0545	-0.0185	0.0270	-0.0122	0.0059	-0.0344	-0.0342	0.0409	-0.0137	-0.0168	-0.0990	-0.6701
 0.0382	1.0000	-0.1159	-0.1856	0.0681	-0.2018	-0.2765	-0.0304	-0.1719	-0.1157	-0.0347	-0.0277	-0.0189	0.0357	0.0657	-0.0070	0.3690	-0.0510
@@ -120,15 +129,23 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 %--------------------------------------------------------------------------
 
+% Standard normal parameter (mean)
  Mean   = XX*Beta'                                                       ;
- 
+
+ % Convert standard deviation and correlation to covariance
+ % MATLAB function
  Sigma  = corr2cov( sqrt(Var) , Corr )                                   ; 
  
 %--------------------------------------------------------------------------
 
+% Random realizations (Sample model parameters)
+% MATLAB function
  Z_sim  = mvnrnd(Mean,Sigma,N_spec)                                      ;
  
 %--------------------------------------------------------------------------
+
+% Different distributions for model parameters
+% LOTS of MATLAB functions...
 
  PD{1}  = makedist('Lognormal',-1.735,0.523)                             ;
  
@@ -177,15 +194,19 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 %--------------------------------------------------------------------------
 
  P_sim = zeros(size(Z_sim))                                              ;
- 
+
+ % Transform sample normal model parameters back to physical space
  for k = 1:18
      P_sim(:,k) = icdf( PD{k} , normcdf(Z_sim(:,k)) )                    ;       
  end    
 
 %--------------------------------------------------------------------------
 
+% cell is essentially a tuple in MATLAB
  accel_pool = cell(1,N_spec)                                             ;
 
+ % Calculate sample non-stationary power spectrum following Eq-18
+ % on page 8. Method described in Section 5.
  for k = 1:N_spec
      PP            = P_sim(k,:)                                          ;
      accel_pool{k} = Sxx_sim(PP,N_sim,dt,d_om,PD,Mean,Sigma)             ;

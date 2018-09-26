@@ -7,6 +7,7 @@ function   fi_pool  =  Sxx_sim(PP,N_sim,dt,d_om,PD,Mean,Sigma)
 
 %--------------------------------------------------------------------------
 
+% Calculate model parameters
   PP      =  P_check(PP,PD,Mean,Sigma)                                   ; 
 
 %-------------------------------------------------------------------------- 
@@ -15,6 +16,7 @@ function   fi_pool  =  Sxx_sim(PP,N_sim,dt,d_om,PD,Mean,Sigma)
 
   TD      = PP(18)                                                       ;
 
+  % Corner frequency
   om_cut  = 220                                                          ;
   
 %-------------------------------------------------------------------------- 
@@ -115,6 +117,8 @@ end
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
 
+% This function calculates the values the parameters, using Eq-8
+% from page 6 to check validity.
 function   PP  =  P_check(PP,PD,Mean,Sigma)
 
 %--------------------------------------------------------------------------
@@ -140,6 +144,7 @@ function   PP  =  P_check(PP,PD,Mean,Sigma)
   
 %--------------------------------------------------------------------------  
   
+% Iterate to find values of alpha, beta and Q from Eq-8 on page 6.
   while  min( om_2 > om_1 ) == 0  ||  ( M1 > M2 )
       
       %-----------------------------
@@ -149,7 +154,8 @@ function   PP  =  P_check(PP,PD,Mean,Sigma)
          PP = zeros(size(Z))                                             ;
        
        %-----------------------------
-       
+
+       % Transform sample parameters to physical space
          for k = 1:18
              PP(k) = icdf( PD{k} , normcdf( Z(k) ) )                     ;
          end    
@@ -180,6 +186,8 @@ function   PP  =  P_check(PP,PD,Mean,Sigma)
 
 end
 
+% This function calculates non-dimensional cumulative energy from
+% Eq-5 on page 6.
 function   y   =  energy_sim(x,time)
 
 %--------------------------------------------------------------------------
@@ -190,6 +198,9 @@ function   y   =  energy_sim(x,time)
 
 end
 
+% This function calculates Eq-8 on page 6. Captures frequency
+% non-stationarities of the ground motion, identifying dominant
+% modal frequencies.
 function   y   =  omega_sim(x,energy)
 
 %--------------------------------------------------------------------------
