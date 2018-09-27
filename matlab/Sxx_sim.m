@@ -117,8 +117,8 @@ end
 %--------------------------------------------------------------------------
 %--------------------------------------------------------------------------
 
-% This function calculates the values the parameters, using Eq-8
-% from page 6 to check validity.
+% This function calculates the values the standard normal model
+% parameters, using Eq-8 from page 6 to check validity.
 function   PP  =  P_check(PP,PD,Mean,Sigma)
 
 %--------------------------------------------------------------------------
@@ -211,6 +211,9 @@ function   y   =  omega_sim(x,energy)
 
 end
 
+% This function calculates the logarithmic factor for the second
+% modal participation factor. Parameters are peaks and width of
+% mixed Gaussian analytical expression. This is Eq-11 on page 7.
 function   y   =  R_sim(x,energy)
 
 %--------------------------------------------------------------------------
@@ -222,6 +225,8 @@ function   y   =  R_sim(x,energy)
 
 end
 
+% This function calculates the amplitude modulating function. Eq-7
+% on page 6.
 function   y   =  z_2_sim(TD,IA,energy_pars,time_ndm)
 
 %--------------------------------------------------------------------------
@@ -237,6 +242,8 @@ function   y   =  z_2_sim(TD,IA,energy_pars,time_ndm)
 
 end
 
+% This function calculates the parametric, fully non-stationary K-T
+% model given in Eq-1 on page 5.
 function   y   =  KT_2(x,omega,HP2)
 
 %--------------------------------------------------------------------------
@@ -251,6 +258,9 @@ function   y   =  KT_2(x,omega,HP2)
        
 end
 
+% This function calculates the ground acceleration time histories
+% using the Spectral Representation Method (SRM) as given in Eq-19
+% on page 8.
 function   fi  =  SRM(d_om,dt,Sxx)
 
      % -------------------------------------------------------
@@ -288,6 +298,9 @@ function   fi  =  SRM(d_om,dt,Sxx)
 
 end
 
+% Applies multiple-window estimation technique after Conte & Peng
+% (1997). Applies two 3-second Hann windows based recommmendations
+% in Vlachos et al. (2018)
 function   fi  =  filt_BW(fi,dt,h)
 
 %--------------------------------------------------------------------------
@@ -301,7 +314,8 @@ function   fi  =  filt_BW(fi,dt,h)
    N_hann    =  t_hann_2/dt + 1                                          ; 
 
    N_2_hann  = (N_hann - 1)/2                                            ;
-    
+  
+   % Applies Hann (Hanning) window
    W_hann    =  hann(N_hann)'                                            ;
      
 %--------------------------------------------------------------------------
