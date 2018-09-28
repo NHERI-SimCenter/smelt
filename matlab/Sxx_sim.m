@@ -32,11 +32,13 @@ function   fi_pool  =  Sxx_sim(PP,N_sim,dt,d_om,PD,Mean,Sigma)
   time_ndm      =  time/time(end)                                        ;
 
   energy_pars   =  PP( 1:2 )                                             ; 
-  
+
+  % calculate non-dimensional cumulative energy
   energy        =  energy_sim(energy_pars,time_ndm)                      ;
 
 %--------------------------------------------------------------------------
-
+% Capture frequency non-stationarities of the ground motion, identifying dominant
+% modal frequencies.
   omega_1_pars  =  PP( 3:5 )                                             ; 
 
   omega_1       =  omega_sim(omega_1_pars,energy)                        ;
@@ -54,6 +56,8 @@ function   fi_pool  =  Sxx_sim(PP,N_sim,dt,d_om,PD,Mean,Sigma)
   zeta_2  =  PP( 10 )                                                    ;
   
 %--------------------------------------------------------------------------
+% This function calculates the logarithmic factor for the second
+% modal participation factor.
 
   R_pars   =  PP( 11:16 )                                                ;
   
@@ -62,11 +66,11 @@ function   fi_pool  =  Sxx_sim(PP,N_sim,dt,d_om,PD,Mean,Sigma)
   S_2      =  10.^R                                                      ;
   
 %--------------------------------------------------------------------------
-
+% Calculate the amplitude modulating function.
   z_2      =  z_2_sim(TD,IA,energy_pars,time_ndm)                        ;                            
 
 %-------------------------------------------------------------------------- 
-
+% Energy content of Butterworth filter transfer function
   N    =  4                                                              ;
 
   fc   =  0.20                                                           ;
@@ -76,6 +80,9 @@ function   fi_pool  =  Sxx_sim(PP,N_sim,dt,d_om,PD,Mean,Sigma)
   HP2  = (omega/wc).^(2*N)./( 1+(omega/wc).^(2*N) )                      ;
 
 %--------------------------------------------------------------------------
+% Calculate evolutionary power spectrum based on Eq-18 on page 8.
+% QUESTION: How does 2 * d_om * trapz( Sxx(i,:) ) give the infinite
+% frequency domain integral on Line 94?
 
   Sxx     =  zeros( length(time),length(omega) )                         ;
   
@@ -92,12 +99,14 @@ function   fi_pool  =  Sxx_sim(PP,N_sim,dt,d_om,PD,Mean,Sigma)
  
 %--------------------------------------------------------------------------
 
+% Apply Butterworth high-pass filter
   [b,a]     =  butter(N,fc/(1/dt/2),'high')                              ; 
 
   time_len  =  1.5*(N/2)/fc                                              ;
 
   time_len  =  roundn(time_len,0)/dt + 1                                 ;
  
+  % QUESTION: Why is the impulse response of the filter calculated?  
   [h,~ ]    =  impz(b,a,time_len)                                        ;
                     
 %--------------------------------------------------------------------------
@@ -105,6 +114,7 @@ function   fi_pool  =  Sxx_sim(PP,N_sim,dt,d_om,PD,Mean,Sigma)
   fi_pool =  zeros(N_sim,(length(time)+length(h)-1))                     ;
   
   for k = 1:N_sim
+      % Compute time histories      
       fi           = SRM(d_om,dt,Sxx)                                    ;
          
       fi_pool(k,:) = filt_BW(fi,dt,h)                                    ;
@@ -243,7 +253,8 @@ function   y   =  z_2_sim(TD,IA,energy_pars,time_ndm)
 end
 
 % This function calculates the parametric, fully non-stationary K-T
-% model given in Eq-1 on page 5.
+% model given in Eq-1 on page 5. Returns the values for two modes
+% without summing them.
 function   y   =  KT_2(x,omega,HP2)
 
 %--------------------------------------------------------------------------
