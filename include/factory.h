@@ -32,9 +32,10 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
-/*!
+/**
  * Singleton factory implementation
  * @tparam Tbaseclass Base class
  * @tparam Targs variadic template arguments
@@ -42,7 +43,7 @@
 template <typename Tbaseclass, typename... Targs>
 class Factory {
  public:
-  /*!
+  /**
    * Get the single instance of the factory
    */
   static Factory* instance() {
@@ -50,7 +51,7 @@ class Factory {
     return &factory;
   }
 
-  /*!
+  /**
    * Register a factory function to create an instance of classname
    * @param[in] key Register key
    * @tparam Tderivedclass Derived class
@@ -60,7 +61,7 @@ class Factory {
     registry[key].reset(new Creator<Tderivedclass>);
   }
 
-  /*!
+  /**
    * Create an instance of a registered class
    * @param[in] key Key to item in registry
    * @param[in] args Variadic template arguments
@@ -70,7 +71,7 @@ class Factory {
     return registry.at(key)->create(std::forward<Targs>(args)...);
   }
 
-  /*!
+  /**
    * List registered elements
    * @return factory_items Return list of items in the registry
    */
@@ -82,46 +83,48 @@ class Factory {
   }
 
  private:
-  /*!
+  /**
    * Private constructor
    */
   Factory() = default;
 
-  /*!
+  /**
    * A base class creator struct
    */
   struct CreatorBase {
-    //! A virtual create function
+    // A virtual create function
     virtual std::shared_ptr<Tbaseclass> create(Targs&&...) = 0;
   };
 
-  /*! 
+  /**
    * Creator class
    * @tparam Tderivedclass Derived class
    */
   template <typename Tderivedclass>
   struct Creator : public CreatorBase {
-    /*! 
+    /**
      * Create instance of object
      */
     std::shared_ptr<Tbaseclass> create(Targs&&... args) override {
       return std::make_shared<Tderivedclass>(std::forward<Targs>(args)...);
     }
   };
-  
-  std::map<std::string, std::shared_ptr<CreatorBase>> registry; /*!< Register of factory functions */
+
+  std::map<std::string, std::shared_ptr<CreatorBase>> registry; /**< Register of
+                                                                   factory
+                                                                   functions */
 };
 
-/*!
+/**
  * A helper class to register a factory function
  * @tparam Tbaseclass Base class
  * @tparam Tderivedclass Derived class
- * @tparam Targs variadic template arguments
+ * @tparam Targs Variadic template arguments
  */
 template <typename Tbaseclass, typename Tderivedclass, typename... Targs>
 class Register {
  public:
-  /*!
+  /**
    * Register with a given key
    * @param[in] key Key to item in registry
    */
