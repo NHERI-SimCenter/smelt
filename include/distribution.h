@@ -67,4 +67,6 @@ class Distribution {
 }
 }  // namespace stochastic
 
+#include "distribution.tcc"
+
 #endif  // _DISTRIBUTION_H_
