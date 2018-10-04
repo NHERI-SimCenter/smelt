@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(Stochastic Module)
+project(StochasticModule LANGUAGES CXX)
 
 # Require C++11-compliant compiler
 set(CMAKE_CXX_STANDARD 11)
@@ -45,8 +45,9 @@ add_library(lstoc SHARED ${SOURCES})
 # Unit testing
 if (BUILD_TESTING)
   set(TEST_SOURCES
-    ${PROJECT_SOURCE_DIR}/test/test_main.cpp
-    )
+    ${PROJECT_SOURCE_DIR}/test/test_main.cc
+    ${PROJECT_SOURCE_DIR}/test/multi_var_tests.cc
+  )
 
   add_executable(unit_tests ${TEST_SOURCES})
   target_link_libraries(unit_tests lstoc)

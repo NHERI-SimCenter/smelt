@@ -19,22 +19,79 @@ Eigen::MatrixXd corr_to_cov(const Eigen::MatrixXd& corr,
                             const Eigen::VectorXd& std_dev);
 
 /**
- * Generate multivariate random numbers for different distribution types
- * @param[in] means Input vector of mean values for random variables
- * @param[in] cov Input covariance matrix for random variables
- * @param[in] seed Seed value to use in random generator
- * @param[in] cases Number of cases to generate
- * @tparam generator Random number generator to use
- * @tparam distribution Distribution type to use for random number generation
- * @tparam Targs Parameter pack containing inputs for distribution
- * @return Matrix of random variables chosen from multivariate distribution
- */
-template <T generator, T distribution>
-Eigen::Matrix<double, Dynamic, Dynamic> multivariate_random(
-    const Eigen::VectorXd& means, const Eigen::MatrixXd& cov,
-    int seed = static_cast<int>(std::time(nullptr)), unsigned int cases = 1);
+ * Templated class for random number generation
+ * @tparam Generator Type of random number generator
+ * @tparam Distribution Distribution type to use for random number generation
+ */ 
+template <typename Generator, template <typename> typename Distribution,
+          typename RealType = double>
+class RandomGenerator {
+ public:
+
+ /**
+  * @constructor Default constructor that uses default value for seed values
+  */
+ RandomGenerator() = default;
+
+ /**
+  * @constructor Constructor that takes seed value as argument
+  * @param[in] seed Value to use as seed for random number generator
+  */
+ RandomGenerator(int seed);
+
+ /**
+  * @destructor Default destructor
+  */
+ ~RandomGenerator() = default;
+
+ /**
+  * Delete copy constructor
+  */
+ RandomGenerator(const RandomGenerator&) = delete;
+
+ /**
+  * Delete assignment operator
+  */
+ RandomGenerator& operator=(const RandomGenerator&) = delete;
+
+ /**
+  * Get single variable random realization
+  * @param[in] mean Mean of distribution
+  * @param[in] std_dev Standard deviation of distribution
+  * @return Random variable realization
+  */
+ double generate(double mean, double std_dev) const;
+
+ /**
+  * Get single variable random realizations
+  * @param[in] mean Mean of distribution
+  * @param[in] std_dev Standard deviation of distribution
+  * @param[in] cases Number of cases to generate
+  * @return Random variable realizations
+  */
+ Eigen::VectorXd generate(double mean, double std_dev,
+                          unsigned int cases) const;
+
+ /**
+  * Get multivariate random realization
+  * @param[in] means Vector of mean values for random variables
+  * @param[in] cov Covariance matrix of for random variables
+  * @param[in] cases Number of cases to generate
+  * @return Matrix of variable realizations
+  */
+ Eigen::MatrixXd generate(const Eigen::VectorXd& means,
+                          const Eigen::MatrixXd& cov,
+                          unsigned int cases = 1) const;
+
+private:
+ int seed_ = static_cast<int>(std::time(nullptr)); /**< Seed value to use in random number generator */
+ Generator generator_; /**< Random number generator type */
+ Distribution distribution_; /**< Distribution type to use for random number generation */
+ boost::variate_generator<Generator, Distribution<RealType> >
+     var_generator_; /**< Random realization generator based on generator and
+                        distribution */
+};
 }  // namespace numeric_utils
-}
 
 #include "numeric_utils.tcc"
 
