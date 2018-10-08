@@ -38,6 +38,7 @@ include_directories(BEFORE
 # Set sources
 set(SOURCES
   ${PROJECT_SOURCE_DIR}/src/numeric_utils.cc
+  ${PROJECT_SOURCE_DIR}/src/normal_multivar.cc  
 )
 
 add_library(lstoc SHARED ${SOURCES})

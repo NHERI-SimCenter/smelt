@@ -9,6 +9,7 @@ TEST_CASE("Test generation of multivariate random numbers", "[MultiVariate]") {
 
   SECTION("Generate normally distributed random numbers for single random "
           "variable") {
+    unsigned int seed = 100;
     double mean = 1.789;
     double std_dev = 0.0123;
     Eigen::VectorXd means(1);
@@ -16,7 +17,6 @@ TEST_CASE("Test generation of multivariate random numbers", "[MultiVariate]") {
     Eigen::MatrixXd std_devs(1,1);
     std_devs(0, 0) = std_dev;
 
-    auto random_numbers = numeric_utils::multivariate_random<
-        boost::mt19937, boost::normal_distribution>(means, std_devs, 100, 1);
+    // auto random_generator = numeric_utils::RandomGenerator(seed);
   }
 }
