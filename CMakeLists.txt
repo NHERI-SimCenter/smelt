@@ -10,7 +10,8 @@ SET(CMAKE_VERBOSE_MAKEFILE OF)
 
 # General compile settings
 IF (NOT CMAKE_BUILD_TYPE)
- SET(CMAKE_BUILD_TYPE "Debug")
+  SET(CMAKE_BUILD_TYPE "Debug")
+  SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g")
  #SET(CMAKE_BUILD_TYPE "Release")
 ENDIF (NOT CMAKE_BUILD_TYPE)
 
@@ -38,7 +39,7 @@ include_directories(BEFORE
 # Set sources
 set(SOURCES
   ${PROJECT_SOURCE_DIR}/src/numeric_utils.cc
-  ${PROJECT_SOURCE_DIR}/src/normal_multivar.cc  
+  ${PROJECT_SOURCE_DIR}/src/normal_multivar.cc
 )
 
 add_library(lstoc SHARED ${SOURCES})

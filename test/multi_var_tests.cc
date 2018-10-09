@@ -1,22 +1,21 @@
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/variate_generator.hpp>
-#include <boost/random/normal_distribution.hpp>
 #include <catch/catch.hpp>
 #include <Eigen/Dense>
+#include "factory.h"
+#include "normal_multivar.h"
 #include "numeric_utils.h"
 
-TEST_CASE("Test generation of multivariate random numbers", "[MultiVariate]") {
-
+TEST_CASE("Test generation of random numbers", "[RandomNumbers]") {
+  unsigned int seed = 100;
+  
   SECTION("Generate normally distributed random numbers for single random "
           "variable") {
-    unsigned int seed = 100;
-    double mean = 1.789;
-    double std_dev = 0.0123;
     Eigen::VectorXd means(1);
-    means(0) = mean;
-    Eigen::MatrixXd std_devs(1,1);
-    std_devs(0, 0) = std_dev;
+    Eigen::MatrixXd cov(1,1);    
+    means(0) = 1.789;
+    cov(0, 0) = 0.0123;
 
-    // auto random_generator = numeric_utils::RandomGenerator(seed);
+    // Register<numeric_utils::RandomGenerator, numeric_utils::NormalMultiVar, int> normal_multivar("MultivariateNormal");
+    auto random_generator = Factory<numeric_utils::RandomGenerator, int>::instance()
+      ->create("MultivariateNormal", 100);
   }
 }

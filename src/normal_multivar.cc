@@ -7,10 +7,12 @@
 #include "factory.h"
 #include "normal_multivar.h"
 
-namespace numeric_utils {
 // Register method with factory
-static Register<numeric_utils::RandomGenerator, numeric_utils::NormalMultiVar>
+static Register<numeric_utils::RandomGenerator, numeric_utils::NormalMultiVar,
+                int>
     normal_multivar("MultivariateNormal");
+
+namespace numeric_utils {
 
 NormalMultiVar::NormalMultiVar()
   : RandomGenerator()
