@@ -68,9 +68,24 @@ class Factory {
    * @return shared_ptr<Tbaseclass> Shared pointer to a base class
    */
   std::shared_ptr<Tbaseclass> create(const std::string& key, Targs&&... args) {
+    if (!this->check(key))
+      throw std::runtime_error("Invalid key: " + key +
+                               ", not found in the factory register!");
     return registry.at(key)->create(std::forward<Targs>(args)...);
   }
 
+  /**
+   * Check if an element is registered
+   * @param[in] key Key to be checked in registry
+   * @return status Return if key is in registry or not
+   */
+  bool check(const std::string& key) const {
+    bool status = false;
+    for (const auto& keyvalue : registry)
+      if (keyvalue.first == key) status = true;
+    return status;
+  }
+  
   /**
    * List registered elements
    * @return factory_items Return list of items in the registry
