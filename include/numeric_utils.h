@@ -55,6 +55,12 @@ class RandomGenerator {
                                    const Eigen::MatrixXd& cov,
                                    unsigned int cases = 1) = 0;
 
+  /**
+   * Get the class name
+   * @return Class name
+   */
+   virtual std::string name() const = 0;
+  
  protected:
   int seed_ = static_cast<int>(
       std::time(nullptr)); /**< Seed value to use in random number generator */

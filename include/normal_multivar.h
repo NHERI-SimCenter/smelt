@@ -42,7 +42,13 @@ class NormalMultiVar : public RandomGenerator {
    */
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> generate(
       const Eigen::VectorXd& means, const Eigen::MatrixXd& cov,
-      unsigned int cases = 1);
+      unsigned int cases = 1) override;
+
+  /**
+   * Get the class name
+   * @return Class name
+   */  
+  std::string name() const override;
 
  private:
   boost::random::mt19937 generator_; /**< Mersenne Twister random number

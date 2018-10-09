@@ -7,11 +7,6 @@
 #include "factory.h"
 #include "normal_multivar.h"
 
-// Register method with factory
-static Register<numeric_utils::RandomGenerator, numeric_utils::NormalMultiVar,
-                int>
-    normal_multivar("MultivariateNormal");
-
 namespace numeric_utils {
 
 NormalMultiVar::NormalMultiVar()
@@ -44,5 +39,9 @@ Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> NormalMultiVar::generate(
   }
 
   return lower_cholesky * random_vars + means;
+}
+
+std::string NormalMultiVar::name() const {
+  return "NormalMultiVar";
 }
 }  // namespace numeric_utils
