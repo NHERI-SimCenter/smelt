@@ -49,6 +49,7 @@ if (BUILD_TESTING)
   set(TEST_SOURCES
     ${PROJECT_SOURCE_DIR}/test/test_main.cc
     ${PROJECT_SOURCE_DIR}/test/multi_var_tests.cc
+    ${PROJECT_SOURCE_DIR}/test/factory_tests.cc
   )
 
   add_executable(unit_tests ${TEST_SOURCES})
