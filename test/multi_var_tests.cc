@@ -19,6 +19,16 @@ TEST_CASE("Test generation of random numbers", "[RandomNumbers]") {
     cov(0, 0) = 0.0123;
     
     auto random_generator = Factory<numeric_utils::RandomGenerator, int>::instance()
-      ->create("MultivariateNormal", std::move(seed));    
+      ->create("MultivariateNormal", std::move(seed));
+
+    // Single random variable
+    auto random_numbers = random_generator->generate(means, cov, 100);
+    
+    double average = 0.0;    
+    for (unsigned int i = 0; i < random_numbers.size(); ++i) {
+      average = average + random_numbers(i);
+    }
+    average = average / random_numbers.size();
+    REQUIRE(average == Approx(means(0)).epsilon(0.01));
   }
 }
