@@ -1,7 +1,9 @@
 #ifndef _CONFIGURE_H_
 #define _CONFIGURE_H_
 
+#include "beta_dist.h"
 #include "factory.h"
+#include "lognormal_dist.h"
 #include "numeric_utils.h"
 #include "normal_dist.h"
 #include "normal_multivar.h"
@@ -24,6 +26,15 @@ void initialize() {
   static Register<stochastic::Distribution, stochastic::NormalDistribution,
                   double, double>
       normal_dist("NormalDist");
+  // Register lognormal distribution
+  static Register<stochastic::Distribution, stochastic::LognormalDistribution,
+                  double, double>
+      lognormal_dist("LognormalDist");
+
+  // Register beta distribution
+  static Register<stochastic::Distribution, stochastic::BetaDistribution,
+                  double, double>
+      beta_dist("BetaDist");
 }
 }  // namespace config
 

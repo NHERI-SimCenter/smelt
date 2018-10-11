@@ -29,6 +29,10 @@ public:
   virtual std::string name() const { return "AnotherDerivedClass"; };
 };
 
+// Register classes
+static Register<BaseClass, DerivedClass> derived("DerivedClass");
+static Register<BaseClass, AnotherDerivedClass> another("AnotherDerivedClass");
+
 namespace numeric_utils {
 class TestingClass : public RandomGenerator {
 public:
@@ -59,11 +63,6 @@ TEST_CASE("Check the factory class implementation", "[Factory]") {
   int seed = 100;
   
   SECTION("Create factory at compile time") {
-    // Register classes
-    static Register<BaseClass, DerivedClass> derived("DerivedClass");
-    static Register<BaseClass, AnotherDerivedClass> another(
-        "AnotherDerivedClass");
-
     // Create derived class
     REQUIRE(Factory<BaseClass>::instance()->check("DerivedClass") == true);
     auto derived_class = Factory<BaseClass>::instance()->create("DerivedClass");

@@ -41,6 +41,8 @@ set(SOURCES
   ${PROJECT_SOURCE_DIR}/src/numeric_utils.cc
   ${PROJECT_SOURCE_DIR}/src/normal_multivar.cc
   ${PROJECT_SOURCE_DIR}/src/normal_dist.cc
+  ${PROJECT_SOURCE_DIR}/src/lognormal_dist.cc
+  ${PROJECT_SOURCE_DIR}/src/beta_dist.cc
 )
 
 add_library(lstoc SHARED ${SOURCES})
