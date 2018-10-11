@@ -4,14 +4,11 @@
 #include <string>
 #include <vector>
 
-#include "??????JSON_WRAPPER.h"
-
 namespace stochastic {
 
 /**
  * Abstract base class for distribution models
  */
-template <typename... Targs>
 class Distribution {
  public:
   /**
@@ -20,15 +17,9 @@ class Distribution {
   Distribution() = default;
 
   /**
-   * @constructor Constructor taking model arguments
-   * @tparam Args Parameter pack containing arguments for stochastic model
-   */
-  Distribution(Targs&&... args);
-
-  /**
    * @destructor Virtual destructor
    */
-  virtual ~Distribution();
+  virtual ~Distribution(){};
 
   /**
    * Delete copy constructor
@@ -52,18 +43,19 @@ class Distribution {
    * @param[in] locations Vector containing locations at which to calculate CDF
    * @return Vector of evaluated values of CDF at input locations
    */
-  virtual std::vector<double> cdf(const std::vector<double>& locations) const = 0;
+  virtual std::vector<double> cumulative_dist_func(
+      const std::vector<double>& locations) const = 0;
 
   /**
-   * Compute the inverse cumulative distribution function (ICDF) of the distribution
-   * at specified input locations
-   * @param[in] locations Vector containing locations at which to calculate ICDF
+   * Compute the inverse cumulative distribution function (ICDF) of the
+   * distribution at specified input locations
+   * @param[in] probabilities Vector containing probabilities at which to
+   *                          calculate ICDF
    * @return Vector of evaluated values of ICDF at input locations
    */
-  virtual std::vector<double> icdf(const std::vector<double>& locations) const = 0;
-}
+  virtual std::vector<double> inv_cumulative_dist_func(
+      const std::vector<double>& probabilities) const = 0;
+};
 }  // namespace stochastic
-
-#include "distribution.tcc"
 
 #endif  // _DISTRIBUTION_H_
