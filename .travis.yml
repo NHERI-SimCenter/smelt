@@ -18,7 +18,7 @@ script:
   - cd build
   - cmake ..
   - make
-  - ./unit_tests
+  - make test
   - cd ..
   - doxygen Doxyfile
 

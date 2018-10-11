@@ -11,6 +11,7 @@ namespace stochastic {
 /**
  * Abstract base class for distribution models
  */
+template <typename... Targs>
 class Distribution {
  public:
   /**
@@ -22,7 +23,6 @@ class Distribution {
    * @constructor Constructor taking model arguments
    * @tparam Args Parameter pack containing arguments for stochastic model
    */
-  template <typename... Targs>
   Distribution(Targs&&... args);
 
   /**
@@ -44,7 +44,7 @@ class Distribution {
    * Get the name of the distribution model
    * @return Model name as a string
    */
-  std::string model_name() const;
+  virtual std::string name() const = 0;
 
   /**
    * Compute the cumulative distribution function (CDF) of the distribution at
@@ -61,9 +61,6 @@ class Distribution {
    * @return Vector of evaluated values of ICDF at input locations
    */
   virtual std::vector<double> icdf(const std::vector<double>& locations) const = 0;
-
- protected:
-  std::string model_name_; /**< Name of distribution model */
 }
 }  // namespace stochastic
 
