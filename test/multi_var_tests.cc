@@ -12,7 +12,8 @@ TEST_CASE("Test generation of random numbers", "[RandomNumbers]") {
   // Seed value for repeatability
   int seed = 100;
   auto random_generator = Factory<numeric_utils::RandomGenerator, int>::instance()
-    ->create("MultivariateNormal", std::move(seed));  
+    ->create("MultivariateNormal", std::move(seed));
+  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> random_numbers;  
   
   SECTION("Generate normally distributed random numbers for single random "
           "variable") {
@@ -22,7 +23,7 @@ TEST_CASE("Test generation of random numbers", "[RandomNumbers]") {
     cov(0, 0) = 0.0123;
     
     // Single random variable
-    auto random_numbers = random_generator->generate(means, cov, 100);
+    random_generator->generate(random_numbers, means, cov, 100);
     
     double average = 0.0;    
     for (unsigned int i = 0; i < random_numbers.size(); ++i) {
@@ -43,7 +44,7 @@ TEST_CASE("Test generation of random numbers", "[RandomNumbers]") {
     cov(3, 3) = 25;
 
     // Random variable vector
-    auto random_numbers = random_generator->generate(means, cov, 1000);
+    random_generator->generate(random_numbers, means, cov, 1000);
 
     std::vector<double> averages(means.size());
     for (unsigned int i = 0; i < random_numbers.cols(); ++i) {
@@ -63,15 +64,26 @@ TEST_CASE("Test generation of random numbers", "[RandomNumbers]") {
     Eigen::VectorXd means(3);
     Eigen::MatrixXd cov = Eigen::MatrixXd::Zero(3, 3);
     means << 64.0, 300.0, 60.0;
+
+    // Try bad COV matrix
     // clang-format off
+    cov << 1.0, 1.0, 0.0, 
+           1.0, 1.0, 1.0,
+           0.0, 1.0, 1.0;    
+    // clang-format on
+
+    bool success = random_generator->generate(random_numbers, means, cov, 250000);
+    REQUIRE(success == false);
+
+    // Try good COV matrix
+    // clang-format off   
     cov << 504.0, 360.0, 180.0, 
            360.0, 360.0, 0.0,
            180.0, 0.0, 720.0;
     // clang-format on
-
-    // Random variable vector
-    auto random_numbers = random_generator->generate(means, cov, 250000);
-
+    success = random_generator->generate(random_numbers, means, cov, 250000);
+    REQUIRE(success == true);    
+    
     Eigen::VectorXd averages = Eigen::VectorXd::Zero(means.size());
     for (unsigned int i = 0; i < means.size(); ++i) {
       for (unsigned int j = 0; j < random_numbers.cols(); ++j) {
@@ -96,10 +108,6 @@ TEST_CASE("Test generation of random numbers", "[RandomNumbers]") {
     Eigen::MatrixXd calculated_cov =
         (deviation_scores * deviation_scores.transpose()) / random_numbers.cols();
 
-    for (unsigned int i = 0; i < cov.cols(); ++i) {
-      for (unsigned int j = 0; j < cov. rows(); ++j) {
-	REQUIRE(cov.lpNorm<2>() == Approx(calculated_cov.lpNorm<2>()).epsilon(0.01));
-      }
-    }
+    REQUIRE(cov.lpNorm<2>() == Approx(calculated_cov.lpNorm<2>()).epsilon(0.01));
   }
 }

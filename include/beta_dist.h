@@ -8,12 +8,12 @@
 
 namespace stochastic {
 /**
- * Normal distribution
+ * Beta distribution
  */
 class BetaDistribution : public Distribution {
  public:
   /**
-   * @constructor Construct standard beta distribution
+   * @constructor Construct standard beta distribution with alpha and beta equal to 1.0
    */
   BetaDistribution();
 

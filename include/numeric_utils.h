@@ -44,16 +44,19 @@ class RandomGenerator {
    */
   RandomGenerator& operator=(const RandomGenerator&) = delete;
 
- /**
-  * Get multivariate random realization
-  * @param[in] means Vector of mean values for random variables
-  * @param[in] cov Covariance matrix of for random variables
-  * @param[in] cases Number of cases to generate
-  * @return Matrix of variable realizations
-  */
-  virtual Eigen::MatrixXd generate(const Eigen::VectorXd& means,
-                                   const Eigen::MatrixXd& cov,
-                                   unsigned int cases = 1) = 0;
+  /**
+   * Get multivariate random realization
+   * @param[in, out] random_numbers Matrix to store generated random numbers to
+   * @param[in] means Vector of mean values for random variables
+   * @param[in] cov Covariance matrix of for random variables
+   * @param[in] cases Number of cases to generate
+   * @return Returns true if no issues were encountered in Cholesky
+   *         decomposition of covariance matrix, returns false otherwise
+   */
+  virtual bool generate(
+      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& random_numbers,
+      const Eigen::VectorXd& means, const Eigen::MatrixXd& cov,
+      unsigned int cases = 1) = 0;
 
   /**
    * Get the class name

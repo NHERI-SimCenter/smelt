@@ -1,3 +1,5 @@
+#include <iostream>
+#include <stdexcept>
 // Boost random generator
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/normal_distribution.hpp>
@@ -24,29 +26,45 @@ NormalMultiVar::NormalMultiVar(int seed)
   distribution_ = boost::random::normal_distribution<double>();
 }
 
-Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> NormalMultiVar::generate(
+bool NormalMultiVar::generate(
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& random_numbers,
     const Eigen::VectorXd& means, const Eigen::MatrixXd& cov,
     unsigned int cases) {
-  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> lower_cholesky =
-      cov.llt().matrixL();
-  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> random_vars =
-      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>::Zero(cov.rows(),
-                                                                  cases);
+
+  bool success = true;
+  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> lower_cholesky;
+  
+  try {
+    auto llt = cov.llt();
+    lower_cholesky = llt.matrixL();
+
+    if (llt.info() == Eigen::NumericalIssue) {
+      throw std::runtime_error(
+          "\nERROR: In NormalMultivar::generate method: Input covariance matrix is not "
+          "positive semi-definite\n");
+    }
+  } catch (const std::exception& e) {
+    std::cerr << "\nERROR: In normal multivariate random number generation: "
+              << e.what() << std::endl;
+    success = false;
+  }
+
+  random_numbers.resize(cov.rows(), cases);
 
   // Generate random numbers based on distribution and generator type for
   // requested number of cases
-  for (unsigned int i = 0; i < random_vars.cols(); ++i) {
-    for (unsigned int j = 0; j < random_vars.rows(); ++j) {
-      random_vars(j, i) = distribution_(generator_);
+  for (unsigned int i = 0; i < random_numbers.cols(); ++i) {
+    for (unsigned int j = 0; j < random_numbers.rows(); ++j) {
+      random_numbers(j, i) = distribution_(generator_);
     }
   }
 
   // Transform from unit normal distribution based on covariance and mean values
-  for (unsigned int i = 0; i < random_vars.cols(); ++i) {
-    random_vars.col(i) = lower_cholesky * random_vars.col(i) + means;
+  for (unsigned int i = 0; i < random_numbers.cols(); ++i) {
+    random_numbers.col(i) = lower_cholesky * random_numbers.col(i) + means;
   }
-  
-  return random_vars;
+
+  return success;
 }
 
 std::string NormalMultiVar::name() const {

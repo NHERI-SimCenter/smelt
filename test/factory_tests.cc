@@ -42,12 +42,13 @@ public:
 
   virtual ~TestingClass(){};
 
-  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>
-  generate(const Eigen::VectorXd &means, const Eigen::MatrixXd &cov,
-           unsigned int cases = 1) override {
-    return Eigen::MatrixXd::Zero(2, 2);
+  bool generate(
+      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> &random_numbers,
+      const Eigen::VectorXd &means, const Eigen::MatrixXd &cov,
+      unsigned int cases = 1) override {
+    return true;
   };
-  
+
   std::string name() const override {
     return "TestingClass";
   };  

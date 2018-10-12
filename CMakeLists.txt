@@ -43,6 +43,7 @@ set(SOURCES
   ${PROJECT_SOURCE_DIR}/src/normal_dist.cc
   ${PROJECT_SOURCE_DIR}/src/lognormal_dist.cc
   ${PROJECT_SOURCE_DIR}/src/beta_dist.cc
+  ${PROJECT_SOURCE_DIR}/src/inv_gauss_dist.cc  
 )
 
 add_library(lstoc SHARED ${SOURCES})

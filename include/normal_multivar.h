@@ -35,12 +35,15 @@ class NormalMultiVar : public RandomGenerator {
 
   /**
    * Get multivariate random realization
+   * @param[in, out] random_numbers Matrix to store generated random numbers to
    * @param[in] means Vector of mean values for random variables
    * @param[in] cov Covariance matrix of for random variables
    * @param[in] cases Number of cases to generate
-   * @return Matrix of variable realizations
+   * @return Returns true if no issues were encountered in Cholesky
+   *         decomposition of covariance matrix, returns false otherwise
    */
-  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> generate(
+  bool generate(
+      Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>& random_numbers,
       const Eigen::VectorXd& means, const Eigen::MatrixXd& cov,
       unsigned int cases = 1) override;
 

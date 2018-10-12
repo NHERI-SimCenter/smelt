@@ -4,7 +4,7 @@
 
 stochastic::BetaDistribution::BetaDistribution()
   : Distribution(),
-    alpha_{0.0},
+    alpha_{1.0},
     beta_{1.0},
     distribution_()
 {}

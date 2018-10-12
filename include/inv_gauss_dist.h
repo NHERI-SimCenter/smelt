@@ -1,41 +1,41 @@
-#ifndef _LOGNORMAL_DIST_H_
-#define _LOGNORMAL_DIST_H_
+#ifndef _INV_GAUSS_DIST_H_
+#define _INV_GAUSS_DIST_H_
 
 #include <string>
 #include <vector>
-#include <boost/math/distributions/lognormal.hpp>
+#include <boost/math/distributions/inverse_gaussian.hpp>
 #include "distribution.h"
 
 namespace stochastic {
 /**
- * Lognormal distribution
+ * Inverse Gaussian distribution
  */
-class LognormalDistribution : public Distribution {
+class InverseGaussianDistribution : public Distribution {
  public:
   /**
-   * @constructor Construct standard lognormal distribution with mean = 0.0 and
-   * standard deviation = 1.0
+   * @constructor Construct standard inverse Gaussian distribution with mean
+   * = 1.0 and scale = 1.0
    */
-  LognormalDistribution();
+  InverseGaussianDistribution();
 
   /**
-   * @constructor Construct lognormal distribution with specified mean and
+   * @constructor Construct inverse Gaussian distribution with specified mean and
    * standard deviation
    * @param[in] mean Mean of distribution
-   * @param[in] std_dev Standard deviation of distribution
+   * @param[in] scale Scale parameter of distribution
    */
-  LognormalDistribution(double mean, double std_dev);
+  InverseGaussianDistribution(double mean, double scale);
 
   /**
    * @destructor Virtual destructor
    */
-  virtual ~LognormalDistribution(){};
+  virtual ~InverseGaussianDistribution(){};
 
   /**
    * Get the name of the distribution model
    * @return Model name as a string
    */
-  std::string name() const override { return "LognormalDist"; };
+  std::string name() const override { return "InverseGaussianDist"; };
 
   /**
    * Compute the cumulative distribution function (CDF) of the distribution at
@@ -58,10 +58,11 @@ class LognormalDistribution : public Distribution {
       const std::vector<double>& probabilities) const override;
 
  protected:
-  double mean_;                         /**< Distribution mean */
-  double std_dev_;                      /**< Distribution standard deviation */
-  boost::math::lognormal distribution_; /**< Lognormal distribution */
+  double mean_;    /**< Distribution mean */
+  double std_dev_; /**< Distribution standard deviation */
+  boost::math::inverse_gaussian distribution_; /**< Inverse Gaussian
+                                                  distribution */
 };
 }  // namespace stochastic
 
-#endif  // _LOGNORMAL_DIST_H_
+#endif  // _INV_GAUSS_DIST_H_
