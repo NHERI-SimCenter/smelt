@@ -38,5 +38,5 @@ std::vector<double>
     evaluations[i] = quantile(distribution_, probabilities[i]);
   }
 
-  return probabilities;
+  return evaluations;
 }

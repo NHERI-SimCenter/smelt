@@ -35,5 +35,5 @@ std::vector<double> stochastic::NormalDistribution::inv_cumulative_dist_func(
     evaluations[i] = quantile(distribution_, probabilities[i]);
   }
 
-  return probabilities;
+  return evaluations;
 }
