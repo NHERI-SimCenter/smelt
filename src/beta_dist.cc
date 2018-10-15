@@ -2,13 +2,6 @@
 #include <boost/math/distributions/beta.hpp>
 #include "beta_dist.h"
 
-stochastic::BetaDistribution::BetaDistribution()
-  : Distribution(),
-    alpha_{1.0},
-    beta_{1.0},
-    distribution_()
-{}
-
 stochastic::BetaDistribution::BetaDistribution(double alpha, double beta)
   : Distribution(),
     alpha_{alpha},

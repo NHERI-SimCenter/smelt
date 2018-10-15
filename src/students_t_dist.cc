@@ -2,14 +2,6 @@
 #include <boost/math/distributions/students_t.hpp>
 #include "students_t_dist.h"
 
-stochastic::StudentstDistribution::StudentstDistribution()
-    : Distribution(),
-      mean_{0.0},
-      std_dev_{1.0},
-      dof_{1.0},      
-      distribution_(dof_)
-{}
-
 stochastic::StudentstDistribution::StudentstDistribution(double mean,
                                                          double std_dev,
                                                          double dof)

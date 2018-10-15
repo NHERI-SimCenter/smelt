@@ -2,13 +2,6 @@
 #include <boost/math/distributions/normal.hpp>
 #include "normal_dist.h"
 
-stochastic::NormalDistribution::NormalDistribution()
-  : Distribution(),
-    mean_{0.0},
-    std_dev_{1.0},
-    distribution_()
-{}
-
 stochastic::NormalDistribution::NormalDistribution(double mean, double std_dev)
   : Distribution(),
     mean_{mean},

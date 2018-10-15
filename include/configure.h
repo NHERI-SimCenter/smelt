@@ -3,10 +3,12 @@
 
 #include "beta_dist.h"
 #include "factory.h"
+#include "inv_gauss_dist.h"
 #include "lognormal_dist.h"
 #include "numeric_utils.h"
 #include "normal_dist.h"
 #include "normal_multivar.h"
+#include "students_t_dist.h"
 
 /**
  * Namespace for configuration and settings
@@ -30,11 +32,18 @@ void initialize() {
   static Register<stochastic::Distribution, stochastic::LognormalDistribution,
                   double, double>
       lognormal_dist("LognormalDist");
-
+  // Register inverse Gaussian distribution
+  static Register<stochastic::Distribution, stochastic::InverseGaussianDistribution,
+                  double, double>
+      inv_gauss_dist("InverseGaussianDist");  
   // Register beta distribution
   static Register<stochastic::Distribution, stochastic::BetaDistribution,
                   double, double>
       beta_dist("BetaDist");
+  // Register Student's t distribution
+  static Register<stochastic::Distribution, stochastic::StudentstDistribution,
+                  double, double, double>
+      student_t_dist("StudentstDist");
 }
 }  // namespace config
 

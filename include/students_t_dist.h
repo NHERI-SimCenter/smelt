@@ -13,10 +13,9 @@ namespace stochastic {
 class StudentstDistribution : public Distribution {
  public:
   /**
-   * @constructor Construct standard Student's t distribution with
-   * mean = 0.0, standard deviation = 1.0 and degrees of freedom = 1.0
+   * @constructor Delete default constructor
    */
-  StudentstDistribution();
+  StudentstDistribution() = delete;
 
   /**
    * @constructor Construct Student's t distribution with specified mean,

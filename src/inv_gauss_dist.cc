@@ -2,19 +2,12 @@
 #include <boost/math/distributions/inverse_gaussian.hpp>
 #include "inv_gauss_dist.h"
 
-stochastic::InverseGaussianDistribution::InverseGaussianDistribution()
-    : Distribution(),
-      mean_{1.0},
-      std_dev_{1.0},
-      distribution_()
-{}
-
 stochastic::InverseGaussianDistribution::InverseGaussianDistribution(
     double mean, double std_dev)
     : Distribution(),
       mean_{mean},
       std_dev_{std_dev},
-      distribution_{mean, std_dev_}      
+      distribution_{mean, std_dev_}     
 {}
 
 std::vector<double>

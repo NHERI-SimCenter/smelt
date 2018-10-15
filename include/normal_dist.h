@@ -15,7 +15,7 @@ class NormalDistribution : public Distribution {
   /**
    * @constructor Construct standard normal distribution
    */
-  NormalDistribution();
+  NormalDistribution() = delete;
 
   /**
    * @constructor Construct normal distribution with specified mean and

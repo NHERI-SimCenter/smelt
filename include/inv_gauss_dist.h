@@ -13,10 +13,9 @@ namespace stochastic {
 class InverseGaussianDistribution : public Distribution {
  public:
   /**
-   * @constructor Construct standard inverse Gaussian distribution with mean
-   * = 1.0 and scale = 1.0
+   * @constructor Delete default constructor
    */
-  InverseGaussianDistribution();
+  InverseGaussianDistribution() = delete;
 
   /**
    * @constructor Construct inverse Gaussian distribution with specified mean and

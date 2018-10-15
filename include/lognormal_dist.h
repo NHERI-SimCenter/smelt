@@ -13,10 +13,9 @@ namespace stochastic {
 class LognormalDistribution : public Distribution {
  public:
   /**
-   * @constructor Construct standard lognormal distribution with mean = 0.0 and
-   * standard deviation = 1.0
+   * @constructor Delete default constructor
    */
-  LognormalDistribution();
+  LognormalDistribution() = delete;
 
   /**
    * @constructor Construct lognormal distribution with specified mean and

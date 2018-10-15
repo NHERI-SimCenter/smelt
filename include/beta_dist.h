@@ -13,9 +13,9 @@ namespace stochastic {
 class BetaDistribution : public Distribution {
  public:
   /**
-   * @constructor Construct standard beta distribution with alpha and beta equal to 1.0
+   * @constructor Delete default constructor
    */
-  BetaDistribution();
+  BetaDistribution() = delete;
 
   /**
    * @constructor Construct beta distribution with specified mean and

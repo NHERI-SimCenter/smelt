@@ -2,13 +2,6 @@
 #include <boost/math/distributions/lognormal.hpp>
 #include "lognormal_dist.h"
 
-stochastic::LognormalDistribution::LognormalDistribution()
-  : Distribution(),
-    mean_{0.0},
-    std_dev_{1.0},
-    distribution_()
-{}
-
 stochastic::LognormalDistribution::LognormalDistribution(double mean, double std_dev)
   : Distribution(),
     mean_{mean},
