@@ -23,12 +23,14 @@ set(CATCH_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/catch)
 set(EIGEN_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/Eigen)
 set(TROMPELOEIL_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/trompeloeil)
 set(BOOST_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/boost)
+set(KFR_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/kfr-1.2.0/include)
 
 # Add external headers to include path
 include_directories(${CATCH_INCLUDE_DIR})
 include_directories(${EIGEN_INCLUDE_DIR})
 include_directories(${TROMPELOEIL_INCLUDE_DIR})
 include_directories(${BOOST_INCLUDE_DIR})
+include_directories(${KFR_INCLUDE_DIR})
 
 # Include directories
 include_directories(BEFORE
