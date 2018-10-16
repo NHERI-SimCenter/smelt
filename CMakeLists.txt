@@ -23,14 +23,12 @@ set(CATCH_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/catch)
 set(EIGEN_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/Eigen)
 set(TROMPELOEIL_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/trompeloeil)
 set(BOOST_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/boost)
-set(KFR_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/kfr-1.2.0/include)
 
 # Add external headers to include path
 include_directories(${CATCH_INCLUDE_DIR})
 include_directories(${EIGEN_INCLUDE_DIR})
 include_directories(${TROMPELOEIL_INCLUDE_DIR})
 include_directories(${BOOST_INCLUDE_DIR})
-include_directories(${KFR_INCLUDE_DIR})
 
 # Include directories
 include_directories(BEFORE
@@ -47,6 +45,7 @@ set(SOURCES
   ${PROJECT_SOURCE_DIR}/src/beta_dist.cc
   ${PROJECT_SOURCE_DIR}/src/inv_gauss_dist.cc
   ${PROJECT_SOURCE_DIR}/src/students_t_dist.cc
+  ${PROJECT_SOURCE_DIR}/src/hann_window.cc  
   )
 
 add_library(lstoc SHARED ${SOURCES})
@@ -58,6 +57,7 @@ if (BUILD_TESTING)
     ${PROJECT_SOURCE_DIR}/test/multi_var_tests.cc
     ${PROJECT_SOURCE_DIR}/test/factory_tests.cc
     ${PROJECT_SOURCE_DIR}/test/distribution_tests.cc
+    ${PROJECT_SOURCE_DIR}/test/window_func_tests.cc
   )
 
   add_executable(unit_tests ${TEST_SOURCES})

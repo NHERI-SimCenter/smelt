@@ -9,6 +9,7 @@
 #include "normal_dist.h"
 #include "normal_multivar.h"
 #include "students_t_dist.h"
+#include "hann_window.h"
 
 /**
  * Namespace for configuration and settings
@@ -20,10 +21,13 @@ namespace config {
  * using the library will have access to them
  */
 void initialize() {
+  // RANDOM VARIABLE GENERATION
   // Register multivariate normal distribution random number generator
   static Register<numeric_utils::RandomGenerator, numeric_utils::NormalMultiVar,
                   int>
       normal_multivar("MultivariateNormal");
+
+  // DISTRIBUTION TYPES
   // Register normal distribution
   static Register<stochastic::Distribution, stochastic::NormalDistribution,
                   double, double>
@@ -44,6 +48,11 @@ void initialize() {
   static Register<stochastic::Distribution, stochastic::StudentstDistribution,
                   double, double, double>
       student_t_dist("StudentstDist");
+
+  // WINDOW FUNCTIONS
+  // Register Hann window
+  static Register<signal_processing::Window, signal_processing::HannWindow>
+      hann_window("HannWindow");  
 }
 }  // namespace config
 
