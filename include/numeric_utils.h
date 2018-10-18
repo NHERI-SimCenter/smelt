@@ -19,6 +19,13 @@ namespace numeric_utils {
 Eigen::MatrixXd corr_to_cov(const Eigen::MatrixXd& corr,
                             const Eigen::VectorXd& std_dev);
 
+
+/**
+ * Compute the 1-dimensional convolution of two input vectors
+ */
+
+
+ 
 /**
  * Abstract base class for random number generators
  */
