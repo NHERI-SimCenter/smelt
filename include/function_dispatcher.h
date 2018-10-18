@@ -18,7 +18,7 @@ class Dispatcher {
   /**
    * Get the single instance of the dispatcher
    */
-  static Dispatcher* dispatcher() {
+  static Dispatcher* instance() {
     static Dispatcher dispatcher;
     return &dispatcher;
   }
@@ -29,7 +29,13 @@ class Dispatcher {
    * @param[in] new_function New function to register with the dispatcher
    */
   void register_function(const std::string& key, std::function<Treturntype(Targs...)> new_function) {
-    registry[key] = std::move(new_function);
+    if (!this->check(key)) {    
+      registry[key] = std::move(new_function);
+    } else {
+      throw std::runtime_error("Duplicate key: " + key +
+                               ", already registered. Verify key choice to "
+                               "ensure function has not already been added");
+    }
   }
 
   /**
@@ -96,7 +102,7 @@ class DispatchRegister {
       const std::string& key,
       std::function<Treturntype(Targs...)> new_function) {
     // register the class factory function
-    Dispatcher<Treturntype, Targs...>::dispatcher()->register_function(
+    Dispatcher<Treturntype, Targs...>::instance()->register_function(
         key, std::move(new_function));
   }
 };

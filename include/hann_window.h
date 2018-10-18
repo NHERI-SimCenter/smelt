@@ -2,50 +2,27 @@
 #define _HANN_WINDOW_H_
 
 #include <cmath>
-#include <string>
+#include <functional>
 #include <vector>
-#include "window.h"
 
 namespace signal_processing {
 
 /**
- * Hann window
+ * Function that calculated the Hann window for the input window length
+ * @param[in] window_length Desired length of window
+ * @return Vector filled with Hann window function evaluations based on input
+ *         window length
  */
-class HannWindow : public Window {
- public:
-  /**
-   * @constructor Default constructor
-   */
-  HannWindow();
+std::function<std::vector<double>(unsigned int)> hann_window =
+    [](unsigned int window_length) -> std::vector<double> {
+  std::vector<double> hann(window_length, 0.0);
+  double number_of_points = static_cast<double>(window_length - 1);
 
-  /**
-   * @destructor Virtual destructor
-   */
-  virtual ~HannWindow(){};
+  for (unsigned int i = 0; i < hann.size(); ++i) {
+    hann[i] = 0.5 * (1.0 - std::cos(2.0 * M_PI * i / number_of_points));
+  }
 
-  /**
-   * Delete copy constructor
-   */
-  HannWindow(const HannWindow&) = delete;
-
-  /**
-   * Delete assignment operator
-   */
-  HannWindow& operator=(const HannWindow&) = delete;
-
-  /**
-   * Get the name of the window
-   * @return Window name as string
-   */
-  std::string name() const override { return "HannWindow"; };
-
-  /**
-   * Get the window for the input window_length
-   * @param[in] window_length Desired length of window
-   * @return Vector filled with window function evaluations based on input
-   * window length
-   */
-  std::vector<double> get_window(unsigned int window_length) const override;
+  return hann;
 };
 }  // namespace signal_processing
 

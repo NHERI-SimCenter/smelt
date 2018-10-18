@@ -33,18 +33,18 @@ TEST_CASE("Check the dispatcher class implementation", "[Dispatcher]") {
         vector_mull("MultiplyVecs", multiply_vector);
 
     // Create dispatchers
-    REQUIRE(Dispatcher<double, int>::dispatcher()->check("AddSmallNumber") == true);
-    REQUIRE(Dispatcher<std::vector<double>, std::vector<double>, double>::dispatcher()->check("MultiplyVecs"));
+    REQUIRE(Dispatcher<double, int>::instance()->check("AddSmallNumber") == true);
+    REQUIRE(Dispatcher<std::vector<double>, std::vector<double>, double>::instance()->check("MultiplyVecs"));
     
     // Check correct functions are called
     auto answer_1 =
-        Dispatcher<double, int>::dispatcher()->dispatch("AddSmallNumber", 3);
+        Dispatcher<double, int>::instance()->dispatch("AddSmallNumber", 3);
     REQUIRE(answer_1 == Approx(3.0 + 0.01).epsilon(0.01));    
     
     std::vector<double> input_vector{0.0, 1.0, 2.0, 3.0};
     double multiplier = 2.0;
     auto answer_2 = Dispatcher<std::vector<double>, std::vector<double>,
-                               double>::dispatcher()
+                               double>::instance()
                         ->dispatch("MultiplyVecs", input_vector, multiplier);
 
     for (unsigned int i = 0; i < input_vector.size(); ++i) {
@@ -54,11 +54,11 @@ TEST_CASE("Check the dispatcher class implementation", "[Dispatcher]") {
     
     // Create a non-existant element
     REQUIRE(
-        Dispatcher<std::vector<double>, std::vector<double>, double>::dispatcher()
+        Dispatcher<std::vector<double>, std::vector<double>, double>::instance()
             ->check("NoFunc") == false);
     try {
       auto no_func = Dispatcher<std::vector<double>, std::vector<double>,
-                                double>::dispatcher()
+                                double>::instance()
                          ->dispatch("NoFunc", std::vector<double>(), 1.0);
     } catch (std::exception &exception) {
       std::cout << "Dispatcher error: " << exception.what() << std::endl;
