@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <utility>
+#include <vector>
 #include <Eigen/Dense>
 
 /**
@@ -19,13 +20,17 @@ namespace numeric_utils {
 Eigen::MatrixXd corr_to_cov(const Eigen::MatrixXd& corr,
                             const Eigen::VectorXd& std_dev);
 
-
 /**
  * Compute the 1-dimensional convolution of two input vectors
+ * @param[in] input_x First input vector of data
+ * @param[in] input_y Second input vector of data
+ * @param[out] output Vector to story convolution results to
+ * @return Returns true if convolution was successful, false otherwise
  */
+bool convolve_1d(const std::vector<double>& input_x,
+                 const std::vector<double>& input_y,
+                 std::vector<double>& response);
 
-
- 
 /**
  * Abstract base class for random number generators
  */

@@ -4,7 +4,7 @@
 #include "function_dispatcher.h"
 #include "window.h"
 
-TEST_CASE("Test window functions", "[WindowFuncs]") {
+TEST_CASE("Test window functions", "[WindowFuncs][Helpers]") {
 
   SECTION("Test Hann window") {
     unsigned int window_length = 23;
