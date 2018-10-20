@@ -42,8 +42,9 @@ include_directories(BEFORE
 # Add link library directories
 find_library(
   MKL_LIBRARIES
-  NAMES mkl_rt libmkl_rt  
-  PATHS ${CMAKE_PREFIX_PATH}/external/intel_mkl/lib ${INTEL_MKL}/lib
+  NAMES mkl_rt libmkl_rt
+  HINTS ${INTEL_MKL}/lib
+  PATHS ${CMAKE_PREFIX_PATH}/external/intel_mkl/lib
   )
 
 # Set sources
