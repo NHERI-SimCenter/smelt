@@ -42,6 +42,9 @@ set(INT_LIB "mkl_rt")
 
 find_path(MKL_INCLUDE_DIR NAMES mkl.h HINTS ${PROJECT_SOURCE_DIR}/external/intel_mkl/include)
 
+MESSAGE(STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR})
+
+
 find_library(MKL_SINGLE_SHARED_LIBRARY
   NAMES ${INT_LIB}
   PATHS ${PROJECT_SOURCE_DIR}/external/intel_mkl/lib

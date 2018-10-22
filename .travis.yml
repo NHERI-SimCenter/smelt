@@ -14,8 +14,6 @@ addons:
       - graphviz
 
 script:
-  - cd external
-  - cd ..
   - mkdir build
   - cd build
   - cmake ..
