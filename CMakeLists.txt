@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 SET(CMAKE_COLOR_MAKEFILE ON)
 SET(CMAKE_VERBOSE_MAKEFILE OF)
-SET(CMAKE_PREFIX_PATH ${PROJECT_SOURCE_DIR})
+# SET(CMAKE_PREFIX_PATH ${PROJECT_SOURCE_DIR})
 
 # General compile settings
 IF (NOT CMAKE_BUILD_TYPE)
@@ -19,19 +19,27 @@ ENDIF (NOT CMAKE_BUILD_TYPE)
 # Provide option for building testing
 option(BUILD_TESTING "Enable testing for stochastic module" ON)
 
+# CMake Modules
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
 # Set path for external dependencies
 set(CATCH_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/catch)
 set(EIGEN_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/Eigen)
 set(TROMPELOEIL_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/trompeloeil)
 set(BOOST_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/boost)
-set(INTEL_MKL, ${PROJECT_SOURCE_DIR}/external/intel_mkl)
+# set(INTEL_MKL, ${PROJECT_SOURCE_DIR}/external/intel_mkl)
 
 # Add external headers to include path
 include_directories(${CATCH_INCLUDE_DIR})
 include_directories(${EIGEN_INCLUDE_DIR})
 include_directories(${TROMPELOEIL_INCLUDE_DIR})
 include_directories(${BOOST_INCLUDE_DIR})
-include_directories(${INTEL_MKL}/include)
+
+
+# Add link library directories
+find_package(MKL)
+include_directories(${MKL_INCLUDE_DIRS})
+# target_link_libraries(inteld ${MKL_LIBRARIES} pthread dl)
 
 # Include directories
 include_directories(BEFORE
@@ -39,12 +47,11 @@ include_directories(BEFORE
 	${PROJECT_SOURCE_DIR}/external/
 	)
 
-# Add link library directories
-find_library(
-  MKL_LIBRARIES
-  NAMES mkl_rt libmkl_rt  
-  PATHS ${CMAKE_PREFIX_PATH}/external/intel_mkl/lib
-  )
+# find_library(
+#   MKL_LIBRARIES
+#   NAMES mkl_rt libmkl_rt  
+#   PATHS ${CMAKE_PREFIX_PATH}/external/intel_mkl/lib
+#   )
 
 # Set sources
 set(SOURCES
