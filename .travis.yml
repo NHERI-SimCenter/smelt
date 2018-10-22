@@ -1,4 +1,10 @@
+dist: trusty
 sudo: true
+language:
+  - cpp
+compiler:
+  - g++
+
 
 branches:
   only:
@@ -12,6 +18,7 @@ addons:
       - doxygen-latex
       - doxygen-gui
       - graphviz
+      - cmake
 
 script:
   - mkdir build
