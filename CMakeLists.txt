@@ -7,7 +7,6 @@ set(CMAKE_CXX_STANDARD 11)
 
 SET(CMAKE_COLOR_MAKEFILE ON)
 SET(CMAKE_VERBOSE_MAKEFILE OF)
-# SET(CMAKE_PREFIX_PATH ${PROJECT_SOURCE_DIR})
 
 # General compile settings
 IF (NOT CMAKE_BUILD_TYPE)
@@ -39,19 +38,12 @@ include_directories(${BOOST_INCLUDE_DIR})
 # Add link library directories
 find_package(MKL)
 include_directories(${MKL_INCLUDE_DIRS})
-# target_link_libraries(inteld ${MKL_LIBRARIES} pthread dl)
 
 # Include directories
 include_directories(BEFORE
 	${PROJECT_SOURCE_DIR}/include/
 	${PROJECT_SOURCE_DIR}/external/
 	)
-
-# find_library(
-#   MKL_LIBRARIES
-#   NAMES mkl_rt libmkl_rt  
-#   PATHS ${CMAKE_PREFIX_PATH}/external/intel_mkl/lib
-#   )
 
 # Set sources
 set(SOURCES
