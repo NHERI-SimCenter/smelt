@@ -20,12 +20,10 @@ addons:
       - graphviz
       - cmake
 
-before_script:
+script:
   - mkdir build
   - cd build
   - cmake ..
-  
-script:
   - make
   - make test
   - cd ..

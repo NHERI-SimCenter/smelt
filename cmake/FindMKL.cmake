@@ -2,10 +2,7 @@
 #
 #  MKL_FOUND - System has MKL
 #  MKL_INCLUDE_DIRS - MKL include files directories
-#  MKL_LIBRARIES - The MKL libraries
-#  MKL_INTERFACE_LIBRARY - MKL interface library
-#  MKL_SEQUENTIAL_LAYER_LIBRARY - MKL sequential layer library
-#  MKL_CORE_LIBRARY - MKL core library
+#  MKL_SINGLE_SHARED_LIBRARY- The MKL single shared library
 #
 #  The environment variables INTEL_MKL and INTEL are used to find the library.
 #  Everything else is ignored. If MKL is found "-DMKL_ILP64" is added to
@@ -40,16 +37,29 @@ set(INT_LIB "mkl_rt")
 #   set(COR_LIB "mkl_core")
 # endif()
 
-find_path(MKL_INCLUDE_DIR NAMES mkl.h HINTS ${PROJECT_SOURCE_DIR}/external/intel_mkl/include)
+# find_path(MKL_INCLUDE_DIR NAMES mkl.h HINTS ${PROJECT_SOURCE_DIR}/external/intel_mkl/include)
+find_path(MKL_INCLUDE_DIR NAMES mkl.h HINTS $ENV{INTEL_MKL}/include NO_DEFAULT_PATH)
 
-MESSAGE(STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR})
+# MESSAGE(STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR})
+MESSAGE(STATUS "INTEL_MKL: " $ENV{INTEL_MKL})
 
+
+# find_library(MKL_SINGLE_SHARED_LIBRARY
+#   NAMES ${INT_LIB}
+#   PATHS ${PROJECT_SOURCE_DIR}/external/intel_mkl/lib
+#   NO_DEFAULT_PATH
+#   )
 
 find_library(MKL_SINGLE_SHARED_LIBRARY
   NAMES ${INT_LIB}
-  PATHS ${PROJECT_SOURCE_DIR}/external/intel_mkl/lib
+  PATHS $ENV{INTEL_MKL_LIB}
   NO_DEFAULT_PATH
   )
+
+
+MESSAGE(STATUS "INTEL_INCLUDE_DIR: " ${MKL_INCLUDE_DIR})
+MESSAGE(STATUS "INTEL_SINGLE_SHARED_LIBRARY: " ${MKL_SINGLE_SHARED_LIBRARY})
+MESSAGE(STATUS "INTEL_MKL lib: " $ENV{INTEL_MKL_LIB})
 # find_library(MKL_INTERFACE_LIBRARY
 #              NAMES ${INT_LIB}
 #              PATHS ${INTEL_MKL}/lib
@@ -73,6 +83,8 @@ find_library(MKL_SINGLE_SHARED_LIBRARY
 
 set(MKL_INCLUDE_DIRS ${MKL_INCLUDE_DIR})
 set(MKL_LIBRARIES ${MKL_SINGLE_SHARED_LIBRARY})
+
+
 # set(MKL_LIBRARIES ${MKL_INTERFACE_LIBRARY} ${MKL_SEQUENTIAL_LAYER_LIBRARY} ${MKL_CORE_LIBRARY})
 
 # if (MKL_INCLUDE_DIR AND
