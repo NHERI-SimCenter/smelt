@@ -37,22 +37,15 @@ set(INT_LIB "mkl_rt")
 #   set(COR_LIB "mkl_core")
 # endif()
 
-# find_path(MKL_INCLUDE_DIR NAMES mkl.h HINTS ${PROJECT_SOURCE_DIR}/external/intel_mkl/include)
-find_path(MKL_INCLUDE_DIR NAMES mkl.h HINTS $ENV{INTEL_MKL}/include NO_DEFAULT_PATH)
+find_path(MKL_INCLUDE_DIR NAMES mkl.h HINTS ${PROJECT_SOURCE_DIR}/external/intel_mkl/include)
 
-# MESSAGE(STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR})
-MESSAGE(STATUS "INTEL_MKL: " $ENV{INTEL_MKL})
+MESSAGE(STATUS "PROJECT_SOURCE_DIR: " ${PROJECT_SOURCE_DIR})
+# MESSAGE(STATUS "INTEL_MKL: " $ENV{INTEL_MKL})
 
-
-# find_library(MKL_SINGLE_SHARED_LIBRARY
-#   NAMES ${INT_LIB}
-#   PATHS ${PROJECT_SOURCE_DIR}/external/intel_mkl/lib
-#   NO_DEFAULT_PATH
-#   )
 
 find_library(MKL_SINGLE_SHARED_LIBRARY
   NAMES ${INT_LIB}
-  PATHS $ENV{INTEL_MKL_LIB}
+  PATHS ${PROJECT_SOURCE_DIR}/external/intel_mkl/lib
   NO_DEFAULT_PATH
   )
 

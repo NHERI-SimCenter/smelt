@@ -28,9 +28,7 @@ set(TROMPELOEIL_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/trompeloeil)
 set(BOOST_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/boost)
 
 # Set environment variable for Intel MKL
-set(ENV{INTEL_MKL} "${PROJECT_SOURCE_DIR}/external/intel_mkl:$ENV{INTEL_MKL}")
-set(ENV{INTEL_MKL_LIB} "${PROJECT_SOURCE_DIR}/external/intel_mkl/lib:$ENV{INTEL_MKL_LIB}")
-# set(INTEL_MKL, ${PROJECT_SOURCE_DIR}/external/intel_mkl)
+set(INTEL_MKL, ${PROJECT_SOURCE_DIR}/external/intel_mkl)
 
 # Add external headers to include path
 include_directories(${CATCH_INCLUDE_DIR})
