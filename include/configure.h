@@ -10,7 +10,7 @@
 #include "normal_dist.h"
 #include "normal_multivar.h"
 #include "students_t_dist.h"
-#include "hann_window.h"
+#include "window.h"
 
 /**
  * Namespace for configuration and settings

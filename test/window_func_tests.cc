@@ -1,8 +1,6 @@
 #include <vector>
 #include <catch/catch.hpp>
-#include "factory.h"
 #include "function_dispatcher.h"
-#include "window.h"
 
 TEST_CASE("Test window functions", "[WindowFuncs][Helpers]") {
 

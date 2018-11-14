@@ -2,51 +2,31 @@
 #define _WINDOW_H_
 
 #include <cmath>
-#include <string>
+#include <functional>
+#include <tuple>
 #include <vector>
 
+/**
+ * Signal processing functionality
+ */
 namespace signal_processing {
 
 /**
- * Abstract base class for window functions. Implemented using classes to allow
- * for easy extension without having to change implementation to account for
- * different function dispatch.
+ * Function that calculated the Hann window for the input window length
+ * @param[in] window_length Desired length of window
+ * @return Vector filled with Hann window function evaluations based on input
+ *         window length
  */
-class Window {
- public:
-  /**
-   * @constructor Default constructor
-   */
-  Window() = default;
+std::function<std::vector<double>(unsigned int)> hann_window =
+    [](unsigned int window_length) -> std::vector<double> {
+  std::vector<double> hann(window_length, 0.0);
+  double number_of_points = static_cast<double>(window_length - 1);
 
-  /**
-   * @destructor Virtual destructor
-   */
-  virtual ~Window(){};
+  for (unsigned int i = 0; i < hann.size(); ++i) {
+    hann[i] = 0.5 * (1.0 - std::cos(2.0 * M_PI * i / number_of_points));
+  }
 
-  /**
-   * Delete copy constructor
-   */
-  Window(const Window&) = delete;
-
-  /**
-   * Delete assignment operator
-   */
-  Window& operator=(const Window&) = delete;
-
-  /**
-   * Get the name of the window
-   * @return Window name as string
-   */
-  virtual std::string name() const = 0;
-
-  /**
-   * Get the window for the input window_length
-   * @param[in] window_length Desired length of window
-   * @return Vector filled with window function evaluations based on input
-   * window length
-   */
-  virtual std::vector<double> get_window(unsigned int window_length) const = 0;
+  return hann;
 };
 }  // namespace signal_processing
 
