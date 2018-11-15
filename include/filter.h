@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 #include <vector>
-#include <ipps.h>
+#include <intel_ipp/include/ipps.h>
 
 /**
  * Signal processing functionality
@@ -20,17 +20,25 @@ namespace signal_processing {
  */
 std::function<std::vector<std::vector<double>>(unsigned int, double)>
     hp_butterworth =
-        [](unsigned int filter_order,
+        [](int filter_order,
            double cutoff_freq) -> std::vector<std::vector<double>> {
   // Allocated memory for coefficients
   Ipp64f taps[2 * (filter_order + 1)];
-
   IppStatus status = ippStsNoErr;
+  int internal_buffer_size;
 
+  // Calculate required buffer size for internal calculations
+  status = ippsIIRGenGetBufferSize(filter_order, &internal_buffer_size);
+  if (status != ippStsNoErr) {
+    throw std::runtime_error(
+        "\nERROR: in signal_processing::hp_butterworth: Error in buffer size "
+        "calculations\n");
+  }
+  
   // Divide by 2 to make cutoff frequency match the definition given in MATLAB
-
-  status = ippsIIRGenHighpass(cutoff_freq / 2.0, 0, filter_order, taps,
-                              ippButterworth);
+  Ipp8u * internal_calcs = ippsMalloc_8u(internal_buffer_size);
+  status = ippsIIRGenHighpass_64f(cutoff_freq / 2.0, 0, filter_order, taps,
+                                  ippButterworth, internal_calcs);
 
   // Check if filter computation succeeded
   if (status != ippStsNoErr) {
@@ -42,12 +50,13 @@ std::function<std::vector<std::vector<double>>(unsigned int, double)>
   std::vector<double> numerator(filter_order + 1);
   std::vector<double> denominator(filter_order + 1);
 
-  for (unsigned int i = 0; i < filter_order + 1; ++i) {
+  for (int i = 0; i < filter_order + 1; ++i) {
     numerator[i] = taps[i];
     denominator[i] = taps[i + filter_order + 1];
   }
 
-  return std::vector<std::vector<double>{numerator, denominator};
+  ippsFree(internal_calcs);
+  return std::vector<std::vector<double>>{numerator, denominator};
 };
 }  // namespace signal_processing
 

@@ -3,6 +3,7 @@
 
 #include "beta_dist.h"
 #include "factory.h"
+#include "filter.h"
 #include "function_dispatcher.h"
 #include "inv_gauss_dist.h"
 #include "lognormal_dist.h"
@@ -52,8 +53,11 @@ void initialize() {
 
   // WINDOW FUNCTIONS
   // Register Hann window
-  static DispatchRegister<std::vector<double>, double> hann_window_function(
+  static DispatchRegister<std::vector<double>, unsigned int> hann_window_function(
       "HannWindow", signal_processing::hann_window);
+
+  /* // FILTER FUNCTIONS */
+  /* static DispatchRegister<std::vector<std::vector<double>>(unsigned int, double) */
 }
 }  // namespace config
 

@@ -27,19 +27,17 @@ set(EIGEN_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/Eigen)
 set(TROMPELOEIL_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/trompeloeil)
 set(BOOST_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/boost)
 
-# Set environment variable for Intel MKL
-set(INTEL_MKL, ${PROJECT_SOURCE_DIR}/external/intel_mkl)
-
 # Add external headers to include path
 include_directories(${CATCH_INCLUDE_DIR})
 include_directories(${EIGEN_INCLUDE_DIR})
 include_directories(${TROMPELOEIL_INCLUDE_DIR})
 include_directories(${BOOST_INCLUDE_DIR})
 
-
-# Add link library directories
+# Add link library directories for MKL and IPP
 find_package(MKL)
 include_directories(${MKL_INCLUDE_DIRS})
+find_package(IPP)
+include_directories(${IPP_INCLUDE_DIRS})
 
 # Include directories
 include_directories(BEFORE
@@ -61,7 +59,7 @@ set(SOURCES
 # Add library as target
 add_library(lstoc SHARED ${SOURCES})
 # Add libraries to link target to
-target_link_libraries(lstoc ${MKL_LIBRARIES})
+target_link_libraries(lstoc ${MKL_LIBRARIES} ${IPP_LIBRARIES})
 
 # Unit testing
 if (BUILD_TESTING)
