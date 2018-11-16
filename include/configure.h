@@ -56,8 +56,11 @@ void initialize() {
   static DispatchRegister<std::vector<double>, unsigned int> hann_window_function(
       "HannWindow", signal_processing::hann_window);
 
-  /* // FILTER FUNCTIONS */
-  /* static DispatchRegister<std::vector<std::vector<double>>(unsigned int, double) */
+  // FILTER FUNCTIONS
+  // Register highpass Butterworth filter
+  static DispatchRegister<std::vector<std::vector<double>>, int, double>
+      hp_butterworth_function("HighPassButter",
+                              signal_processing::hp_butterworth);
 }
 }  // namespace config
 

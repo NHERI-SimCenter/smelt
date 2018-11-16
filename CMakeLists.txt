@@ -70,7 +70,8 @@ if (BUILD_TESTING)
     ${PROJECT_SOURCE_DIR}/test/distribution_tests.cc
     ${PROJECT_SOURCE_DIR}/test/window_func_tests.cc
     ${PROJECT_SOURCE_DIR}/test/dispatcher_tests.cc
-    ${PROJECT_SOURCE_DIR}/test/convolution_tests.cc    
+    ${PROJECT_SOURCE_DIR}/test/convolution_tests.cc
+    ${PROJECT_SOURCE_DIR}/test/filter_func_tests.cc
   )
 
   add_executable(unit_tests ${TEST_SOURCES})

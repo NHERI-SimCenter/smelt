@@ -18,7 +18,7 @@ namespace signal_processing {
  *         contains and numerator coefficients and the second vector contains
  *         the denominator coefficients.
  */
-std::function<std::vector<std::vector<double>>(unsigned int, double)>
+std::function<std::vector<std::vector<double>>(int, double)>
     hp_butterworth =
         [](int filter_order,
            double cutoff_freq) -> std::vector<std::vector<double>> {
@@ -46,7 +46,7 @@ std::function<std::vector<std::vector<double>>(unsigned int, double)>
         "\nERROR: in signal_processing::hp_butterworth: Error in coefficient "
         "calculations\n");
   }
-
+  
   std::vector<double> numerator(filter_order + 1);
   std::vector<double> denominator(filter_order + 1);
 
