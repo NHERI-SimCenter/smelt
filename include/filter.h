@@ -55,7 +55,9 @@ std::function<std::vector<std::vector<double>>(int, double)>
     denominator[i] = taps[i + filter_order + 1];
   }
 
+  // Free memory associated with internal calcs
   ippsFree(internal_calcs);
+  
   return std::vector<std::vector<double>>{numerator, denominator};
 };
 }  // namespace signal_processing
