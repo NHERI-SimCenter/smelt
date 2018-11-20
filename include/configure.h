@@ -61,6 +61,12 @@ void initialize() {
   static DispatchRegister<std::vector<std::vector<double>>, int, double>
       hp_butterworth_function("HighPassButter",
                               signal_processing::hp_butterworth);
+
+  // Register filter impulse response
+  static DispatchRegister<std::vector<double>, std::vector<double>,
+                          std::vector<double>, int, int>
+      filter_impulse_response("ImpulseResponse",
+                              signal_processing::impulse_response);
 }
 }  // namespace config
 
