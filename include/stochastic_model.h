@@ -2,8 +2,7 @@
 #define _STOCHASTIC_MODEL_H_
 
 #include <string>
-
-#include "??????JSON_WRAPPER.h"
+#include "json_wrapper.h"
 
 namespace stochastic {
 
@@ -18,13 +17,6 @@ class StochasticModel {
   StochasticModel() = default;
 
   /**
-   * @constructor Constructor taking model arguments
-   * @tparam Args Parameter pack containing arguments for stochastic model
-   */
-  template <typename... Targs>
-  StochasticModel(Targs&&... args);
-
-  /**
    * @destructor Virtual destructor
    */
   virtual ~StochasticModel();
@@ -33,7 +25,7 @@ class StochasticModel {
    * Delete copy constructor
    */
   StochasticModel(const StochasticModel&) = delete;
-  
+
   /**
    * Delete assignment operator
    */
@@ -43,7 +35,7 @@ class StochasticModel {
    * Get the name of the stochastic model
    * @return Model name as a string
    */
-  std::string model_name() const;
+  std::string model_name() const { return model_name_; };
 
   /**
    * Generate loading based on stochastic model
@@ -51,13 +43,18 @@ class StochasticModel {
   virtual void generate() = 0;
 
   /**
-   * Get the results of the stochastic load generation
-   * @return Desired stochastic results in JSON format
+   * Get the results of the stochastic load generation in JSON
+   * wrapper class format
+   * @return Desired stochastic results in JSON wrapper class format
    */
-  ? ? ? JSON results() const;
+  virtual utilities::JsonWrapper wrapped_json_results() const = 0;
 
- protected:
-  std::string model_name_; /**< Name of stochastic model */
+  /**
+   * Get the results of the stochastic load generation in string
+   * format
+   * @return Desired stochastic results in string format
+   */
+  virtual std::string json_results() const = 0;
 }
 }  // namespace stochastic
 
