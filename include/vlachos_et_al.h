@@ -1,7 +1,11 @@
 #ifndef _VLACHOS_ET_AL_H_
 #define _VLACHOS_ET_AL_H_
 
+#include <memory>
 #include <string>
+#include <vector>
+#include <Eigen/Dense>
+#include "distribution.h"
 #include "stochastic_model.h"
 
 namespace stochastic {
@@ -19,6 +23,25 @@ class VlachosEtAl : public StochasticModel {
    * @constructor Delete default constructor
    */
   VlachosEtAl() = delete;
+
+  /**
+   * @constructor Construct scenario specific ground motion model based on input
+   * parameters
+   * @param[in] moment_magnitude Moment magnitude of earthquake scenario
+   * @param[in] rupture_distance Closest-to-site rupture distance in kilometers
+   * @param[in] vs30 Soil shear wave velocity averaged over top 30 meters in
+   *                 meters per second
+   * @param[in] time_step Temporal discretization. Defaults to 0.01 seconds.
+   * @param[in] freq_step Frequency discretization. Defaults to 0.2 Hz.
+   * @param[in] num_spectra Number of evolutionary power spectra that should be
+   *                        generated. Default value is 1.
+   * @param[in] num_sims Number of simulated ground motion time histories that
+   *                     should be generated per evolutionary power
+   */
+  VlachosEtAl(double moment_magnitude, double rupture_distance, double vs30,
+              double time_step = 0.01, double freq_step = 0.2,
+              unsigned int num_spectra = 1;
+              unsigned int num_sims = 1);
 
   /**
    * @destructor Virtual destructor
@@ -55,16 +78,17 @@ class VlachosEtAl : public StochasticModel {
   double rupture_dist_; /**< Closest-to-site rupture distance in kilometers */
   double vs30_; /**< Soil shear wave velocity averaged over top 30 meters in
                    meters per second */
+  double time_step_; /**< Temporal discretization */
+  double freq_step_; /**< Frequency discretization */
   unsigned int num_spectra_; /**< Number of evolutionary power spectra that
                                 should be generated */
   unsigned int num_sims_; /**< Number of simulated ground motion time histories
                              that should be generated per evolutionary power
                              spectrum */
-  double time_step_; /**< Temporal discretization */
-  double freq_step_; /**< Frequency discretization */
-  double soft_site_; /**< Factor for soft soil site */
-  double med_site_; /**< Factor for medium soil site */
-  double hard_site_; /**< Factor for hard soil site */
+  std::vector<std::shared_ptr<stochastic::Distribution>>
+      model_parameters_; /**< Distrubutions for 18-parameter model */
+  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>
+      parameter_realizations_; /**< Random realizations of model parameters */
 };
 }  // namespace stochastic
 
