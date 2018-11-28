@@ -56,8 +56,9 @@ class VlachosEtAl : public StochasticModel {
 
   /**
    * Generate ground motion time histories based on input parameters
+   * @return Json object containing acceleration time histories
    */
-  void generate() override;
+  utilities::JsonWrapper generate() override;
 
   /**
    * Get the generated ground motion time histories in JSON wrapper
@@ -73,6 +74,34 @@ class VlachosEtAl : public StochasticModel {
   std::string json_results() const override;
 
  private:
+  /**
+   * Simulate fully non-stationary ground motion sample realizations based on
+   * model parameters, time and frequency discretization for the requested
+   * number of samples.
+   * @return Vector of vectors containing acceleration time histories
+   */
+  std::vector<std::vector<double>> simulate_time_histories() const;
+
+  /**
+   * Identifies modal frequency parameters for mode 1 and 2
+   * @return Vector with identified parameters
+   */
+  std::vector<double> identify_parameters() const;
+  
+  /**
+   * Calculates the dominant modal frequencies as a function of non-dimensional
+   * cumulative energy and the model parameters Q_k, alpha_k, and beta_k where
+   * k is the mode (either 1 or 2).
+   * @param[in] parameters Vector of values for alpha_k, beta_k and Q_k at k-th
+   *                       mode
+   * @param[in] energy Vector of non-dimensional energy values at which to
+   *                   calculate frequency
+   * @return Vector of frequency values at input energy values
+   */
+  std::vector<double> modal_frequencies(
+      const std::vector<double>& parameters,
+      const std::vector<double>& energy) const;
+
   std::string model_name_; /**< Name of stochastic model */
   double moment_magnitude_; /**< Moment magnitude for scenario */
   double rupture_dist_; /**< Closest-to-site rupture distance in kilometers */
@@ -85,10 +114,15 @@ class VlachosEtAl : public StochasticModel {
   unsigned int num_sims_; /**< Number of simulated ground motion time histories
                              that should be generated per evolutionary power
                              spectrum */
+  Eigen::VectorXd means_; /**< Mean values of model parameters */
+  Eigen::MatrixXd covariance_; /**< Covariance matrix for model parameters */
   std::vector<std::shared_ptr<stochastic::Distribution>>
       model_parameters_; /**< Distrubutions for 18-parameter model */
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>
       parameter_realizations_; /**< Random realizations of model parameters */
+  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>
+      physical_parameters_; /**< Sample normal parameters transformed to
+                               physical space */
 };
 }  // namespace stochastic
 

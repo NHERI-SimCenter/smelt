@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <cmath>
 #include <memory>
+#include <vector>
 #include <Eigen/Dense>
 #include "factory.h"
 #include "lognormal_dist.h"
@@ -100,10 +102,10 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
   // clang-format on
 
   // Mean of transformed normal model parameters (described by Eq. 25 on page 12)
-  Eigen::VectorXd means = conditional_means * beta.transpose();
+  means_ = conditional_means * beta.transpose();
 
   // Convert the standard deviation and correlation to covariance
-  auto covariance = numeric_utils(correlation_matrix, variance.sqrt());
+  covariance_ = numeric_utils::corr_to_cov(correlation_matrix, variance.sqrt());
 
   // Generate realizations of model parameters
   int seed = 100;
@@ -168,4 +170,81 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
   model_parameters_[17] =
       Factory<stochastic::Distribution, double, double>::instance()->create(
           "LognormalDist", std::move(3.658), std::move(0.375));
+
+  // Standard normal distribution with mean at 0.0 and standard deviation of 1.0
+  auto std_normal_dist =
+      Factory<stochastic::Distribution, double, double>::instance()->create(
+          "NormalDist", std::move(0.0), std::move(1.0));
+
+  physical_parameters_.resize(parameter_realizations_.rows(),
+                              parameter_realizations_.cols());
+
+  // Transform sample normal model parameters to physical space
+  for (unsigned int i = 0; i < model_parameters_.size(); ++i) {
+    for (unsigned int j = 0; j < parameter_realizations_.rows(); ++j) {
+      physical_parameters(j, i) =
+          model_parameters_[i]->inv_cumulative_dist_func(
+              std_normal_dist->cumulative_dist_func(
+                  std::vector<double>{parameter_realizations_(j, i)}));
+    }
+  }
 }
+
+utilities::JsonWrapper stochastic::VlachosEtAl::generate() {
+  // Calculate sample non-stationary power spectrum following Eq-18 on page 8 as
+  // described in Section 5.
+  // UPDATE DATA TYPE HERE AFTER ADDING POWER_SPECTRUM FUNCTION
+  std::vector<std::vector<double>> accelerations(num_spectra_,
+                                                 std::vector<double>());
+
+  for (unsigned int i = 0; i < num_spectra_; ++i) {
+    accelerations[i] =
+        power_spectrum(physical_parameters.row(i));
+  }
+
+  // CONTINUE HERE AFTER ADDING POWER_SPECTRUM FUNCS
+}
+
+std::vector<std::vector<double>> stochastic::VlachosEtAl::simulate_time_histories() const {
+  // STILL NEEDS TO BE IMPLEMENTED
+}
+
+std::vector<double> stochastic::VlachosEtAl::identify_parameters() const {
+  // Initialize non-dimensional cumulative energy
+  std::vector<double> energy(static_cast<unsigned int>(1.0 / 0.05));
+  std::generate(energy.begin(), energy.end(),
+                [value = 0.0]() mutable { return value + 0.05 });
+
+  // Initialze mode 1 parameters and frequencies
+  std::vector<double> mode_1_params = {physical_parameters_[2],
+                                       physical_parameters_[3],
+                                       physical_parameters_[4]};
+  auto mode_1_freqs = modal_frequencies(mode_1_params, energy);
+
+  // Initialize mode 2 parameters and frequencies
+  std::vector<double> mode_2_params = {physical_parameters_[5],
+                                       physical_parameters_[6],
+                                       physical_parameters_[7]};
+  auto mode_2_freqs = modal_frequencies(mode_2_params, energy);
+
+  double mode_1_mean = physical_parameters_[11],
+         mode_2_mean = physical_parameters_[14];
+
+  // Iterate until suitable parameter values have been identified
+  // CONTINUE HERE--LOOK AT LINE 158 IN Sxx_sim FOR LOGICALS DEFINING LOOP TERMINATION
+  while ()
+}
+
+std::vector<double> stochastic::VlachosEtAl::modal_frequencies(
+    const std::vector<double>& parameters,
+    const std::vector<double>& energy) const {
+  std::vector<double> frequencies(energy.size());
+
+  for (unsigned int i = 0; i < energy.size(); ++i) {
+    frequencies[i] = parameters[2] * std::pow(0.5 + energy[i], parameters[0]) *
+                     std::pow(1.5 - energy[i], parameters[1]);
+  }
+
+  return frequencies;
+}
+
