@@ -109,9 +109,11 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
 
   // Generate realizations of model parameters
   int seed = 100;
-  auto sample_generator = Factory<numeric_utils::RandomGenerator, int>::instance()
-    ->create("MultivariateNormal", std::move(seed));
-  sample_generator->generate(parameter_realizations_, means, covariance, num_spectra_);
+  sample_generator_ =
+      Factory<numeric_utils::RandomGenerator, int>::instance()->create(
+          "MultivariateNormal", std::move(seed));
+  sample_generator_->generate(parameter_realizations_, means_, covariance_,
+                              num_spectra_);
 
   // Create distributions for model parameters
   model_parameters_[0] =
@@ -209,30 +211,74 @@ std::vector<std::vector<double>> stochastic::VlachosEtAl::simulate_time_historie
   // STILL NEEDS TO BE IMPLEMENTED
 }
 
-std::vector<double> stochastic::VlachosEtAl::identify_parameters() const {
+Eigen::VectorXd stochastic::VlachosEtAl::identify_parameters(
+    const Eigen::VectorXd& initial_params) const {
   // Initialize non-dimensional cumulative energy
   std::vector<double> energy(static_cast<unsigned int>(1.0 / 0.05));
   std::generate(energy.begin(), energy.end(),
                 [value = 0.0]() mutable { return value + 0.05 });
 
   // Initialze mode 1 parameters and frequencies
-  std::vector<double> mode_1_params = {physical_parameters_[2],
-                                       physical_parameters_[3],
-                                       physical_parameters_[4]};
+  std::vector<double> mode_1_params = {initial_params(2),
+				       initial_params(3),
+				       initial_params(4)};
   auto mode_1_freqs = modal_frequencies(mode_1_params, energy);
 
   // Initialize mode 2 parameters and frequencies
-  std::vector<double> mode_2_params = {physical_parameters_[5],
-                                       physical_parameters_[6],
-                                       physical_parameters_[7]};
+  std::vector<double> mode_2_params = {initial_params(5),
+				       initial_params(6),
+				       initial_params(7)};
   auto mode_2_freqs = modal_frequencies(mode_2_params, energy);
 
-  double mode_1_mean = physical_parameters_[11],
-         mode_2_mean = physical_parameters_[14];
+  double mode_1_mean = initial_params(11), mode_2_mean = initial_params(14);
+
+  // Standard normal distribution with mean at 0.0 and standard deviation of 1.0
+  auto std_normal_dist =
+      Factory<stochastic::Distribution, double, double>::instance()->create(
+          "NormalDist", std::move(0.0), std::move(1.0));  
+  bool freq_comparison = true;
+  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> realizations(
+      initial_params.size(), 1);
+  Eigen::VectorXd transformed_realizations(initial_params.size());
 
   // Iterate until suitable parameter values have been identified
-  // CONTINUE HERE--LOOK AT LINE 158 IN Sxx_sim FOR LOGICALS DEFINING LOOP TERMINATION
-  while ()
+  while (freq_comparison || (mode_1_mean > mode_2_mean)) {
+    
+    // Generate realizations of parameters
+    sample_generator_->generate(realizations, means_, covariance_, 1);
+    
+    // Transform parameter realizations to physical space
+    for (unsigned int i = 0; i < initial_params.size(); ++i) {
+      transformed_realizations(i) =
+          model_parameters_[i]->inv_cumulative_dist_func(
+              std_normal_dist->cumulative_dist_func(
+                  std::vector<double>{realizations(i, 0)}));
+    }
+
+    // Calculate dominant modal frequencies
+    mode_1_params = {transformed_realizations(2), transformed_realizations(3),
+                     transformed_realizations(4)};
+    mode_1_freqs = modal_frequencies(mode_1_params, energy);
+
+    mode_2_params = {transformed_realizations(5), transformed_realizations(6),
+                     transformed_realizations(7)};
+    mode_2_freqs = modal_frequencies(mode_2_params, energy);
+
+    mode_1_mean = transformed_realizations(11);
+    mode_2_mean = transformed_realizations(14);
+
+    // Check if any mode 1 dominant frequencies across all non-dimensional energy values
+    // are greater than the corresponding values for mode 2
+    freq_comparison = false;
+    for (unsigned int i = 0; i < mode_1_freqs.size(); ++i) {
+      if (mode_1_freqs[i] > mode_2_freqs[i]) {
+	freq_comparison = true;
+	break;
+      }
+    }
+  }
+
+  return transformed_realizations;
 }
 
 std::vector<double> stochastic::VlachosEtAl::modal_frequencies(

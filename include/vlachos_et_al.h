@@ -84,10 +84,11 @@ class VlachosEtAl : public StochasticModel {
 
   /**
    * Identifies modal frequency parameters for mode 1 and 2
-   * @return Vector with identified parameters
+   * @param[in] initial_params Initial set of parameters
+   * @return Vector of identified parameters
    */
-  std::vector<double> identify_parameters() const;
-  
+  Eigen::VectorXd identify_parameters(const Eigen::VectorXd& initial_params) const;
+
   /**
    * Calculates the dominant modal frequencies as a function of non-dimensional
    * cumulative energy and the model parameters Q_k, alpha_k, and beta_k where
@@ -119,10 +120,12 @@ class VlachosEtAl : public StochasticModel {
   std::vector<std::shared_ptr<stochastic::Distribution>>
       model_parameters_; /**< Distrubutions for 18-parameter model */
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>
-      parameter_realizations_; /**< Random realizations of model parameters */
+      parameter_realizations_; /**< Random realizations of normal model parameters */
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>
-      physical_parameters_; /**< Sample normal parameters transformed to
+      physical_parameters_; /**< Normal parameters transformed to
                                physical space */
+  std::shared_ptr<numeric_utils::RandomGenerator>
+      sample_generator_; /**< Multivariate normal random number generator */
 };
 }  // namespace stochastic
 
