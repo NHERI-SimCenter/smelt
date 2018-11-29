@@ -1,8 +1,15 @@
 #include <algorithm>
 #include <cmath>
+#include <ctime>
 #include <memory>
 #include <vector>
+// Boost random generator
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/random/uniform_real_distribution.hpp>
+#include <boost/random/variate_generator.hpp>
+// Eigen dense matrices
 #include <Eigen/Dense>
+
 #include "factory.h"
 #include "lognormal_dist.h"
 #include "normal_dist.h"
@@ -108,10 +115,9 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
   covariance_ = numeric_utils::corr_to_cov(correlation_matrix, variance.sqrt());
 
   // Generate realizations of model parameters
-  int seed = 100;
   sample_generator_ =
       Factory<numeric_utils::RandomGenerator, int>::instance()->create(
-          "MultivariateNormal", std::move(seed));
+          "MultivariateNormal");
   sample_generator_->generate(parameter_realizations_, means_, covariance_,
                               num_spectra_);
 
@@ -207,8 +213,52 @@ utilities::JsonWrapper stochastic::VlachosEtAl::generate() {
   // CONTINUE HERE AFTER ADDING POWER_SPECTRUM FUNCS
 }
 
-std::vector<std::vector<double>> stochastic::VlachosEtAl::simulate_time_histories() const {
-  // STILL NEEDS TO BE IMPLEMENTED
+Eigen::VectorXd stochastic::VlachosEtAl::simulate_time_history(
+    const Eigen::MatrixXd& power_spectrum) const {
+  unsigned int num_times = power_spectrum.rows(),
+               num_freqs = power_spectrum.cols();
+
+  Eigen::VectorXd time_history = Eigen::VectorXd::Zero(num_times);
+
+  std::vector<double> times(num_times);
+  std::vector<double> frequencies(num_freqs);
+
+  for (unsigned int i = 0; i < times.size(); ++i) {
+    times[i] = i * time_step_;
+  }
+
+  for (unsigned int i = 0; i < frequencies.size(); ++i) {
+    frequencies[i] = i * freq_step_;
+  }
+
+  // Create random number for phase angle
+  auto generator = boost::random::mt19937(static_cast<int>(std::time(nullptr)));
+  boost::random::uniform_real_distribution<> distribution(0.0, 2.0 * M_PI);
+  boost::random::variate_generator<boost::random::mt19937&,
+                                   boost::random::uniform_real_distribution<>>
+      angle_gen(generator, distribution);
+
+  std::vector<double> phase_angle(num_freqs, 0.0);
+
+  for (auto & angle : phase_angle) {
+    angle = angle_gen();
+  }
+
+  double current_freq, current_phase;
+
+  // Loop over all frequencies and times to calculate time history
+  for (unsigned int i = 0; i < num_times; ++i) {
+    for (unsigned int j = 0; j < num_freqs; ++j) {
+      time_history[i] =
+          time_history[i] +
+          std::sqrt(power_spectrum(i, j)) *
+              std::cos(frequencies[j] * times[i] + phase_angle[j]);
+    }
+
+    time_history[i] = 2.0 * std::sqrt(freq_step_) * time_history[i];
+  }
+
+  return time_history;
 }
 
 Eigen::VectorXd stochastic::VlachosEtAl::identify_parameters(

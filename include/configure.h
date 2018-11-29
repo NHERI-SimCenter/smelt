@@ -25,6 +25,9 @@ namespace config {
 void initialize() {
   // RANDOM VARIABLE GENERATION
   // Register multivariate normal distribution random number generator
+  static Register<numeric_utils::RandomGenerator, numeric_utils::NormalMultiVar>
+      normal_multivar_default("MultivariateNormal");
+  
   static Register<numeric_utils::RandomGenerator, numeric_utils::NormalMultiVar,
                   int>
       normal_multivar("MultivariateNormal");

@@ -75,12 +75,15 @@ class VlachosEtAl : public StochasticModel {
 
  private:
   /**
-   * Simulate fully non-stationary ground motion sample realizations based on
-   * model parameters, time and frequency discretization for the requested
-   * number of samples.
-   * @return Vector of vectors containing acceleration time histories
+   * Simulate fully non-stationary ground motion sample realization based on
+   * time and frequency discretization and the discretized evolutionary
+   * power spectrum. This is described by Eq-19 on page 8.
+   * @param[in] power_spectrum Matrix containing values of power spectrum over
+   *                           range of frequencies at specified times.
+   * @return Vector containing acceleration time history
    */
-  std::vector<std::vector<double>> simulate_time_histories() const;
+  Eigen::VectorXd simulate_time_history(
+      const Eigen::MatrixXd& power_spectrum) const;
 
   /**
    * Identifies modal frequency parameters for mode 1 and 2

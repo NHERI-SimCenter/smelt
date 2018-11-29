@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iostream>
 #include <vector>
 #include <catch/catch.hpp>
 #include "numeric_utils.h"
