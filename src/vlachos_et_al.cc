@@ -294,3 +294,78 @@ std::vector<double> stochastic::VlachosEtAl::modal_frequencies(
   return frequencies;
 }
 
+std::vector<double> stochastic::VlachosEtAl::energy_accumulation(
+    const std::vector<double>& parameters,
+    const std::vector<double>& times) const {
+  std::vector<double> accumulated_energy(times.size());
+
+  for (unsigned int i = 0; i < times.size(); ++i) {
+    accumulated_energy[i] =
+        std::exp(-std::pow(times[i] / parameters[0]), -parameters[1]) /
+        std::exp(-std::pow(1.0 / parameters[0], -parameters[1]));
+  }
+
+  return accumulated_energy;
+}
+
+std::vector<double> stochastic::VlachosEtAl::modal_participation_factor(
+    const std::vector<double>& parameters,
+    const std::vector<double>& energy) const {
+  std::vector<double> participation_factor(energy.size());
+
+  for (unsigned int i = 0; i < energy.size(); ++i) {
+    participation_factor[i] =
+        parameters[0] * std::exp(-std::pow(
+                            (energy[i] - parameters[1]) / parameters[2], 2)) +
+        parameters[3] * std::exp(-std::pow(
+                            (energy[i] - parameters[4]) / parameters[5], 2)) -
+        2.0;
+  }
+  
+  return participation_factor;
+}
+
+std::vector<double> stochastic::VlachosEtAl::amplitude_modulating_function(
+    double duration, double total_energy, const std::vector<double>& parameters,
+    const std::vector<double>& times) const {
+  std::vector<double> func_vals(times.size());
+
+  double term1 = total_energy * parameters[1] / (parameters[0] * duration);
+  double term2 = std::pow(1.0 / parameters[0], -parameters[1]);
+
+  for (unsigned int i = 0; i < times.size(); ++i) {
+    func_vals[i] =
+        term1 *
+        std::exp(term2 - std::pow(times[i] / parameters[0], parameters[1])) *
+        std::pow(times[i] / parameters[0], -1.0 - parameters[1]);
+  }
+
+  return func_vals;
+}
+
+Eigen::VectorXd stochastic::VlachosEtAl::kt_2(
+    const std::vector<double>& parameters,
+    const std::vector<double>& frequencies,
+    const std::vector<double>& highpass_butter) const {
+  Eigen::VectorXd power_spectrum(frequencies.size());
+  double mode1 = 0, mode2 = 0;
+  
+  for (unsigned int i = 0; i < frequencies.size(); ++i) {
+    mode1 = parameters[2] *
+            (1.0 + 4.0 * parameters[1] * parameters[1] *
+                       std::pow(frequencies[i] / parameters[0], 2)) /
+            (std::pow(1 - std::pow(frequencies[i] / parameters[0], 2), 2) +
+             4.0 * parameters[1] * parameters[1] *
+                 std::pow(frequencies[i] / parameters[0], 2));
+    mode2 = parameters[5] *
+            (1.0 + 4.0 * parameters[4] * parameters[4] *
+                       std::pow(frequencies[i] / parameters[3], 2)) /
+            (std::pow(1 - std::pow(frequencies[i] / parameters[3], 2), 2) +
+             4.0 * parameters[4] * parameters[4] *
+                 std::pow(frequencies[i] / parameters[3], 2));
+
+    power_spectrum[i] = highpass_butter[i] * (mode1 + mode2)
+  }
+
+  return power_spectrum;
+}

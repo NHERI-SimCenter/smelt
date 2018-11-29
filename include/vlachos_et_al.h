@@ -90,9 +90,9 @@ class VlachosEtAl : public StochasticModel {
   Eigen::VectorXd identify_parameters(const Eigen::VectorXd& initial_params) const;
 
   /**
-   * Calculates the dominant modal frequencies as a function of non-dimensional
+   * Calculate the dominant modal frequencies as a function of non-dimensional
    * cumulative energy and the model parameters Q_k, alpha_k, and beta_k where
-   * k is the mode (either 1 or 2).
+   * k is the mode (either 1 or 2). This is defined by Eq-8 on page 6.
    * @param[in] parameters Vector of values for alpha_k, beta_k and Q_k at k-th
    *                       mode
    * @param[in] energy Vector of non-dimensional energy values at which to
@@ -102,6 +102,73 @@ class VlachosEtAl : public StochasticModel {
   std::vector<double> modal_frequencies(
       const std::vector<double>& parameters,
       const std::vector<double>& energy) const;
+
+  /**
+   * Calculate the energy accumulation over the times specified in the inputs as
+   * defined by Eq-5 on page 6.
+   * @param[in] parameters Vector of values containing energy parameters gamma
+   *                       and delta
+   * @param[in] times Vector containing non-dimensional times at which to
+   *                  calculate energy accumulation
+   * @return Vector containing accumulated energy values at specified input
+   *         times
+   */
+  std::vector<double> energy_accumulation(
+      const std::vector<double>& parameters,
+      const std::vector<double>& times) const;
+
+  /**
+   * Calculate the logarithmic normalized modal participation factor for the
+   * second mode as defined by Eq-11 on page 7.
+   * @param[in] parameters Vector of values for F(I), mu(I), sigma(I), F(II),
+   *                       mu(II) and sigma(II)
+   * @param[in] energy Vector of non-dimensional energy values at which to
+   *                   calculate frequency
+   * @return Vector containing values of logarithmic normalized modal
+   *         participation factor for second mode at input energy values
+   */
+  std::vector<double> modal_participation_factor(
+      const std::vector<double>& parameters,
+      const std::vector<double>& energy) const;
+
+  /**
+   * Calculate amplitude modulating function as defined by Eq-7 on page 6
+   * @param[in] duration Total duration of target seismic record
+   * @param[in] total_energy Total energy content of seismic ground acceleration
+   * @param[in] parameters Vector of values containing energy parameters gamma
+   *                       and delta
+   * @param[in] times Vector containing non-dimensional times at which to
+   *                  calculate energy accumulation
+   * @return Vector containing values of amplitude modulating function at input
+   *         times
+   */
+  std::vector<double> amplitude_modulating_function(
+      double duration, double total_energy,
+      const std::vector<double>& parameters,
+      const std::vector<double>& times) const;
+
+  /**
+   * Calculate evolutionary power spectrum at specific time using parametric,
+   * bimodal, fully non-stationary Kinai-Tajimi (K-T) model of seismic ground
+   * acceleration signal consisting of 2 distinct spectral modes. This is
+   * described by Eq-1 on page 4.
+   * @param[in] parameters Vector of parameters fg_1, zeta_1, S0_1, fg_2, zeta_2
+   *                       and S0_2 which define the time varying modal dominant
+   *                       frequency, model apparent damping ratio, and modal
+   *                       participation factor associated with the two modes.
+   *                       NOTE: Values of fg_1, fg_2 and S0_2 must be for the
+   *                       particular time at which the power spectrum is
+   *                       desired
+   * @param[in] frequencies Vector of frequencies at which to evaluate
+   *                        evolutionary power spectrum
+   * @param[in] highpass_butter Vector of Butterworth filter transfer function
+   *                            energy content at input frequencies
+   * @return Vector containing values for model evolutionary power spectrum at
+   *         time defined by input parameters fg_1, fg_2 and S0_2.
+   */
+  Eigen::VectorXd kt_2(const std::vector<double>& parameters,
+                       const std::vector<double>& frequencies,
+                       const std::vector<double>& highpass_butter) const;
 
   std::string model_name_; /**< Name of stochastic model */
   double moment_magnitude_; /**< Moment magnitude for scenario */
