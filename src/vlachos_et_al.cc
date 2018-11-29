@@ -214,9 +214,11 @@ std::vector<std::vector<double>> stochastic::VlachosEtAl::simulate_time_historie
 Eigen::VectorXd stochastic::VlachosEtAl::identify_parameters(
     const Eigen::VectorXd& initial_params) const {
   // Initialize non-dimensional cumulative energy
-  std::vector<double> energy(static_cast<unsigned int>(1.0 / 0.05));
-  std::generate(energy.begin(), energy.end(),
-                [value = 0.0]() mutable { return value + 0.05 });
+  std::vector<double> energy(static_cast<unsigned int>(1.0 / 0.05) + 1, 0.0);
+
+  for (unsigned int i = 1; i < energy.size(); ++i) {
+    energy[i] = energy[i - 1] + 0.05;
+  }
 
   // Initialze mode 1 parameters and frequencies
   std::vector<double> mode_1_params = {initial_params(2),

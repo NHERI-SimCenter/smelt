@@ -1,4 +1,4 @@
-#include <iostream>
+#include <cmath>
 #include <vector>
 #include <catch/catch.hpp>
 #include "numeric_utils.h"
@@ -43,5 +43,28 @@ TEST_CASE("Test one dimensional convolution", "[Helpers][Convolution]") {
     REQUIRE(response[1] == Approx(11.0).epsilon(0.01));
     REQUIRE(response[2] == Approx(14.0).epsilon(0.01));
     REQUIRE(response[3] == Approx(5.0).epsilon(0.01));
+  }  
+}
+
+TEST_CASE("Test trapazoid rule", "[Helpers][Trapazoid]") {
+
+  SECTION("Input vector with unit spacing") {
+    std::vector<double> input_vector{1, 4, 9, 16, 25};
+
+    auto integral = numeric_utils::trapazoid_rule(input_vector, 1.0);
+    REQUIRE(integral == 42);
+  }
+
+  SECTION("Input vector with non-unit spacing") {
+    std::vector<double> input_vector(101, 0.0);
+
+    double accumulator = 0.0;
+    for (unsigned int i = 1; i < input_vector.size(); ++i) {
+      accumulator += M_PI / 100.0;
+      input_vector[i] = std::sin(accumulator);
+    }
+
+    auto integral = numeric_utils::trapazoid_rule(input_vector, M_PI / 100.0);
+    REQUIRE(integral == Approx(1.9998).epsilon(0.01));
   }  
 }
