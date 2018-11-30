@@ -5,6 +5,7 @@
 #include <functional>
 #include <tuple>
 #include <vector>
+#include <Eigen/Dense>
 
 /**
  * Signal processing functionality
@@ -17,9 +18,9 @@ namespace signal_processing {
  * @return Vector filled with Hann window function evaluations based on input
  *         window length
  */
-std::function<std::vector<double>(unsigned int)> hann_window =
-    [](unsigned int window_length) -> std::vector<double> {
-  std::vector<double> hann(window_length, 0.0);
+std::function<Eigen::VectorXd(unsigned int)> hann_window =
+    [](unsigned int window_length) -> Eigen::VectorXd {
+  Eigen::VectorXd hann(window_length);
   double number_of_points = static_cast<double>(window_length - 1);
 
   for (unsigned int i = 0; i < hann.size(); ++i) {

@@ -1,6 +1,7 @@
 #ifndef _CONFIGURE_H_
 #define _CONFIGURE_H_
 
+#include <Eigen/Dense>
 #include "beta_dist.h"
 #include "factory.h"
 #include "filter.h"
@@ -26,8 +27,7 @@ void initialize() {
   // RANDOM VARIABLE GENERATION
   // Register multivariate normal distribution random number generator
   static Register<numeric_utils::RandomGenerator, numeric_utils::NormalMultiVar>
-      normal_multivar_default("MultivariateNormal");
-  
+      normal_multivar_default("MultivariateNormal");  
   static Register<numeric_utils::RandomGenerator, numeric_utils::NormalMultiVar,
                   int>
       normal_multivar("MultivariateNormal");
@@ -56,7 +56,7 @@ void initialize() {
 
   // WINDOW FUNCTIONS
   // Register Hann window
-  static DispatchRegister<std::vector<double>, unsigned int> hann_window_function(
+  static DispatchRegister<Eigen::VectorXd, unsigned int> hann_window_function(
       "HannWindow", signal_processing::hann_window);
 
   // FILTER FUNCTIONS

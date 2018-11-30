@@ -11,6 +11,7 @@
 #include <Eigen/Dense>
 
 #include "factory.h"
+#include "function_dispatcher.h"
 #include "lognormal_dist.h"
 #include "normal_dist.h"
 #include "normal_multivar.h"
@@ -211,6 +212,27 @@ utilities::JsonWrapper stochastic::VlachosEtAl::generate() {
   }
 
   // CONTINUE HERE AFTER ADDING POWER_SPECTRUM FUNCS
+
+  // int filter_order = 4;
+  // double cutoff_freq = 0.20;
+  // int num_samples =
+  //     static_cast<int>(std::round(1.5 * static_cast<double>(filter_order) /
+  //                                 (2.0 * cutoff_freq)) /
+  //                          time_step_ +
+  //                      1);
+
+  // // Get coefficients for highpass Butterworth filter
+  // auto hp_butter =
+  //     Dispatcher<std::vector<std::vector<double>>, int, double>::instance()
+  //         ->dispatch("HighPassButter", filter_order, cutoff_freq);
+
+  // // Calculate filter impulse response for calculated number of samples
+  // auto impulse_response =
+  //     Dispatcher<std::vector<double>, std::vector<double>, std::vector<double>,
+  //                int, int>::instance()
+  //         ->dispatch("ImpulseResponse", hp_butter[0], hp_butter[1],
+  //                    filter_order, num_samples);
+  
 }
 
 Eigen::VectorXd stochastic::VlachosEtAl::simulate_time_history(
@@ -259,6 +281,33 @@ Eigen::VectorXd stochastic::VlachosEtAl::simulate_time_history(
   }
 
   return time_history;
+}
+
+void stochastic::VlachosEtAl::post_process(
+    Eigen::VectorXd& time_history, const std::vector& filter_imp_resp) const {
+  double time_hann_2 = 1.0;
+
+  Eigen::VectorXd window = Eigen::VectorXd::Ones(time_history.size());
+  int window1_size = static_cast<int>(time_hann_2 / time_step_ + 1);
+  int window2_size = (window1_size - 1) / 2;
+
+  auto hann_window =
+      Dispatcher<Eigen::VectorXd, unsigned int>::instance()->dispatch(
+          "HannWindow", window1_size);
+
+  window.head(window2_size) = hann_window.head(window2_size);
+  window.tail(window.size() - window2_size) =
+      hann_window.head(window2_size).reverse();
+
+  double mean = time_history.mean();
+  std::vector<double> time_history_vec(time_history.size());
+  for (unsigned int i = 0; i < time_history.size(); ++i) {
+    time_history[i] = window[i] * (time_history[i] - mean);
+    time_history_vec[i] = time_history[i];
+  }
+
+  // CONTINUE HERE--NEED TO FIGURE OUT HOW BEST TO DEAL WITH SWITCHING
+  // BETWEEN EIGEN AND STD::VECTOR FOR CONVOLUTION
 }
 
 Eigen::VectorXd stochastic::VlachosEtAl::identify_parameters(

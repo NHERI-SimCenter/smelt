@@ -86,6 +86,16 @@ class VlachosEtAl : public StochasticModel {
       const Eigen::MatrixXd& power_spectrum) const;
 
   /**
+   * Post-process the input time history as described in Vlachos et al. using
+   * multiple-window estimation technique after Conte & Peng (1997) and
+   * highpass Butterworth filter
+   * @param[in, out] time_history Time history to post-process
+   * @param[in] filter_imp_resp Impulse response of Butterworth filter
+   */
+  void post_process(Eigen::VectorXd& time_history,
+                    const std::vector<double>& filter_imp_resp) const;
+
+  /**
    * Identifies modal frequency parameters for mode 1 and 2
    * @param[in] initial_params Initial set of parameters
    * @return Vector of identified parameters

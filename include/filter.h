@@ -68,6 +68,7 @@ std::function<std::vector<std::vector<double>>(int, double)>
  * @param[in] denominator_coeffs Denominator coefficients for filter
  * @param[in] order Order of the filter
  * @param[in] num_samples Number of samples desired
+ * @return Vector containing impulse response for requested number of samples
  */
 std::function<std::vector<double>(std::vector<double>, std::vector<double>,
                                   int, int)>
