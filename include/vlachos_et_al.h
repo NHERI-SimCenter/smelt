@@ -75,6 +75,17 @@ class VlachosEtAl : public StochasticModel {
 
  private:
   /**
+   * Compute a family of time histories for a particular power spectrum
+   * @param[in] parameters Set of model parameters to use for calculating power
+   *                       specturm and time histories
+   * @return A family of time histories based on a single power spectrum. Number
+   *         of time histories per family is specified in the constructor by
+   *         num_sims input parameter.
+   */
+  std::vector<std::vector<double>> time_history_family(
+      const Eigen::VectorXd& parameters) const;
+
+  /**
    * Simulate fully non-stationary ground motion sample realization based on
    * time and frequency discretization and the discretized evolutionary
    * power spectrum. This is described by Eq-19 on page 8.
@@ -82,17 +93,19 @@ class VlachosEtAl : public StochasticModel {
    *                           range of frequencies at specified times.
    * @return Vector containing acceleration time history
    */
-  Eigen::VectorXd simulate_time_history(
+  std::vector<double> simulate_time_history(
       const Eigen::MatrixXd& power_spectrum) const;
 
   /**
    * Post-process the input time history as described in Vlachos et al. using
    * multiple-window estimation technique after Conte & Peng (1997) and
    * highpass Butterworth filter
-   * @param[in, out] time_history Time history to post-process
+   * @param[in, out] time_history Time history to post-process. Post-processed
+   *                              results are also stored here.
    * @param[in] filter_imp_resp Impulse response of Butterworth filter
+   * @return Returns true if sucessful, false otherwise
    */
-  void post_process(Eigen::VectorXd& time_history,
+  bool post_process(std::vector<double>& time_history,
                     const std::vector<double>& filter_imp_resp) const;
 
   /**
@@ -179,7 +192,7 @@ class VlachosEtAl : public StochasticModel {
    * @return Vector containing values for model evolutionary power spectrum at
    *         time defined by input parameters fg_1, fg_2 and S0_2.
    */
-  Eigen::VectorXd kt_2(const std::vector<double>& parameters,
+  Eigen::VectorXd kt_2(const Eigen::VectorXd& parameters,
                        const std::vector<double>& frequencies,
                        const std::vector<double>& highpass_butter) const;
 
@@ -190,6 +203,7 @@ class VlachosEtAl : public StochasticModel {
                    meters per second */
   double time_step_; /**< Temporal discretization */
   double freq_step_; /**< Frequency discretization */
+  double cutoff_freq_; /**< Cutoff frequency */
   unsigned int num_spectra_; /**< Number of evolutionary power spectra that
                                 should be generated */
   unsigned int num_sims_; /**< Number of simulated ground motion time histories

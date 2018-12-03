@@ -1,7 +1,10 @@
 #include <algorithm>
 #include <cmath>
 #include <ctime>
+#include <iostream>
 #include <memory>
+#include <numeric>
+#include <stdexcept>
 #include <vector>
 // Boost random generator
 #include <boost/random/mersenne_twister.hpp>
@@ -29,6 +32,7 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
     vs30_{vs30 / 450.0},
     time_step_{time_step},
     freq_step_{freq_step},
+    cutoff_freq_{220.0},
     num_spectra_{num_spectra},
     num_sims_{num_sims},
     model_parameters_(18)
@@ -235,12 +239,67 @@ utilities::JsonWrapper stochastic::VlachosEtAl::generate() {
   
 }
 
-Eigen::VectorXd stochastic::VlachosEtAl::simulate_time_history(
+std::vector<std::vector<double>> stochastic::VlachosEtAl::time_history_family(
+    const Eigen::VectorXd& parameters) const {
+  std::vector<std::vector<double>> time_histories(num_sims_,
+                                                  std::vector<double>());
+  auto identified_parameters = identify_parameters(parameters);
+
+  unsigned int num_times =
+      static_cast<unsigned int>(std::ceil(identified_parameters[17] / time_step_));
+  unsigned int num_freqs =
+      static_cast<unsigned int>(std::ceil(cutoff_freq_ / freq_step_));
+
+  std::vector<double> times(num_times);
+  std::vector<double> frequencies(num_freqs);
+  double total_time = (num_times - 1) * time_step_;
+  
+  for (unsigned int i = 0; i < times.size(); ++i) {
+    times[i] = i * time_step_ / total_time;
+  }
+  times[0] = 1E-6;
+
+  for (unsigned int i = 0; i < frequencies.size(); ++i) {
+    frequencies[i] = i * freq_step_;
+  }
+
+  // Calculate non-dimensional energy accumulation
+  auto energy = energy_accumulation(
+      std::vector<double>{identified_parameters[0], identified_parameters[1]},
+      times);
+
+  // Calculate mode 1 and 2 dominant frequencies
+  auto mode_1_freqs = modal_frequencies(
+      std::vector<double>{identified_parameters[2], identified_parameters[3],
+                          identified_parameters[4]},
+      energy);
+  auto mode_2_freqs = modal_frequencies(
+      std::vector<double>{identified_parameters[5], identified_parameters[6],
+                          identified_parameters[7]},
+      energy);
+
+  // Calculate 2nd modal participation factor
+  auto mode_2_participation = modal_participation_factor(
+      std::vector<double>{identified_parameters[10], identified_parameters[11],
+                          identified_parameters[12], identified_parameters[13],
+                          identified_parameters[14], identified_parameters[15]},
+      energy);
+
+  // Calculate amplitude modulating function
+  auto amplitude_modulation = amplitude_modulating_function(
+      identified_parameters[17], identified_parameters[16],
+      std::vector<double>{identify_parameters[0], identify_parameters[1]},
+      times);
+
+  // CONTINUE HERE WITH BUTTERWORTH FILTER ON LINE 74 of Sxx_sim
+}
+
+std::vector<double> stochastic::VlachosEtAl::simulate_time_history(
     const Eigen::MatrixXd& power_spectrum) const {
   unsigned int num_times = power_spectrum.rows(),
                num_freqs = power_spectrum.cols();
 
-  Eigen::VectorXd time_history = Eigen::VectorXd::Zero(num_times);
+  std::vector<double> time_history(num_times, 0.0);
 
   std::vector<double> times(num_times);
   std::vector<double> frequencies(num_freqs);
@@ -284,13 +343,24 @@ Eigen::VectorXd stochastic::VlachosEtAl::simulate_time_history(
 }
 
 void stochastic::VlachosEtAl::post_process(
-    Eigen::VectorXd& time_history, const std::vector& filter_imp_resp) const {
+    std::vector<double>& time_history,
+    const std::vector& filter_imp_resp) const {
+
+  bool status = true;
   double time_hann_2 = 1.0;
 
   Eigen::VectorXd window = Eigen::VectorXd::Ones(time_history.size());
   int window1_size = static_cast<int>(time_hann_2 / time_step_ + 1);
-  int window2_size = (window1_size - 1) / 2;
+  int window2_size = static_cast<int>((window1_size - 1) / 2);
 
+  // Check if input time history length is sufficient
+  if (time_history.size() < window1_size) {
+    throw std::runtime_error(
+        "\nERROR: in stochastic::VlachosEtAl::post_process: Input time history "
+        "too short for Hanning Window size\n");
+  }
+
+  // Get Hanning window of length window1_size
   auto hann_window =
       Dispatcher<Eigen::VectorXd, unsigned int>::instance()->dispatch(
           "HannWindow", window1_size);
@@ -299,15 +369,29 @@ void stochastic::VlachosEtAl::post_process(
   window.tail(window.size() - window2_size) =
       hann_window.head(window2_size).reverse();
 
-  double mean = time_history.mean();
-  std::vector<double> time_history_vec(time_history.size());
+  // Calculate mean of time history
+  double mean = std::accumulate(time_history.begin(), time_history.end(), 0.0) /
+                static_cast<double>(time_history.size());
+
+  // Apply window
   for (unsigned int i = 0; i < time_history.size(); ++i) {
     time_history[i] = window[i] * (time_history[i] - mean);
-    time_history_vec[i] = time_history[i];
   }
 
-  // CONTINUE HERE--NEED TO FIGURE OUT HOW BEST TO DEAL WITH SWITCHING
-  // BETWEEN EIGEN AND STD::VECTOR FOR CONVOLUTION
+  // Apply 4th order Butterworth filter
+  std::vector<double> filtered_history(filter_imp_resp.size() +
+                                       time_history.size() - 1);
+  try {
+    numeric_utils::convolve_1d(filter_imp_resp, time_history, filtered_history);
+  } catch (const std::exception& e) {
+    std::cerr << e.what();
+    status = false;
+    throw;
+  }
+
+  // Copy filtered results to time_history
+  time_history = filtered_history;
+  return status;
 }
 
 Eigen::VectorXd stochastic::VlachosEtAl::identify_parameters(
@@ -415,12 +499,14 @@ std::vector<double> stochastic::VlachosEtAl::modal_participation_factor(
   std::vector<double> participation_factor(energy.size());
 
   for (unsigned int i = 0; i < energy.size(); ++i) {
-    participation_factor[i] =
+    participation_factor[i] = std::pow(
+        10.0,
         parameters[0] * std::exp(-std::pow(
                             (energy[i] - parameters[1]) / parameters[2], 2)) +
-        parameters[3] * std::exp(-std::pow(
-                            (energy[i] - parameters[4]) / parameters[5], 2)) -
-        2.0;
+            parameters[3] *
+                std::exp(
+                    -std::pow((energy[i] - parameters[4]) / parameters[5], 2)) -
+            2.0);
   }
   
   return participation_factor;
@@ -445,8 +531,7 @@ std::vector<double> stochastic::VlachosEtAl::amplitude_modulating_function(
 }
 
 Eigen::VectorXd stochastic::VlachosEtAl::kt_2(
-    const std::vector<double>& parameters,
-    const std::vector<double>& frequencies,
+    const Eigen::VectorXd& parameters, const std::vector<double>& frequencies,
     const std::vector<double>& highpass_butter) const {
   Eigen::VectorXd power_spectrum(frequencies.size());
   double mode1 = 0, mode2 = 0;
