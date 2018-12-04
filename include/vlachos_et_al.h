@@ -76,25 +76,25 @@ class VlachosEtAl : public StochasticModel {
  private:
   /**
    * Compute a family of time histories for a particular power spectrum
+   * @param[in, out] time_histories Location where time histories should be
+   *                                stored
    * @param[in] parameters Set of model parameters to use for calculating power
    *                       specturm and time histories
-   * @return A family of time histories based on a single power spectrum. Number
-   *         of time histories per family is specified in the constructor by
-   *         num_sims input parameter.
+   * @return Returns true if successful, false otherwise
    */
-  std::vector<std::vector<double>> time_history_family(
-      const Eigen::VectorXd& parameters) const;
+  bool time_history_family(std::vector<std::vector<double>>& time_histories,
+                           const Eigen::VectorXd& parameters) const;
 
   /**
    * Simulate fully non-stationary ground motion sample realization based on
    * time and frequency discretization and the discretized evolutionary
    * power spectrum. This is described by Eq-19 on page 8.
+   * @param[in, out] time_history Location where time history should be stored
    * @param[in] power_spectrum Matrix containing values of power spectrum over
    *                           range of frequencies at specified times.
-   * @return Vector containing acceleration time history
    */
-  std::vector<double> simulate_time_history(
-      const Eigen::MatrixXd& power_spectrum) const;
+  void simulate_time_history(std::vector<double>& time_history,
+                             const Eigen::MatrixXd& power_spectrum) const;
 
   /**
    * Post-process the input time history as described in Vlachos et al. using
@@ -103,7 +103,7 @@ class VlachosEtAl : public StochasticModel {
    * @param[in, out] time_history Time history to post-process. Post-processed
    *                              results are also stored here.
    * @param[in] filter_imp_resp Impulse response of Butterworth filter
-   * @return Returns true if sucessful, false otherwise
+   * @return Returns true if successful, false otherwise
    */
   bool post_process(std::vector<double>& time_history,
                     const std::vector<double>& filter_imp_resp) const;

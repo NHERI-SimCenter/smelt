@@ -204,26 +204,32 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
 }
 
 utilities::JsonWrapper stochastic::VlachosEtAl::generate() {
-  // CONTINUE HERE!!!!
-  
-  // Calculate sample non-stationary power spectrum following Eq-18 on page 8 as
-  // described in Section 5.
-  // UPDATE DATA TYPE HERE AFTER ADDING POWER_SPECTRUM FUNCTION
-  std::vector<std::vector<double>> accelerations(num_spectra_,
-                                                 std::vector<double>());
 
-  for (unsigned int i = 0; i < num_spectra_; ++i) {
-    accelerations[i] =
-        power_spectrum(physical_parameters.row(i));
-  }  
+  // Pool of acceleration time histories based on number of spectra and
+  // simulations requested
+  std::vector<std::vector<std::vector<double>>> acceleration_pool(
+      num_spectra_,
+      std::vector<std::vector<double>>(num_sims_, std::vector<double>()));
+
+  // Generate family of time histories for each spectrum. Family size is
+  // specified by requested number of simulations per spectra.
+  try {
+    for (unsigned int i = 0; i < num_spectra_; ++i) {
+      time_history_family(acceleration_pool[i], physical_parameters_.row(i));
+    }
+  } catch (const std::exception& e) {
+    std::cerr << e.what();
+    status = false;
+    throw;
+  }
 }
 
-std::vector<std::vector<double>> stochastic::VlachosEtAl::time_history_family(
+void stochastic::VlachosEtAl::time_history_family(
+    std::vector<std::vector<double>>& time_histories,
     const Eigen::VectorXd& parameters) const {
-  std::vector<std::vector<double>> time_histories(num_sims_,
-                                                  std::vector<double>());
+  bool status = true;
   auto identified_parameters = identify_parameters(parameters);
-
+  
   unsigned int num_times =
       static_cast<unsigned int>(std::ceil(identified_parameters[17] / time_step_));
   unsigned int num_freqs =
@@ -315,20 +321,28 @@ std::vector<std::vector<double>> stochastic::VlachosEtAl::time_history_family(
                  int, int>::instance()
           ->dispatch("ImpulseResponse", hp_butter[0], hp_butter[1],
                      filter_order, num_samples);
-
-  // Generate family of time histories
-  for (unsigned int i = 0; i < num_sims_; ++i) {
-    time_histories[i] = simulate_time_history(power_spectrum);
-    post_process(time_histories[i], impulse_response);
+  try {
+    // Generate family of time histories
+    for (unsigned int i = 0; i < num_sims_; ++i) {
+      simulate_time_history(time_histories[i], power_spectrum);
+      post_process(time_histories[i], impulse_response);
+    }
+  } catch (const std::exception& e) {
+    std::cerr << e.what();
+    status = false;
+    throw;
   }
+
+  return status;
 }
 
-std::vector<double> stochastic::VlachosEtAl::simulate_time_history(
+void stochastic::VlachosEtAl::simulate_time_history(
+    std::vector<double>& time_history,
     const Eigen::MatrixXd& power_spectrum) const {
   unsigned int num_times = power_spectrum.rows(),
                num_freqs = power_spectrum.cols();
 
-  std::vector<double> time_history(num_times, 0.0);
+  time_history.resize(num_times, 0.0);
 
   std::vector<double> times(num_times);
   std::vector<double> frequencies(num_freqs);
@@ -367,11 +381,9 @@ std::vector<double> stochastic::VlachosEtAl::simulate_time_history(
 
     time_history[i] = 2.0 * std::sqrt(freq_step_) * time_history[i];
   }
-
-  return time_history;
 }
 
-void stochastic::VlachosEtAl::post_process(
+bool stochastic::VlachosEtAl::post_process(
     std::vector<double>& time_history,
     const std::vector& filter_imp_resp) const {
 
