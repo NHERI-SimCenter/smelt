@@ -41,6 +41,15 @@ bool convolve_1d(const std::vector<double>& input_x,
 double trapazoid_rule(const std::vector<double>& input_vector, double spacing);
 
 /**
+ * Calculate the integral of the input vector with uniform spacing
+ * between data points
+ * @param[in] input_vector Vector containing function values
+ * @param[in] spacing Spacing between data points
+ * @return Approximate value of function integral
+ */
+double trapazoid_rule(const Eigen::VectorXd& input_vector, double spacing);
+
+/**
  * Abstract base class for random number generators
  */
 class RandomGenerator {

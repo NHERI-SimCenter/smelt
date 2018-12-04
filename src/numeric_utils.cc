@@ -70,4 +70,14 @@ double trapazoid_rule(const std::vector<double>& input_vector, double spacing) {
 
   return result * spacing;
 }
+
+double trapazoid_rule(const Eigen::VectorXd& input_vector, double spacing) {
+  double result = (input_vector[0] + input_vector[input_vector.size() - 1]) / 2.0;
+
+  for (unsigned int i = 1; i < input_vector.size() - 1; ++i) {
+    result = result + input_vector[i];
+  }
+
+  return result * spacing;
+}  
 }  // namespace numeric_utils

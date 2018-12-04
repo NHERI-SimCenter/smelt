@@ -204,6 +204,8 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
 }
 
 utilities::JsonWrapper stochastic::VlachosEtAl::generate() {
+  // CONTINUE HERE!!!!
+  
   // Calculate sample non-stationary power spectrum following Eq-18 on page 8 as
   // described in Section 5.
   // UPDATE DATA TYPE HERE AFTER ADDING POWER_SPECTRUM FUNCTION
@@ -213,30 +215,7 @@ utilities::JsonWrapper stochastic::VlachosEtAl::generate() {
   for (unsigned int i = 0; i < num_spectra_; ++i) {
     accelerations[i] =
         power_spectrum(physical_parameters.row(i));
-  }
-
-  // CONTINUE HERE AFTER ADDING POWER_SPECTRUM FUNCS
-
-  // int filter_order = 4;
-  // double cutoff_freq = 0.20;
-  // int num_samples =
-  //     static_cast<int>(std::round(1.5 * static_cast<double>(filter_order) /
-  //                                 (2.0 * cutoff_freq)) /
-  //                          time_step_ +
-  //                      1);
-
-  // // Get coefficients for highpass Butterworth filter
-  // auto hp_butter =
-  //     Dispatcher<std::vector<std::vector<double>>, int, double>::instance()
-  //         ->dispatch("HighPassButter", filter_order, cutoff_freq);
-
-  // // Calculate filter impulse response for calculated number of samples
-  // auto impulse_response =
-  //     Dispatcher<std::vector<double>, std::vector<double>, std::vector<double>,
-  //                int, int>::instance()
-  //         ->dispatch("ImpulseResponse", hp_butter[0], hp_butter[1],
-  //                    filter_order, num_samples);
-  
+  }  
 }
 
 std::vector<std::vector<double>> stochastic::VlachosEtAl::time_history_family(
@@ -288,10 +267,60 @@ std::vector<std::vector<double>> stochastic::VlachosEtAl::time_history_family(
   // Calculate amplitude modulating function
   auto amplitude_modulation = amplitude_modulating_function(
       identified_parameters[17], identified_parameters[16],
-      std::vector<double>{identify_parameters[0], identify_parameters[1]},
+      std::vector<double>{identified_parameters[0], identified_parameters[1]},
       times);
 
-  // CONTINUE HERE WITH BUTTERWORTH FILTER ON LINE 74 of Sxx_sim
+  // Parameters for high-pass Butterworth filter
+  int filter_order = 4;
+  double norm_cutoff_freq = 0.20;
+
+  // Calculate energy content of the Butterworth filter transfer function
+  std::vector<double> highpass_butter_energy(frequencies.size());
+  for (unsigned int i = 0; i < frequencies.size(); ++i) {
+    double freq_ratio_sq = std::pow(frequencies[i]/ norm_cutoff_freq, 2);
+    highpass_butter_energy[i] = freq_ratio_sq / (1.0 + freq_ratio_sq);
+  }
+
+  // Calculate the evolutionary power spectrum with unit variance at
+  // each time step
+  Eigen::MatrixXd power_spectrum(times.size(), frequencies.size);
+
+  for (unsigned int i = 0; i < times.size(); ++i) {
+    power_spectrum.row(i) =
+        kt_2(std::vector<double>{mode_1_freqs[i], identified_parameters[8], 1.0,
+                                 mode_2_freqs[i], identified_parameters[9],
+                                 mode_2_participation[i]},
+             frequencies, highpass_butter_energy);
+
+    double freq_domain_integral = trapazoid_rule(power_spectrum.row(i), freq_step_);
+
+    power_spectrum.row(i) =
+        power_spectrum.row(i) * amplitude_modulation[i] / freq_domain_integral;
+  }
+
+  // Get coefficients for highpass Butterworth filter  
+  int num_samples =
+      static_cast<int>(std::round(1.5 * static_cast<double>(filter_order) /
+                                  (2.0 * cutoff_freq)) /
+                           time_step_ +
+                       1);
+  
+  auto hp_butter =
+      Dispatcher<std::vector<std::vector<double>>, int, double>::instance()
+          ->dispatch("HighPassButter", filter_order, cutoff_freq);
+
+  // Calculate filter impulse response for calculated number of samples
+  auto impulse_response =
+      Dispatcher<std::vector<double>, std::vector<double>, std::vector<double>,
+                 int, int>::instance()
+          ->dispatch("ImpulseResponse", hp_butter[0], hp_butter[1],
+                     filter_order, num_samples);
+
+  // Generate family of time histories
+  for (unsigned int i = 0; i < num_sims_; ++i) {
+    time_histories[i] = simulate_time_history(power_spectrum);
+    post_process(time_histories[i], impulse_response);
+  }
 }
 
 std::vector<double> stochastic::VlachosEtAl::simulate_time_history(
