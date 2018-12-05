@@ -22,16 +22,16 @@ option(BUILD_TESTING "Enable testing for stochastic module" ON)
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 # Set path for external dependencies
+set(JSON_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/nlohmann_json)
 set(CATCH_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/catch)
 set(EIGEN_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/Eigen)
 set(TROMPELOEIL_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/trompeloeil)
 set(BOOST_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/boost)
 
 # Add external headers to include path
-include_directories(${CATCH_INCLUDE_DIR})
 include_directories(${EIGEN_INCLUDE_DIR})
-include_directories(${TROMPELOEIL_INCLUDE_DIR})
 include_directories(${BOOST_INCLUDE_DIR})
+include_directories(${JSON_INCLUDE_DIR})
 
 # Add link library directories for MKL and IPP
 find_package(MKL)
@@ -54,6 +54,7 @@ set(SOURCES
   ${PROJECT_SOURCE_DIR}/src/beta_dist.cc
   ${PROJECT_SOURCE_DIR}/src/inv_gauss_dist.cc
   ${PROJECT_SOURCE_DIR}/src/students_t_dist.cc
+  ${PROJECT_SOURCE_DIR}/src/json_object.cc  
   )
 
 # Add library as target
@@ -63,6 +64,9 @@ target_link_libraries(lstoc ${MKL_LIBRARIES} ${IPP_LIBRARIES})
 
 # Unit testing
 if (BUILD_TESTING)
+  include_directories(${CATCH_INCLUDE_DIR})
+  include_directories(${TROMPELOEIL_INCLUDE_DIR})
+  
   set(TEST_SOURCES
     ${PROJECT_SOURCE_DIR}/test/test_main.cc
     ${PROJECT_SOURCE_DIR}/test/multi_var_tests.cc

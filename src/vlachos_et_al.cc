@@ -203,7 +203,7 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
   }
 }
 
-utilities::JsonWrapper stochastic::VlachosEtAl::generate() {
+bool stochastic::VlachosEtAl::generate(utilities::JsonObject& outputs) {
 
   // Pool of acceleration time histories based on number of spectra and
   // simulations requested
@@ -222,6 +222,8 @@ utilities::JsonWrapper stochastic::VlachosEtAl::generate() {
     status = false;
     throw;
   }
+
+  // CONTINUE HERE ONCE JSONOBJECT HAS BEEN IMPLEMENTED
 }
 
 void stochastic::VlachosEtAl::time_history_family(

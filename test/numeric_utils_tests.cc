@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <catch/catch.hpp>
+#include <Eigen/Dense>
 #include "numeric_utils.h"
 
 TEST_CASE("Test one dimensional convolution", "[Helpers][Convolution]") { 
@@ -49,14 +50,14 @@ TEST_CASE("Test one dimensional convolution", "[Helpers][Convolution]") {
 
 TEST_CASE("Test trapazoid rule", "[Helpers][Trapazoid]") {
 
-  SECTION("Input vector with unit spacing") {
+  SECTION("STL vector with unit spacing") {
     std::vector<double> input_vector{1, 4, 9, 16, 25};
 
     auto integral = numeric_utils::trapazoid_rule(input_vector, 1.0);
     REQUIRE(integral == 42);
   }
 
-  SECTION("Input vector with non-unit spacing") {
+  SECTION("STL vector with non-unit spacing") {
     std::vector<double> input_vector(101, 0.0);
 
     double accumulator = 0.0;
@@ -67,5 +68,26 @@ TEST_CASE("Test trapazoid rule", "[Helpers][Trapazoid]") {
 
     auto integral = numeric_utils::trapazoid_rule(input_vector, M_PI / 100.0);
     REQUIRE(integral == Approx(1.9998).epsilon(0.01));
-  }  
+  }
+
+  SECTION("Eigen vector with unit spacing") {
+    Eigen::VectorXd input_vector(5);
+    input_vector << 1, 4, 9, 16, 25;
+
+    auto integral = numeric_utils::trapazoid_rule(input_vector, 1.0);
+    REQUIRE(integral == 42);
+  }
+
+  SECTION("Eigen vector with non-unit spacing") {
+    Eigen::VectorXd input_vector = Eigen::VectorXd::Zero(101);
+
+    double accumulator = 0.0;
+    for (unsigned int i = 1; i < input_vector.size(); ++i) {
+      accumulator += M_PI / 100.0;
+      input_vector[i] = std::sin(accumulator);
+    }
+
+    auto integral = numeric_utils::trapazoid_rule(input_vector, M_PI / 100.0);
+    REQUIRE(integral == Approx(1.9998).epsilon(0.01));
+  }    
 }

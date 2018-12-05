@@ -56,22 +56,20 @@ class VlachosEtAl : public StochasticModel {
 
   /**
    * Generate ground motion time histories based on input parameters
-   * @return Json object containing acceleration time histories
+   * and store outputs as JSON object
+   * @param[in, out] outputs Json object to write outputs to
+   * @return Returns true if successful, false otherwise
    */
-  utilities::JsonWrapper generate() override;
+  bool generate(utilities::JsonObject& outputs) override;
 
   /**
-   * Get the generated ground motion time histories in JSON wrapper
-   * class format
-   * @return Desires time histories in JSON wrapper class format
+   * Generate ground motion time histories based on input parameters
+   * and write results to file in JSON format
+   * @param[in, out] output_location Location to write outputs to
+   * @return Returns true if successful, false otherwise
    */
-  utilities::JsonWrapper wrapped_json_results() const override;
-
-  /**
-   * Get the generated ground motion time histories in string format
-   * @return Desired time histories in string format
-   */
-  std::string json_results() const override;
+  bool generate(const std::string& output_location) override;
+  
 
  private:
   /**
