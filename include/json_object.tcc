@@ -1,11 +1,17 @@
-/**< Add value to value to key */
+#include <iostream>
+
+/**< Add value to key */
 template <typename Tparam>
-void utilities::JsonObject::add_value(const std::string& key,
+bool utilities::JsonObject::add_value(const std::string& key,
                                       const Tparam& value) {
   bool status = true;
-  
+    
   try {
-    json_object_.emplace(key, value);    
+    if (json_object_.find(key) != json_object_.end()) {
+      json_object_.at(key) = {json_object_.at(key), value};
+      } else {
+      json_object_.emplace(key, value);      
+    }
   } catch (const std::exception& e) {
     std::cerr << e.what();
     status = false;
@@ -13,4 +19,10 @@ void utilities::JsonObject::add_value(const std::string& key,
   }
 
   return status;
-}
+};
+
+/**< Get value at input key */
+template <typename Tparam>
+Tparam utilities::JsonObject::get_value(const std::string& key) const {
+  return json_object_.at(key);
+};

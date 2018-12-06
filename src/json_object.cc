@@ -1,23 +1,11 @@
 #include <fstream>
+#include <iomanip>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 // JSON for Modern C++ single-include header
 #include <nlohmann_json/json.hpp>
 #include "json_object.h"
-
-bool utilities::JsonObject::add_key(const std::string& key) {
-  bool status = true;
-  
-  try {
-    json_object_.emplace(key);    
-  } catch (const std::exception& e) {
-    std::cerr << e.what();
-    status = false;
-    throw;
-  }
-  
-  return status;
-}
 
 bool utilities::JsonObject::delete_key(const std::string& key) {
   bool status = true;
@@ -33,7 +21,8 @@ bool utilities::JsonObject::delete_key(const std::string& key) {
   return status;
 }
 
-bool utilities::JsonObject::write_to_file(const std::string& output_location) {
+bool utilities::JsonObject::write_to_file(
+    const std::string& output_location) const {
   bool status = true;
   std::ofstream output_file;
   output_file.open(output_location);
@@ -50,7 +39,7 @@ bool utilities::JsonObject::write_to_file(const std::string& output_location) {
 
   output_file.close();
 
-  if (ofstream::fail()) {
+  if (output_file.fail()) {
     status = false;
     throw std::runtime_error(
         "\nERROR: In utilities::JsonObject::write_to_file(): Error when "
@@ -58,4 +47,21 @@ bool utilities::JsonObject::write_to_file(const std::string& output_location) {
   }
 
   return status;
+}
+
+void utilities::JsonObject::clear() {
+  json_object_.clear();
+}
+
+bool utilities::JsonObject::is_empty() const {
+  return json_object_.empty();
+}
+
+unsigned int utilities::JsonObject::get_size() const {
+  return json_object_.size();
+}
+
+void utilities::JsonObject::add_as_value(const std::string& key,
+                                         JsonObject& receiving_object) const {
+  receiving_object.add_value(key, json_object_);
 }
