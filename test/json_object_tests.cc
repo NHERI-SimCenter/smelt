@@ -29,14 +29,16 @@ TEST_CASE("Test JSON object wrapper", "[Helpers][Json]") {
 
     utilities::JsonObject insert_object;
     insert_object.add_value("Bar", true);
-    
-    try {
-      insert_object.add_as_value("JSON Object", test_object);
-    } catch (const std::exception& e) {
-      std::cerr << e.what();
-      FAIL("Failed to add JSON object as value in JsonObject\n");
-    }
 
+    test_object.add_value("JSON Object", insert_object);
+
+    auto get_object = test_object.get_value<utilities::JsonObject>("JSON Object");
+    auto get_bool = get_object.get_value<bool>("Bar");
+
+    std::cout << "\nObject that was value:\n" << get_object << std::endl;
+
+    std::cout << "\nTest object:\n" << test_object << std::endl;
+    
     test_object.clear();
     REQUIRE(test_object.is_empty());
   }

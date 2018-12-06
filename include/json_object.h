@@ -81,15 +81,22 @@ class JsonObject {
    */
   unsigned int get_size() const;
 
-  /**
-   * Add this JsonObject as a value at the input key in the input JsonObject
-   * @param[in] key Key at which to add JsonObject
-   * @param[in, out] receiving_object JsonObject that this JsonObject should be added to
-   */
-  void add_as_value(const std::string& key, JsonObject& receiving_object) const;
-
  protected:
-  json json_object_; /**< Json object for this class */  
+  /**
+   * @constructor Construct JsonObject from underlying library object
+   * @param[in] library_json Library JSON object
+   */
+  JsonObject(json library_json);
+  
+  /**
+   * Get underlying JSON library object
+   * @return Copy of interal JSON implementation
+   */
+  json get_library_json() const {
+    return json_object_;
+  };
+  
+  json json_object_; /**< JSON object for this class */
 };
 
 /**

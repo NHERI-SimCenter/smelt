@@ -7,6 +7,9 @@
 #include <nlohmann_json/json.hpp>
 #include "json_object.h"
 
+utilities::JsonObject::JsonObject(json library_json)
+    : json_object_{library_json} {}
+
 bool utilities::JsonObject::delete_key(const std::string& key) {
   bool status = true;
   
@@ -59,9 +62,4 @@ bool utilities::JsonObject::is_empty() const {
 
 unsigned int utilities::JsonObject::get_size() const {
   return json_object_.size();
-}
-
-void utilities::JsonObject::add_as_value(const std::string& key,
-                                         JsonObject& receiving_object) const {
-  receiving_object.add_value(key, json_object_);
 }
