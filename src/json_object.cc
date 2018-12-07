@@ -7,18 +7,27 @@
 #include <nlohmann_json/json.hpp>
 #include "json_object.h"
 
+utilities::JsonObject::JsonObject() { 
+  // This is constructed here to ensure the JSON member is stored as an object
+  json_object_ = json::object();
+}
+
 utilities::JsonObject::JsonObject(json library_json)
-    : json_object_{library_json} {}
+  : JsonObject::JsonObject()
+{
+  json_object_ = library_json;
+}
 
 bool utilities::JsonObject::delete_key(const std::string& key) {
   bool status = true;
   
-  try {
-    json_object_.erase(key);    
-  } catch (const std::exception& e) {
-    std::cerr << e.what();
+  int erased = json_object_.erase(key);
+
+  if (erased != 1) {
     status = false;
-    throw;
+    throw std::runtime_error(
+        "\nWARNING: In utilities::JsonObject::delete_key: Key not present, so "
+        "no values were erased\n");
   }
 
   return status;

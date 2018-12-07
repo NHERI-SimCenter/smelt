@@ -8,7 +8,7 @@
 
 namespace utilities {
 // Alias for JSON type
-using json = nlohmann::json;
+  using json = nlohmann::json;
   
 /**
  * Wrapper class for JSON implementation
@@ -23,12 +23,30 @@ class JsonObject {
   /**
    * @constructor Construct JSON wrapper
    */
-  JsonObject() = default;
+  JsonObject();
 
   /**
    * @destructor Virtual destructor
    */
   virtual ~JsonObject() {};
+
+  /**
+   * Compares input JsonObject to this JsonObject for equality
+   * @param[in] json_value JsonObject to compare this JsonObject to
+   * @return Returns true if JsonObjects are equal, false otherwise
+   */
+  inline bool operator==(const JsonObject& json_value) const {
+    return json_object_ == json_value.json_object_;
+  };
+
+  /**
+   * Compares input JsonObject to this JsonObject for inequality
+   * @param[in] json_value JsonObject to compare this JsonObject to
+   * @return Returns true if JsonObjects are not equal, false otherwise
+   */
+  inline bool operator!=(const JsonObject& json_value) const {
+    return !(*this == json_value);
+  };
 
   /**
    * Add value to key in JSON object. If key doesn't exist,
@@ -40,7 +58,7 @@ class JsonObject {
    */
   template <typename Tparam>
   bool add_value(const std::string& key, const Tparam& value);
-
+  
   /**
    * Get the value associated with the input key
    * @tparam Tparam Template parameter value

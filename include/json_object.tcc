@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdexcept>
 
 /**< Add value to key */
 template <typename Tparam>
@@ -41,14 +42,28 @@ bool utilities::JsonObject::add_value(const std::string& key,
 /**< Get value at input key */
 template <typename Tparam>
 Tparam utilities::JsonObject::get_value(const std::string& key) const {
-  return json_object_.at(key);
+
+  auto key_location = json_object_.find(key);
+  if (key_location != json_object_.end()) {
+      return key_location.value();
+  } else {
+    throw std::runtime_error(
+        "\nWARNING: In utilities::JsonObject::get_value: Input key not found, "
+        "so make sure that exception is properly handled!\n");
+  } 
 };
 
 /**< Template specialization for case when return value is JsonObject */
 template <>
 utilities::JsonObject utilities::JsonObject::get_value(
     const std::string& key) const {
-  /* nlohmann::json json_object_value = json_object_.at(key); */
 
-  return JsonObject(json_object_.at(key));
+  auto key_location = json_object_.find(key);
+  if (json_object_.find(key) != json_object_.end()) {
+    return JsonObject(key_location.value());
+  } else {
+    throw std::runtime_error(
+        "\nWARNING: In utilities::JsonObject::get_value: Input key not found, "
+        "so make sure that exception is properly handled!\n");
+  } 
 }
