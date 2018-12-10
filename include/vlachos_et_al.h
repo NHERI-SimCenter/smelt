@@ -6,6 +6,7 @@
 #include <vector>
 #include <Eigen/Dense>
 #include "distribution.h"
+#include "json_object.h"
 #include "stochastic_model.h"
 
 namespace stochastic {
@@ -31,6 +32,10 @@ class VlachosEtAl : public StochasticModel {
    * @param[in] rupture_distance Closest-to-site rupture distance in kilometers
    * @param[in] vs30 Soil shear wave velocity averaged over top 30 meters in
    *                 meters per second
+   * @param[in] orientation Orientation of acceleration relative to global
+   *                        coordinates. Represents counter-clockwise angle (in
+   *                        degrees) away from x-axis rotating around z-axis in
+   *                        right-handed coordinate system.
    * @param[in] time_step Temporal discretization. Defaults to 0.01 seconds.
    * @param[in] freq_step Frequency discretization. Defaults to 0.2 Hz.
    * @param[in] num_spectra Number of evolutionary power spectra that should be
@@ -39,8 +44,8 @@ class VlachosEtAl : public StochasticModel {
    *                     should be generated per evolutionary power
    */
   VlachosEtAl(double moment_magnitude, double rupture_distance, double vs30,
-              double time_step = 0.01, double freq_step = 0.2,
-              unsigned int num_spectra = 1;
+              double orientation = 0.0, double time_step = 0.01,
+              double freq_step = 0.2, unsigned int num_spectra = 1;
               unsigned int num_sims = 1);
 
   /**
@@ -56,20 +61,23 @@ class VlachosEtAl : public StochasticModel {
 
   /**
    * Generate ground motion time histories based on input parameters
-   * and store outputs as JSON object
-   * @param[in, out] outputs Json object to write outputs to
-   * @return Returns true if successful, false otherwise
+   * and store outputs as JSON object. Throws exception if errors
+   * are encountered during time history generation.
+   * @param[in] event_name Name to assign to event
+   * @return JsonObject containing time histories
    */
-  bool generate(utilities::JsonObject& outputs) override;
+  utilities::JsonObject generate(const std::string& event_name) override;
 
   /**
    * Generate ground motion time histories based on input parameters
-   * and write results to file in JSON format
+   * and write results to file in JSON format. Throws exception if
+   * errors are encountered during time history generation.
+   * @param[in] event_name Name to assign to event
    * @param[in, out] output_location Location to write outputs to
    * @return Returns true if successful, false otherwise
    */
-  bool generate(const std::string& output_location) override;
-  
+  bool generate(const std::string& event_name,
+                const std::string& output_location) override;
 
  private:
   /**
@@ -194,11 +202,22 @@ class VlachosEtAl : public StochasticModel {
                        const std::vector<double>& frequencies,
                        const std::vector<double>& highpass_butter) const;
 
+  /**
+   * Rotate acceleration based on orientation angle
+   * @param[in] acceleration Acceleration to rotate
+   * @param[in, out] x_accels Vector to store x-component of acceleration to
+   * @param[in, out] y_accels Vector to story y-component of acceleration to
+   */
+  void rotate_acceleration(const std::vector<double>& acceleration,
+                           std::vector<double>& x_accels,
+                           std::vector<double>& y_accels) const;  
+
   std::string model_name_; /**< Name of stochastic model */
   double moment_magnitude_; /**< Moment magnitude for scenario */
   double rupture_dist_; /**< Closest-to-site rupture distance in kilometers */
   double vs30_; /**< Soil shear wave velocity averaged over top 30 meters in
                    meters per second */
+  double orientation_; /**< Counter-clockwise angle away from global x-axis */
   double time_step_; /**< Temporal discretization */
   double freq_step_; /**< Frequency discretization */
   double cutoff_freq_; /**< Cutoff frequency */

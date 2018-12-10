@@ -15,6 +15,7 @@
 
 #include "factory.h"
 #include "function_dispatcher.h"
+#include "json_object.h"
 #include "lognormal_dist.h"
 #include "normal_dist.h"
 #include "normal_multivar.h"
@@ -23,20 +24,20 @@
 
 stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
                                      double rupture_distance, double vs30,
-                                     double time_step, double freq_step,
-                                     unsigned int num_spectra;
+                                     double orientation, double time_step,
+                                     double freq_step, unsigned int num_spectra;
                                      unsigned int num_sims)
-  : StochasticModel(),
-    moment_magnitude_{moment_magnitude / 6.0},
-    rupture_dist_{(rupture_distance + 5.0) / 30.0},
-    vs30_{vs30 / 450.0},
-    time_step_{time_step},
-    freq_step_{freq_step},
-    cutoff_freq_{220.0},
-    num_spectra_{num_spectra},
-    num_sims_{num_sims},
-    model_parameters_(18)
-{
+    : StochasticModel(),
+      moment_magnitude_{moment_magnitude / 6.0},
+      rupture_dist_{(rupture_distance + 5.0) / 30.0},
+      vs30_{vs30 / 450.0},
+      orientation_{orientation},
+      time_step_{time_step},
+      freq_step_{freq_step},
+      cutoff_freq_{220.0},
+      num_spectra_{num_spectra},
+      num_sims_{num_sims},
+      model_parameters_(18) {
   // Factors for site condition based on Vs30
   double site_soft = 0.0, site_medium = 0.0, site_hard = 0.0; 
   if (vs30 <= 300.0) {
@@ -203,7 +204,8 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
   }
 }
 
-bool stochastic::VlachosEtAl::generate(utilities::JsonObject& outputs) {
+utilities::JsonObject stochastic::VlachosEtAl::generate(
+    const std::string& event_name) {
 
   // Pool of acceleration time histories based on number of spectra and
   // simulations requested
@@ -223,7 +225,76 @@ bool stochastic::VlachosEtAl::generate(utilities::JsonObject& outputs) {
     throw;
   }
 
-  // CONTINUE HERE ONCE JSONOBJECT HAS BEEN IMPLEMENTED
+  // Create JsonObject for events
+  auto events = utilities::JsonObject();
+  std::vector<utilities::JsonObject> events_array(num_spectra_ * num_sims_);
+
+  // Add pattern information for JSON
+  auto pattern_x = utilities::JsonObject();
+  auto pattern_y = utilities::JsonObject();  
+  pattern_x.add_value("type", "UniformAcceleration");
+  pattern_x.add_value("timeSeries", "accel_x");
+  pattern_x.add_value("dof", 1);
+  pattern_y.add_value("type", "UniformAcceleration");
+  pattern_y.add_value("timeSeries", "accel_y");
+  pattern_y.add_value("dof", 2);
+
+  // Create JSON for specific event
+  auto event_data = utilities::JsonObject();
+  // Loop over spectra
+  for (unsigned int i = 0; i < num_spectra_; ++i) {
+    // Loop over different simulations for current spectra
+    for (unsigned int j = 0; j < num_sims_; ++j) {
+      event_data.add_value("name", event_name + "_Spectra" + i + "_Sim" + j);
+      event_data.add_value("type", "Seismic");
+      event_data.add_value("dT", time_step_);
+      event_data.add_value("numSteps", acceleration_pool[i][j].size());
+      event_data.add_value(
+          "pattern", std::vector<utilities::JsonObject>{pattern_x, pattern_y});
+
+      // Rotate accelerations, if necessary      
+      std::vector<double> x_accels(acceleration_pool[i][j].size());
+      std::vector<double> y_accels(acceleration_pool[i][j].size());
+      rotate_acceleration(acceleration_pool[i][j], x_accels, y_accels);
+
+      // Add time histories for x and y directions to event
+      auto time_history_x = utilities::JsonObject();
+      auto time_history_y = utilities::JsonObject();
+      time_history_x.add_value("name", "accel_x");
+      time_history_x.add_value("type", "Value");
+      time_history_x.add_value("dT", time_step_);
+      time_history_x.add_value("data", x_accels);
+      time_history_y.add_value("name", "accel_y");
+      time_history_y.add_value("type", "Value");
+      time_history_y.add_value("dT", time_step_);
+      time_history_y.add_value("data", y_accels);
+      event_data.add_value("timeSeries", std::vector<utilities::JsonObject>{
+                                             time_history_x, time_history_y});
+      event_array[i * num_sims_ + j] = event_data;	
+      event_data.clear();
+    }
+  }
+
+  events.add_value("Events", event_array);
+
+  return events;
+}
+
+bool utilities::VlachosEtAl::generate(const std::string& event_name,
+                                      const std::string& output_location) {
+  bool status = true;
+  
+  // Generate pool of acceleration time histories
+  try{
+    auto json_output = generate(event_name);
+    json_output.write_to_file(output_location);
+  } catch (const std::exception& e) {
+    std::cerr << e.what();
+    status = false;
+    throw;
+  }
+
+  return status;
 }
 
 void stochastic::VlachosEtAl::time_history_family(
@@ -597,4 +668,21 @@ Eigen::VectorXd stochastic::VlachosEtAl::kt_2(
   }
 
   return power_spectrum;
+}
+
+void stochastic::VlachosEtAl::rotate_acceleration(
+    const std::vector<double>& acceleration, std::vector<double>& x_accels,
+    std::vector<double> y_accels) const {
+
+  // No orientation specified to acceleration oriented along x-axis
+  if (std::abs(orientation_) < 1E-6) {
+    x_accels = acceleration;
+    y_accels.assign(acceleration.size(), 0.0);
+  // Rotate accelerations to match orientation
+  } else {
+    for (unsigned int i = 0; i < acceleration.size(); ++i) {
+      x_accels[i] = acceleration[i] * std::cos(orientation_ * M_PI / 180.0);
+      y_accels[i] = acceleration[i] * std::sin(orientation_ * M_PI / 180.0);
+    }
+  }
 }

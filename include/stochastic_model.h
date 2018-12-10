@@ -40,18 +40,20 @@ class StochasticModel {
   /**
    * Generate loading based on stochastic model and store
    * outputs as JSON object
-   * @param[in, out] outputs Json object to write outputs to
-   * @return Returns true if successful, false otherwise
+   * @param[in] event_name Name to assign to event
+   * @return JsonObject containing loading time histories
    */
-  bool generate(utilities::JsonObject& outputs) = 0;
+  utilities::JsonObject generate(const std::string& event_name) = 0;
 
   /**
    * Generate loading based on stochastic model and write
    * results to file in JSON format
+   * @param[in] event_name Name to assign to event
    * @param[in, out] output_location Location to write outputs to
    * @return Returns true if successful, false otherwise
    */
-  bool generate(const std::string& output_location) = 0;
+  bool generate(const std::string& event_name,
+                const std::string& output_location) = 0;
 }
 }  // namespace stochastic
 

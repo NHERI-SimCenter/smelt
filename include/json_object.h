@@ -113,7 +113,7 @@ class JsonObject {
   json get_library_json() const {
     return json_object_;
   };
-  
+
   json json_object_; /**< JSON object for this class */
 };
 
