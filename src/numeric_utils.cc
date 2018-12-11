@@ -6,7 +6,7 @@
 
 namespace numeric_utils {
 Eigen::MatrixXd corr_to_cov(const Eigen::MatrixXd& corr,
-                            const Eigen::MatrixXd& std_dev) {
+                            const Eigen::VectorXd& std_dev) {
   Eigen::MatrixXd cov_matrix = Eigen::MatrixXd::Zero(corr.rows(), corr.cols());
 
   for (unsigned int i = 0; i < cov_matrix.rows(); ++i) {
@@ -17,7 +17,7 @@ Eigen::MatrixXd corr_to_cov(const Eigen::MatrixXd& corr,
 
   return cov_matrix;
 }
-
+  
 bool convolve_1d(const std::vector<double>& input_x,
                  const std::vector<double>& input_y,
                  std::vector<double>& response) {

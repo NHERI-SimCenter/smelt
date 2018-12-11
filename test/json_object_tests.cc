@@ -28,9 +28,11 @@ TEST_CASE("Test JSON object wrapper", "[Helpers][Json]") {
     std::vector<double> double_vec = {0.0, 1.0, 2.0};
     test_object.add_value("Vector", double_vec);
     test_object.add_value("String", "I'm a string");
-    test_object.add_value("String", "Yet another string");
-    test_object.add_value("Vector", double_vec);
+    REQUIRE_THROWS(test_object.add_value("String", "Yet another string"));
+    REQUIRE_THROWS(test_object.add_value("Vector", double_vec));
     REQUIRE(test_object.get_size() == 2);
+
+    std::cout << "\nTest object:\n" << test_object << std::endl;
 
     // Add JsonObject as value
     utilities::JsonObject insert_object;

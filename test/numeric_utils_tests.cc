@@ -5,6 +5,30 @@
 #include <Eigen/Dense>
 #include "numeric_utils.h"
 
+TEST_CASE("Test correlation to covariance functionality", "[Helpers]") {
+  SECTION("Correlation is diagonal matrix with values of 1.0 along diagonal") {
+    Eigen::MatrixXd test_corr = Eigen::MatrixXd::Zero(3, 3);
+    test_corr(0, 0) = 1.0;
+    test_corr(1, 1) = 1.0;
+    test_corr(2, 2) = 1.0;
+    Eigen::MatrixXd std_dev = Eigen::VectorXd::Ones(3);
+
+    std_dev << 2.0, 3.0, 4.0;
+
+    auto cov = numeric_utils::corr_to_cov(test_corr, std_dev);
+
+    Eigen::MatrixXd expected_matrix = Eigen::MatrixXd::Zero(3, 3);
+    expected_matrix(0, 0) = 4.0;
+    expected_matrix(1, 1) = 9.0;
+    expected_matrix(2, 2) = 16.0;
+
+    REQUIRE(cov(0, 0) == expected_matrix(0, 0));
+    REQUIRE(cov(1, 1) == expected_matrix(1, 1));
+    REQUIRE(cov(2, 2) == expected_matrix(2, 2));
+    REQUIRE(expected_matrix.lpNorm<2>() == Approx(cov.lpNorm<2>()).epsilon(0.01));
+  }
+}
+
 TEST_CASE("Test one dimensional convolution", "[Helpers][Convolution]") { 
   SECTION("One dimensional convolution of vectors with length 1") {
     std::vector<double> input_x{1.0};

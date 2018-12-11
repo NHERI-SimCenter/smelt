@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stdexcept>
+#include <vector>
 
 /**< Add value to key */
 template <typename Tparam>
@@ -9,9 +10,12 @@ bool utilities::JsonObject::add_value(const std::string& key,
     
   try {
     if (json_object_.find(key) != json_object_.end()) {
-      json_object_.at(key) = {json_object_.at(key), value};
-      } else {
-      json_object_.emplace(key, value);      
+      status = false;      
+      throw std::runtime_error(
+          "\nWARNING: In utilities::JsonObject::add_value: Input already "
+          "exists, so no value was added!\n");
+    } else {
+      json_object_.emplace(key, value);
     }
   } catch (const std::exception& e) {
     std::cerr << e.what();
@@ -23,7 +27,7 @@ bool utilities::JsonObject::add_value(const std::string& key,
 };
 
 /**< Template specialization for case when input value in JsonObject */
-template <>
+template <> inline
 bool utilities::JsonObject::add_value(const std::string& key,
                                       const utilities::JsonObject& value) {
   bool status = true;
@@ -37,6 +41,27 @@ bool utilities::JsonObject::add_value(const std::string& key,
   }
 
   return status;
+}
+
+/**< Template specialization for case when input value is vector of JsonObjects */
+template<> inline
+bool utilities::JsonObject::add_value(const std::string& key, const std::vector<utilities::JsonObject>& value) {
+  bool status = true;
+
+  try {
+    // Create vector nlohmann::json type
+    std::vector<nlohmann::json> value_vector(value.size());   
+    for (unsigned int i = 0; i < value.size(); ++i) {
+      value_vector[i] = value[i].get_library_json();
+    }    
+    add_value<std::vector<nlohmann::json>>(key, value_vector);
+  } catch (const std::exception& e) {
+    std::cerr << e.what();
+    status = false;
+    throw;    
+  }
+
+  return status;  
 }
 
 /**< Get value at input key */
@@ -54,7 +79,7 @@ Tparam utilities::JsonObject::get_value(const std::string& key) const {
 };
 
 /**< Template specialization for case when return value is JsonObject */
-template <>
+template <> inline
 utilities::JsonObject utilities::JsonObject::get_value(
     const std::string& key) const {
 

@@ -18,7 +18,7 @@ namespace numeric_utils {
  * @return Covariance matrix with same dimensions as input correlation matrix
  */
 Eigen::MatrixXd corr_to_cov(const Eigen::MatrixXd& corr,
-                            const Eigen::VectorXd& std_dev);
+			    const Eigen::VectorXd& std_dev);
 
 /**
  * Compute the 1-dimensional convolution of two input vectors

@@ -5,6 +5,7 @@
 #include <memory>
 #include <numeric>
 #include <stdexcept>
+#include <string>
 #include <vector>
 // Boost random generator
 #include <boost/random/mersenne_twister.hpp>
@@ -25,7 +26,7 @@
 stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
                                      double rupture_distance, double vs30,
                                      double orientation, double time_step,
-                                     double freq_step, unsigned int num_spectra;
+                                     double freq_step, unsigned int num_spectra,
                                      unsigned int num_sims)
     : StochasticModel(),
       moment_magnitude_{moment_magnitude / 6.0},
@@ -38,6 +39,7 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
       num_spectra_{num_spectra},
       num_sims_{num_sims},
       model_parameters_(18) {
+  model_name_ = "VlachosEtAl";
   // Factors for site condition based on Vs30
   double site_soft = 0.0, site_medium = 0.0, site_hard = 0.0; 
   if (vs30 <= 300.0) {
@@ -118,11 +120,12 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
   means_ = conditional_means * beta.transpose();
 
   // Convert the standard deviation and correlation to covariance
-  covariance_ = numeric_utils::corr_to_cov(correlation_matrix, variance.sqrt());
+  covariance_ = numeric_utils::corr_to_cov(correlation_matrix,
+                                           (variance.array().sqrt()).matrix());
 
   // Generate realizations of model parameters
   sample_generator_ =
-      Factory<numeric_utils::RandomGenerator, int>::instance()->create(
+      Factory<numeric_utils::RandomGenerator>::instance()->create(
           "MultivariateNormal");
   sample_generator_->generate(parameter_realizations_, means_, covariance_,
                               num_spectra_);
@@ -196,10 +199,10 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
   // Transform sample normal model parameters to physical space
   for (unsigned int i = 0; i < model_parameters_.size(); ++i) {
     for (unsigned int j = 0; j < parameter_realizations_.rows(); ++j) {
-      physical_parameters(j, i) =
-          model_parameters_[i]->inv_cumulative_dist_func(
+      physical_parameters_(j, i) =
+          (model_parameters_[i]->inv_cumulative_dist_func(
               std_normal_dist->cumulative_dist_func(
-                  std::vector<double>{parameter_realizations_(j, i)}));
+                  std::vector<double>{parameter_realizations_(j, i)})))[0];
     }
   }
 }
@@ -221,7 +224,6 @@ utilities::JsonObject stochastic::VlachosEtAl::generate(
     }
   } catch (const std::exception& e) {
     std::cerr << e.what();
-    status = false;
     throw;
   }
 
@@ -245,7 +247,8 @@ utilities::JsonObject stochastic::VlachosEtAl::generate(
   for (unsigned int i = 0; i < num_spectra_; ++i) {
     // Loop over different simulations for current spectra
     for (unsigned int j = 0; j < num_sims_; ++j) {
-      event_data.add_value("name", event_name + "_Spectra" + i + "_Sim" + j);
+      event_data.add_value("name", event_name + "_Spectra" + std::to_string(i) +
+                                       "_Sim" + std::to_string(j));
       event_data.add_value("type", "Seismic");
       event_data.add_value("dT", time_step_);
       event_data.add_value("numSteps", acceleration_pool[i][j].size());
@@ -270,18 +273,18 @@ utilities::JsonObject stochastic::VlachosEtAl::generate(
       time_history_y.add_value("data", y_accels);
       event_data.add_value("timeSeries", std::vector<utilities::JsonObject>{
                                              time_history_x, time_history_y});
-      event_array[i * num_sims_ + j] = event_data;	
+      events_array[i * num_sims_ + j] = event_data;	
       event_data.clear();
     }
   }
 
-  events.add_value("Events", event_array);
+  events.add_value("Events", events_array);
 
   return events;
 }
 
-bool utilities::VlachosEtAl::generate(const std::string& event_name,
-                                      const std::string& output_location) {
+bool stochastic::VlachosEtAl::generate(const std::string& event_name,
+                                       const std::string& output_location) {
   bool status = true;
   
   // Generate pool of acceleration time histories
@@ -297,7 +300,7 @@ bool utilities::VlachosEtAl::generate(const std::string& event_name,
   return status;
 }
 
-void stochastic::VlachosEtAl::time_history_family(
+bool stochastic::VlachosEtAl::time_history_family(
     std::vector<std::vector<double>>& time_histories,
     const Eigen::VectorXd& parameters) const {
   bool status = true;
@@ -356,13 +359,14 @@ void stochastic::VlachosEtAl::time_history_family(
   // Calculate energy content of the Butterworth filter transfer function
   std::vector<double> highpass_butter_energy(frequencies.size());
   for (unsigned int i = 0; i < frequencies.size(); ++i) {
-    double freq_ratio_sq = std::pow(frequencies[i]/ norm_cutoff_freq, 2);
+    double freq_ratio_sq = std::pow(
+        frequencies[i] / (2.0 * M_PI * norm_cutoff_freq), 2 * filter_order);
     highpass_butter_energy[i] = freq_ratio_sq / (1.0 + freq_ratio_sq);
   }
 
   // Calculate the evolutionary power spectrum with unit variance at
   // each time step
-  Eigen::MatrixXd power_spectrum(times.size(), frequencies.size);
+  Eigen::MatrixXd power_spectrum(times.size(), frequencies.size());
 
   for (unsigned int i = 0; i < times.size(); ++i) {
     power_spectrum.row(i) =
@@ -371,7 +375,8 @@ void stochastic::VlachosEtAl::time_history_family(
                                  mode_2_participation[i]},
              frequencies, highpass_butter_energy);
 
-    double freq_domain_integral = trapazoid_rule(power_spectrum.row(i), freq_step_);
+    double freq_domain_integral =
+        numeric_utils::trapazoid_rule(power_spectrum.row(i), freq_step_);
 
     power_spectrum.row(i) =
         power_spectrum.row(i) * amplitude_modulation[i] / freq_domain_integral;
@@ -380,13 +385,14 @@ void stochastic::VlachosEtAl::time_history_family(
   // Get coefficients for highpass Butterworth filter  
   int num_samples =
       static_cast<int>(std::round(1.5 * static_cast<double>(filter_order) /
-                                  (2.0 * cutoff_freq)) /
+                                  (2.0 * norm_cutoff_freq)) /
                            time_step_ +
                        1);
-  
+
   auto hp_butter =
       Dispatcher<std::vector<std::vector<double>>, int, double>::instance()
-          ->dispatch("HighPassButter", filter_order, cutoff_freq);
+          ->dispatch("HighPassButter", filter_order,
+                     norm_cutoff_freq / (1.0 / (time_step_ / 2.0)));
 
   // Calculate filter impulse response for calculated number of samples
   auto impulse_response =
@@ -441,8 +447,6 @@ void stochastic::VlachosEtAl::simulate_time_history(
     angle = angle_gen();
   }
 
-  double current_freq, current_phase;
-
   // Loop over all frequencies and times to calculate time history
   for (unsigned int i = 0; i < num_times; ++i) {
     for (unsigned int j = 0; j < num_freqs; ++j) {
@@ -458,14 +462,15 @@ void stochastic::VlachosEtAl::simulate_time_history(
 
 bool stochastic::VlachosEtAl::post_process(
     std::vector<double>& time_history,
-    const std::vector& filter_imp_resp) const {
+    const std::vector<double>& filter_imp_resp) const {
 
   bool status = true;
   double time_hann_2 = 1.0;
 
   Eigen::VectorXd window = Eigen::VectorXd::Ones(time_history.size());
-  int window1_size = static_cast<int>(time_hann_2 / time_step_ + 1);
-  int window2_size = static_cast<int>((window1_size - 1) / 2);
+  unsigned int window1_size =
+      static_cast<unsigned int>(time_hann_2 / time_step_ + 1);
+  unsigned int window2_size = static_cast<unsigned int>((window1_size - 1) / 2);
 
   // Check if input time history length is sufficient
   if (time_history.size() < window1_size) {
@@ -549,9 +554,9 @@ Eigen::VectorXd stochastic::VlachosEtAl::identify_parameters(
     // Transform parameter realizations to physical space
     for (unsigned int i = 0; i < initial_params.size(); ++i) {
       transformed_realizations(i) =
-          model_parameters_[i]->inv_cumulative_dist_func(
+          (model_parameters_[i]->inv_cumulative_dist_func(
               std_normal_dist->cumulative_dist_func(
-                  std::vector<double>{realizations(i, 0)}));
+                  std::vector<double>{realizations(i, 0)})))[0];
     }
 
     // Calculate dominant modal frequencies
@@ -600,7 +605,7 @@ std::vector<double> stochastic::VlachosEtAl::energy_accumulation(
 
   for (unsigned int i = 0; i < times.size(); ++i) {
     accumulated_energy[i] =
-        std::exp(-std::pow(times[i] / parameters[0]), -parameters[1]) /
+        std::exp(-std::pow(times[i] / parameters[0], -parameters[1])) /
         std::exp(-std::pow(1.0 / parameters[0], -parameters[1]));
   }
 
@@ -645,7 +650,8 @@ std::vector<double> stochastic::VlachosEtAl::amplitude_modulating_function(
 }
 
 Eigen::VectorXd stochastic::VlachosEtAl::kt_2(
-    const Eigen::VectorXd& parameters, const std::vector<double>& frequencies,
+    const std::vector<double>& parameters,
+    const std::vector<double>& frequencies,
     const std::vector<double>& highpass_butter) const {
   Eigen::VectorXd power_spectrum(frequencies.size());
   double mode1 = 0, mode2 = 0;
@@ -664,7 +670,7 @@ Eigen::VectorXd stochastic::VlachosEtAl::kt_2(
              4.0 * parameters[4] * parameters[4] *
                  std::pow(frequencies[i] / parameters[3], 2));
 
-    power_spectrum[i] = highpass_butter[i] * (mode1 + mode2)
+    power_spectrum[i] = highpass_butter[i] * (mode1 + mode2);
   }
 
   return power_spectrum;
@@ -672,7 +678,7 @@ Eigen::VectorXd stochastic::VlachosEtAl::kt_2(
 
 void stochastic::VlachosEtAl::rotate_acceleration(
     const std::vector<double>& acceleration, std::vector<double>& x_accels,
-    std::vector<double> y_accels) const {
+    std::vector<double>& y_accels) const {
 
   // No orientation specified to acceleration oriented along x-axis
   if (std::abs(orientation_) < 1E-6) {

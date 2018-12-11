@@ -19,7 +19,7 @@ class StochasticModel {
   /**
    * @destructor Virtual destructor
    */
-  virtual ~StochasticModel();
+  virtual ~StochasticModel() {};
 
   /**
    * Delete copy constructor
@@ -43,7 +43,7 @@ class StochasticModel {
    * @param[in] event_name Name to assign to event
    * @return JsonObject containing loading time histories
    */
-  utilities::JsonObject generate(const std::string& event_name) = 0;
+  virtual utilities::JsonObject generate(const std::string& event_name) = 0;
 
   /**
    * Generate loading based on stochastic model and write
@@ -52,9 +52,12 @@ class StochasticModel {
    * @param[in, out] output_location Location to write outputs to
    * @return Returns true if successful, false otherwise
    */
-  bool generate(const std::string& event_name,
-                const std::string& output_location) = 0;
-}
+  virtual bool generate(const std::string& event_name,
+                        const std::string& output_location) = 0;
+
+ protected:
+  std::string model_name_ = "StochasticModel"; /**< Name of stochastic model */  
+};
 }  // namespace stochastic
 
 #endif  // _STOCHASTIC_MODEL_H_

@@ -123,7 +123,7 @@ class JsonObject {
  * @param[in] json_object JSON object to insert into output stream
  * @return Reference to output stream that JSON object has been inserted into
  */
-std::ostream& operator<<(std::ostream& out, const utilities::JsonObject& json_object) {
+inline std::ostream& operator<<(std::ostream& out, const utilities::JsonObject& json_object) {
   out << std::setw(4) << json_object.json_object_;
   return out;
 }; 

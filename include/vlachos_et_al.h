@@ -45,19 +45,13 @@ class VlachosEtAl : public StochasticModel {
    */
   VlachosEtAl(double moment_magnitude, double rupture_distance, double vs30,
               double orientation = 0.0, double time_step = 0.01,
-              double freq_step = 0.2, unsigned int num_spectra = 1;
+              double freq_step = 0.2, unsigned int num_spectra = 1,
               unsigned int num_sims = 1);
 
   /**
    * @destructor Virtual destructor
    */
   virtual ~VlachosEtAl() {};
-
-  /**
-   * Get the name of the stochastic model
-   * @return Model name as a string
-   */
-  std::string model_name() const override { return model_name_ };
 
   /**
    * Generate ground motion time histories based on input parameters
@@ -79,7 +73,6 @@ class VlachosEtAl : public StochasticModel {
   bool generate(const std::string& event_name,
                 const std::string& output_location) override;
 
- private:
   /**
    * Compute a family of time histories for a particular power spectrum
    * @param[in, out] time_histories Location where time histories should be
@@ -198,7 +191,7 @@ class VlachosEtAl : public StochasticModel {
    * @return Vector containing values for model evolutionary power spectrum at
    *         time defined by input parameters fg_1, fg_2 and S0_2.
    */
-  Eigen::VectorXd kt_2(const Eigen::VectorXd& parameters,
+  Eigen::VectorXd kt_2(const std::vector<double>& parameters,
                        const std::vector<double>& frequencies,
                        const std::vector<double>& highpass_butter) const;
 
@@ -210,9 +203,9 @@ class VlachosEtAl : public StochasticModel {
    */
   void rotate_acceleration(const std::vector<double>& acceleration,
                            std::vector<double>& x_accels,
-                           std::vector<double>& y_accels) const;  
+                           std::vector<double>& y_accels) const;
 
-  std::string model_name_; /**< Name of stochastic model */
+ private:
   double moment_magnitude_; /**< Moment magnitude for scenario */
   double rupture_dist_; /**< Closest-to-site rupture distance in kilometers */
   double vs30_; /**< Soil shear wave velocity averaged over top 30 meters in

@@ -54,7 +54,8 @@ set(SOURCES
   ${PROJECT_SOURCE_DIR}/src/beta_dist.cc
   ${PROJECT_SOURCE_DIR}/src/inv_gauss_dist.cc
   ${PROJECT_SOURCE_DIR}/src/students_t_dist.cc
-  ${PROJECT_SOURCE_DIR}/src/json_object.cc  
+  ${PROJECT_SOURCE_DIR}/src/json_object.cc
+  ${PROJECT_SOURCE_DIR}/src/vlachos_et_al.cc
   )
 
 # Add library as target
