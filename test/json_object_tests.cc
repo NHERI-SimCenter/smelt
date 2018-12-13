@@ -1,4 +1,3 @@
-#include <iostream>
 #include <string>
 #include <vector>
 #include <catch/catch.hpp>
@@ -31,8 +30,6 @@ TEST_CASE("Test JSON object wrapper", "[Helpers][Json]") {
     REQUIRE_THROWS(test_object.add_value("String", "Yet another string"));
     REQUIRE_THROWS(test_object.add_value("Vector", double_vec));
     REQUIRE(test_object.get_size() == 2);
-
-    std::cout << "\nTest object:\n" << test_object << std::endl;
 
     // Add JsonObject as value
     utilities::JsonObject insert_object;

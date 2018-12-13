@@ -1,7 +1,6 @@
 #include <algorithm>
 #include <cmath>
 #include <ctime>
-#include <iostream>
 #include <memory>
 #include <numeric>
 #include <stdexcept>
@@ -117,7 +116,7 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
   // clang-format on
 
   // Mean of transformed normal model parameters (described by Eq. 25 on page 12)
-  means_ = conditional_means * beta.transpose();
+  means_ = beta * conditional_means;
 
   // Convert the standard deviation and correlation to covariance
   covariance_ = numeric_utils::corr_to_cov(correlation_matrix,
@@ -129,6 +128,7 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
           "MultivariateNormal");
   sample_generator_->generate(parameter_realizations_, means_, covariance_,
                               num_spectra_);
+  parameter_realizations_.transposeInPlace();
 
   // Create distributions for model parameters
   model_parameters_[0] =
@@ -197,12 +197,12 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
                               parameter_realizations_.cols());
 
   // Transform sample normal model parameters to physical space
-  for (unsigned int i = 0; i < model_parameters_.size(); ++i) {
-    for (unsigned int j = 0; j < parameter_realizations_.rows(); ++j) {
-      physical_parameters_(j, i) =
-          (model_parameters_[i]->inv_cumulative_dist_func(
+  for (unsigned int i = 0; i < parameter_realizations_.rows(); ++i) {
+    for (unsigned int j = 0; j < model_parameters_.size(); ++j) {
+      physical_parameters_(i, j) =
+          (model_parameters_[j]->inv_cumulative_dist_func(
               std_normal_dist->cumulative_dist_func(
-                  std::vector<double>{parameter_realizations_(j, i)})))[0];
+                  std::vector<double>{parameter_realizations_(i, j)})))[0];
     }
   }
 }
@@ -642,8 +642,9 @@ std::vector<double> stochastic::VlachosEtAl::amplitude_modulating_function(
   for (unsigned int i = 0; i < times.size(); ++i) {
     func_vals[i] =
         term1 *
-        std::exp(term2 - std::pow(times[i] / parameters[0], parameters[1])) *
-        std::pow(times[i] / parameters[0], -1.0 - parameters[1]);
+        std::exp(term2 - std::pow(times[i] / (parameters[0] * duration),
+                                  -parameters[1])) *
+        std::pow(times[i] / (parameters[0] * duration), -1.0 - parameters[1]);
   }
 
   return func_vals;

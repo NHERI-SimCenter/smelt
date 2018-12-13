@@ -7,6 +7,7 @@
 #include <Eigen/Dense>
 #include "distribution.h"
 #include "json_object.h"
+#include "numeric_utils.h"
 #include "stochastic_model.h"
 
 namespace stochastic {
@@ -23,7 +24,7 @@ class VlachosEtAl : public StochasticModel {
   /**
    * @constructor Delete default constructor
    */
-  VlachosEtAl() = delete;
+  VlachosEtAl() = default;
 
   /**
    * @constructor Construct scenario specific ground motion model based on input
@@ -52,6 +53,17 @@ class VlachosEtAl : public StochasticModel {
    * @destructor Virtual destructor
    */
   virtual ~VlachosEtAl() {};
+
+  /**
+   * Delete copy constructor
+   */
+  VlachosEtAl(const VlachosEtAl&) = delete;
+
+  /**
+   * Delete assignment operator
+   */
+  VlachosEtAl& operator=(const VlachosEtAl&) = delete;
+  
 
   /**
    * Generate ground motion time histories based on input parameters

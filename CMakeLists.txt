@@ -77,7 +77,8 @@ if (BUILD_TESTING)
     ${PROJECT_SOURCE_DIR}/test/dispatcher_tests.cc
     ${PROJECT_SOURCE_DIR}/test/numeric_utils_tests.cc
     ${PROJECT_SOURCE_DIR}/test/filter_func_tests.cc
-    ${PROJECT_SOURCE_DIR}/test/json_object_tests.cc    
+    ${PROJECT_SOURCE_DIR}/test/json_object_tests.cc
+    ${PROJECT_SOURCE_DIR}/test/stochastic_model_tests.cc
   )
 
   add_executable(unit_tests ${TEST_SOURCES})
