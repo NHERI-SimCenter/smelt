@@ -358,9 +358,10 @@ bool stochastic::VlachosEtAl::time_history_family(
 
   // Calculate energy content of the Butterworth filter transfer function
   std::vector<double> highpass_butter_energy(frequencies.size());
+  double freq_ratio_sq;
   for (unsigned int i = 0; i < frequencies.size(); ++i) {
-    double freq_ratio_sq = std::pow(
-        frequencies[i] / (2.0 * M_PI * norm_cutoff_freq), 2 * filter_order);
+    freq_ratio_sq = std::pow(frequencies[i] / (2.0 * M_PI * norm_cutoff_freq),
+                             2 * filter_order);
     highpass_butter_energy[i] = freq_ratio_sq / (1.0 + freq_ratio_sq);
   }
 
@@ -377,9 +378,10 @@ bool stochastic::VlachosEtAl::time_history_family(
 
     double freq_domain_integral =
         numeric_utils::trapazoid_rule(power_spectrum.row(i), freq_step_);
-
+    
     power_spectrum.row(i) =
         power_spectrum.row(i) * amplitude_modulation[i] / freq_domain_integral;
+
   }
 
   // Get coefficients for highpass Butterworth filter  
@@ -400,6 +402,7 @@ bool stochastic::VlachosEtAl::time_history_family(
                  int, int>::instance()
           ->dispatch("ImpulseResponse", hp_butter[0], hp_butter[1],
                      filter_order, num_samples);
+  
   try {
     // Generate family of time histories
     for (unsigned int i = 0; i < num_sims_; ++i) {
@@ -450,12 +453,11 @@ void stochastic::VlachosEtAl::simulate_time_history(
   // Loop over all frequencies and times to calculate time history
   for (unsigned int i = 0; i < num_times; ++i) {
     for (unsigned int j = 0; j < num_freqs; ++j) {
-      time_history[i] =
+     time_history[i] =
           time_history[i] +
           std::sqrt(power_spectrum(i, j)) *
-              std::cos(frequencies[j] * times[i] + phase_angle[j]);
+              std::cos(frequencies[j] * times[i] + phase_angle[j]);      
     }
-
     time_history[i] = 2.0 * std::sqrt(freq_step_) * time_history[i];
   }
 }
@@ -463,7 +465,7 @@ void stochastic::VlachosEtAl::simulate_time_history(
 bool stochastic::VlachosEtAl::post_process(
     std::vector<double>& time_history,
     const std::vector<double>& filter_imp_resp) const {
-
+  
   bool status = true;
   double time_hann_2 = 1.0;
 
@@ -485,8 +487,7 @@ bool stochastic::VlachosEtAl::post_process(
           "HannWindow", window1_size);
 
   window.head(window2_size) = hann_window.head(window2_size);
-  window.tail(window.size() - window2_size) =
-      hann_window.head(window2_size).reverse();
+  window.tail(window2_size) = hann_window.head(window2_size).reverse();
 
   // Calculate mean of time history
   double mean = std::accumulate(time_history.begin(), time_history.end(), 0.0) /
@@ -507,9 +508,10 @@ bool stochastic::VlachosEtAl::post_process(
     status = false;
     throw;
   }
-
+  
   // Copy filtered results to time_history
   time_history = filtered_history;
+  
   return status;
 }
 
@@ -540,10 +542,20 @@ Eigen::VectorXd stochastic::VlachosEtAl::identify_parameters(
   auto std_normal_dist =
       Factory<stochastic::Distribution, double, double>::instance()->create(
           "NormalDist", std::move(0.0), std::move(1.0));  
-  bool freq_comparison = true;
+
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> realizations(
       initial_params.size(), 1);
-  Eigen::VectorXd transformed_realizations(initial_params.size());
+  Eigen::VectorXd transformed_realizations = initial_params;
+
+  // Check if any mode 1 dominant frequencies across all non-dimensional energy
+  // values are greater than the corresponding values for mode 2
+  bool freq_comparison = false;
+  for (unsigned int i = 0; i < mode_1_freqs.size(); ++i) {
+    if (mode_1_freqs[i] > mode_2_freqs[i]) {
+      freq_comparison = true;
+      break;
+    }
+  }
 
   // Iterate until suitable parameter values have been identified
   while (freq_comparison || (mode_1_mean > mode_2_mean)) {
@@ -560,13 +572,19 @@ Eigen::VectorXd stochastic::VlachosEtAl::identify_parameters(
     }
 
     // Calculate dominant modal frequencies
-    mode_1_params = {transformed_realizations(2), transformed_realizations(3),
-                     transformed_realizations(4)};
-    mode_1_freqs = modal_frequencies(mode_1_params, energy);
+    mode_1_freqs =
+        modal_frequencies(std::vector<double>{transformed_realizations(2),
+                                              transformed_realizations(3),
+                                              transformed_realizations(4)},
+                          energy);
 
     mode_2_params = {transformed_realizations(5), transformed_realizations(6),
                      transformed_realizations(7)};
-    mode_2_freqs = modal_frequencies(mode_2_params, energy);
+    mode_2_freqs =
+        modal_frequencies(std::vector<double>{transformed_realizations(5),
+                                              transformed_realizations(6),
+                                              transformed_realizations(7)},
+                          energy);
 
     mode_1_mean = transformed_realizations(11);
     mode_2_mean = transformed_realizations(14);
@@ -636,15 +654,13 @@ std::vector<double> stochastic::VlachosEtAl::amplitude_modulating_function(
     const std::vector<double>& times) const {
   std::vector<double> func_vals(times.size());
 
-  double term1 = total_energy * parameters[1] / (parameters[0] * duration);
-  double term2 = std::pow(1.0 / parameters[0], -parameters[1]);
+  double mult_term = total_energy * parameters[1] / (parameters[0] * duration);
+  double exponent_1 = std::pow(1.0 / parameters[0], -parameters[1]);
 
   for (unsigned int i = 0; i < times.size(); ++i) {
-    func_vals[i] =
-        term1 *
-        std::exp(term2 - std::pow(times[i] / (parameters[0] * duration),
-                                  -parameters[1])) *
-        std::pow(times[i] / (parameters[0] * duration), -1.0 - parameters[1]);
+    func_vals[i] = mult_term *
+                   std::exp(exponent_1 - std::pow(times[i] / parameters[0], -parameters[1])) *
+                   std::pow(times[i] / parameters[0], -1.0 - parameters[1]);
   }
 
   return func_vals;
@@ -681,6 +697,9 @@ void stochastic::VlachosEtAl::rotate_acceleration(
     const std::vector<double>& acceleration, std::vector<double>& x_accels,
     std::vector<double>& y_accels) const {
 
+  x_accels.resize(acceleration.size());
+  y_accels.resize(acceleration.size());
+  
   // No orientation specified to acceleration oriented along x-axis
   if (std::abs(orientation_) < 1E-6) {
     x_accels = acceleration;
