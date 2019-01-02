@@ -24,23 +24,23 @@
 
 stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
                                      double rupture_distance, double vs30,
-                                     double orientation, double time_step,
-                                     double freq_step, unsigned int num_spectra,
+                                     double orientation,
+                                     unsigned int num_spectra,
                                      unsigned int num_sims)
     : StochasticModel(),
       moment_magnitude_{moment_magnitude / 6.0},
       rupture_dist_{(rupture_distance + 5.0) / 30.0},
       vs30_{vs30 / 450.0},
       orientation_{orientation},
-      time_step_{time_step},
-      freq_step_{freq_step},
+      time_step_{0.01},
+      freq_step_{0.2},
       cutoff_freq_{220.0},
       num_spectra_{num_spectra},
       num_sims_{num_sims},
       model_parameters_(18) {
   model_name_ = "VlachosEtAl";
   // Factors for site condition based on Vs30
-  double site_soft = 0.0, site_medium = 0.0, site_hard = 0.0; 
+  double site_soft = 0.0, site_medium = 0.0, site_hard = 0.0;
   if (vs30 <= 300.0) {
     site_soft = 1.0;
   } else if (vs30 <= 450.0) {

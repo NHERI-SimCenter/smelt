@@ -37,17 +37,14 @@ class VlachosEtAl : public StochasticModel {
    *                        coordinates. Represents counter-clockwise angle (in
    *                        degrees) away from x-axis rotating around z-axis in
    *                        right-handed coordinate system.
-   * @param[in] time_step Temporal discretization. Defaults to 0.01 seconds.
-   * @param[in] freq_step Frequency discretization. Defaults to 0.2 Hz.
    * @param[in] num_spectra Number of evolutionary power spectra that should be
    *                        generated. Default value is 1.
    * @param[in] num_sims Number of simulated ground motion time histories that
    *                     should be generated per evolutionary power
    */
   VlachosEtAl(double moment_magnitude, double rupture_distance, double vs30,
-              double orientation = 0.0, double time_step = 0.01,
-              double freq_step = 0.2, unsigned int num_spectra = 1,
-              unsigned int num_sims = 1);
+              double orientation, unsigned int num_spectra,
+              unsigned int num_sims);
 
   /**
    * @destructor Virtual destructor
@@ -64,7 +61,6 @@ class VlachosEtAl : public StochasticModel {
    */
   VlachosEtAl& operator=(const VlachosEtAl&) = delete;
   
-
   /**
    * Generate ground motion time histories based on input parameters
    * and store outputs as JSON object. Throws exception if errors
@@ -223,8 +219,8 @@ class VlachosEtAl : public StochasticModel {
   double vs30_; /**< Soil shear wave velocity averaged over top 30 meters in
                    meters per second */
   double orientation_; /**< Counter-clockwise angle away from global x-axis */
-  double time_step_; /**< Temporal discretization */
-  double freq_step_; /**< Frequency discretization */
+  double time_step_; /**< Temporal discretization. Set to 0.01 seconds */
+  double freq_step_; /**< Frequency discretization. Set to 0.2 Hz */
   double cutoff_freq_; /**< Cutoff frequency */
   unsigned int num_spectra_; /**< Number of evolutionary power spectra that
                                 should be generated */

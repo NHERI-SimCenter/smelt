@@ -2,12 +2,17 @@
 #include <cmath>
 #include <catch/catch.hpp>
 #include <Eigen/Dense>
+#include "factory.h"
 #include "vlachos_et_al.h"
 
 TEST_CASE("Test Vlachos et al. (2018) implementation", "[Stochastic][Seismic]") {
 
-  stochastic::VlachosEtAl test_model(6.5, 30.0, 500.0, 30.0, 0.01, 0.2, 2, 2);
-
+  double moment_magnitude = 6.5, rupture_dist = 30.0, vs30 = 500.0,
+         orientation = 30.0;
+  unsigned int num_spectra = 2, num_sims = 2;
+ 
+  stochastic::VlachosEtAl test_model(moment_magnitude, rupture_dist, vs30, orientation, num_spectra, num_sims);
+  
   SECTION("Test modal frequency identification") {
     std::vector<double> params = {2.0, 3.0, 4.0};
     std::vector<double> energy = {0.5, 2.5};
@@ -71,7 +76,7 @@ TEST_CASE("Test Vlachos et al. (2018) implementation", "[Stochastic][Seismic]") 
     REQUIRE(x_accels[0] == Approx(std::sqrt(3.0)/2.0).epsilon(0.01));
     REQUIRE(y_accels[0] == Approx(1.0/2.0).epsilon(0.01));
 
-    stochastic::VlachosEtAl test_model_2(6.5, 30.0, 500.0, 315.0);
+    stochastic::VlachosEtAl test_model_2(6.5, 30.0, 500.0, 315.0, 1, 1);
     test_model_2.rotate_acceleration(acceleration, x_accels, y_accels);
 
     REQUIRE(x_accels[0] == Approx(1.0/std::sqrt(2.0)).epsilon(0.01));
@@ -91,8 +96,19 @@ TEST_CASE("Test Vlachos et al. (2018) implementation", "[Stochastic][Seismic]") 
     }
   }
 
-  SECTION("Test time history generation") {
-    auto success = test_model.generate("TestHistory", "./test.json");
+  SECTION("Test time history generation") {  
+    auto test_model_factory =
+        Factory<stochastic::StochasticModel, double, double, double, double,
+                unsigned int, unsigned int>::instance()
+            ->create("VlachosSiteSpecificEQ", std::move(moment_magnitude),
+                     std::move(rupture_dist), std::move(vs30),
+                     std::move(orientation), std::move(num_spectra),
+                     std::move(num_sims));
+
+    auto success = test_model_factory->generate("TestHistory", "./test.json");
     REQUIRE(success);
+
+    // stochastic::VlachosEtAl coalinga_model(6.36, 43.6, 441.4, 0.0, 0.01, 0.2, 1, 1);
+    // auto results = coalinga_model.generate("TestHistory", "./coalinga.json");
   }
 }

@@ -12,6 +12,7 @@
 #include "normal_dist.h"
 #include "normal_multivar.h"
 #include "students_t_dist.h"
+#include "vlachos_et_al.h"
 #include "window.h"
 
 /**
@@ -53,6 +54,11 @@ void initialize() {
   static Register<stochastic::Distribution, stochastic::StudentstDistribution,
                   double, double, double>
       student_t_dist("StudentstDist");
+
+  // STOCHASTIC MODELS
+  static Register<stochastic::StochasticModel, stochastic::VlachosEtAl, double,
+                  double, double, double, unsigned int, unsigned int>
+      vlachos_et_al("VlachosSiteSpecificEQ");
 
   // WINDOW FUNCTIONS
   // Register Hann window
