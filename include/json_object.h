@@ -99,20 +99,20 @@ class JsonObject {
    */
   unsigned int get_size() const;
 
- protected:
-  /**
-   * @constructor Construct JsonObject from underlying library object
-   * @param[in] library_json Library JSON object
-   */
-  JsonObject(json library_json);
-  
   /**
    * Get underlying JSON library object
    * @return Copy of interal JSON implementation
    */
   json get_library_json() const {
     return json_object_;
-  };
+  };  
+
+ protected:
+  /**
+   * @constructor Construct JsonObject from underlying library object
+   * @param[in] library_json Library JSON object
+   */
+  JsonObject(json library_json);
 
   json json_object_; /**< JSON object for this class */
 };
