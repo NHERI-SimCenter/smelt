@@ -38,13 +38,35 @@ class VlachosEtAl : public StochasticModel {
    *                        degrees) away from x-axis rotating around z-axis in
    *                        right-handed coordinate system.
    * @param[in] num_spectra Number of evolutionary power spectra that should be
-   *                        generated. Default value is 1.
+   *                        generated.
    * @param[in] num_sims Number of simulated ground motion time histories that
    *                     should be generated per evolutionary power
    */
   VlachosEtAl(double moment_magnitude, double rupture_distance, double vs30,
               double orientation, unsigned int num_spectra,
               unsigned int num_sims);
+
+  /**
+   * @constructor Construct scenario specific ground motion model based on input
+   * parameters
+   * @param[in] moment_magnitude Moment magnitude of earthquake scenario
+   * @param[in] rupture_distance Closest-to-site rupture distance in kilometers
+   * @param[in] vs30 Soil shear wave velocity averaged over top 30 meters in
+   *                 meters per second
+   * @param[in] orientation Orientation of acceleration relative to global
+   *                        coordinates. Represents counter-clockwise angle (in
+   *                        degrees) away from x-axis rotating around z-axis in
+   *                        right-handed coordinate system.
+   * @param[in] num_spectra Number of evolutionary power spectra that should be
+   *                        generated.
+   * @param[in] num_sims Number of simulated ground motion time histories that
+   *                     should be generated per evolutionary power
+   * @param[in] seed_value Value to seed random variables with to ensure
+   *                       repeatability
+   */
+  VlachosEtAl(double moment_magnitude, double rupture_distance, double vs30,
+              double orientation, unsigned int num_spectra,
+              unsigned int num_sims, int seed_value);  
 
   /**
    * @destructor Virtual destructor
@@ -227,6 +249,7 @@ class VlachosEtAl : public StochasticModel {
   unsigned int num_sims_; /**< Number of simulated ground motion time histories
                              that should be generated per evolutionary power
                              spectrum */
+  int seed_value_; /**< Integer to seed random distributions with */
   Eigen::VectorXd means_; /**< Mean values of model parameters */
   Eigen::MatrixXd covariance_; /**< Covariance matrix for model parameters */
   std::vector<std::shared_ptr<stochastic::Distribution>>

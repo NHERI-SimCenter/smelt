@@ -48,6 +48,9 @@ void config::initialize() {
   static Register<stochastic::StochasticModel, stochastic::VlachosEtAl, double,
                   double, double, double, unsigned int, unsigned int>
       vlachos_et_al("VlachosSiteSpecificEQ");
+  static Register<stochastic::StochasticModel, stochastic::VlachosEtAl, double,
+                  double, double, double, unsigned int, unsigned int, int>
+      vlachos_et_al_seed("VlachosSiteSpecificEQ");
 
   // WINDOW FUNCTIONS
   // Register Hann window
