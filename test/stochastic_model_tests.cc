@@ -71,13 +71,13 @@ TEST_CASE("Test Vlachos et al. (2018) implementation", "[Stochastic][Seismic]") 
     std::vector<double> x_accels(acceleration.size());
     std::vector<double> y_accels(acceleration.size());
 
-    test_model.rotate_acceleration(acceleration, x_accels, y_accels);
+    test_model.rotate_acceleration(acceleration, x_accels, y_accels, false);
 
     REQUIRE(x_accels[0] == Approx(std::sqrt(3.0) / (100.0 *2.0)).epsilon(0.01));
     REQUIRE(y_accels[0] == Approx(1.0/(100.0 * 2.0)).epsilon(0.01));
 
     stochastic::VlachosEtAl test_model_2(6.5, 30.0, 500.0, 315.0, 1, 1);
-    test_model_2.rotate_acceleration(acceleration, x_accels, y_accels);
+    test_model_2.rotate_acceleration(acceleration, x_accels, y_accels, false);
 
     REQUIRE(x_accels[0] == Approx(1.0/(100.0 * std::sqrt(2.0))).epsilon(0.01));
     REQUIRE(y_accels[0] == Approx(-1.0/(100.0 * std::sqrt(2.0))).epsilon(0.01));
@@ -105,7 +105,7 @@ TEST_CASE("Test Vlachos et al. (2018) implementation", "[Stochastic][Seismic]") 
                      std::move(orientation), std::move(num_spectra),
                      std::move(num_sims));
 
-    auto success = test_model_factory->generate("TestHistory", "./test.json");
+    auto success = test_model_factory->generate("TestHistory", "./test.json", false);
     REQUIRE(success);
 
     // stochastic::VlachosEtAl coalinga_model(6.36, 43.6, 441.4, 0.0, 0.01, 0.2, 1, 1);
