@@ -81,6 +81,13 @@ TEST_CASE("Test Vlachos et al. (2018) implementation", "[Stochastic][Seismic]") 
 
     REQUIRE(x_accels[0] == Approx(1.0/(100.0 * std::sqrt(2.0))).epsilon(0.01));
     REQUIRE(y_accels[0] == Approx(-1.0/(100.0 * std::sqrt(2.0))).epsilon(0.01));
+
+    test_model_2.rotate_acceleration(acceleration, x_accels, y_accels, true);
+
+    REQUIRE(x_accels[0] ==
+            Approx(1.0 / (100.0 * 9.81 * std::sqrt(2.0))).epsilon(0.01));
+    REQUIRE(y_accels[0] ==
+            Approx(-1.0 / (100.0 * 9.81 * std::sqrt(2.0))).epsilon(0.01));
   }
 
   SECTION("Test K-T model") {
