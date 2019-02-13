@@ -2,6 +2,7 @@
 #include <cmath>
 #include <catch/catch.hpp>
 #include <Eigen/Dense>
+#include <nlohmann_json/json.hpp>
 #include "factory.h"
 #include "vlachos_et_al.h"
 
@@ -12,7 +13,7 @@ TEST_CASE("Test Vlachos et al. (2018) implementation", "[Stochastic][Seismic]") 
   unsigned int num_spectra = 2, num_sims = 2;
  
   stochastic::VlachosEtAl test_model(moment_magnitude, rupture_dist, vs30, orientation, num_spectra, num_sims);
-  
+
   SECTION("Test modal frequency identification") {
     std::vector<double> params = {2.0, 3.0, 4.0};
     std::vector<double> energy = {0.5, 2.5};
@@ -118,4 +119,31 @@ TEST_CASE("Test Vlachos et al. (2018) implementation", "[Stochastic][Seismic]") 
     // stochastic::VlachosEtAl coalinga_model(6.36, 43.6, 441.4, 0.0, 0.01, 0.2, 1, 1);
     // auto results = coalinga_model.generate("TestHistory", "./coalinga.json");
   }
+  
+  SECTION("Test time history generation") {
+    int seed = 10;    
+    auto test_model_factory1 =
+        Factory<stochastic::StochasticModel, double, double, double, double,
+                unsigned int, unsigned int, int>::instance()
+            ->create("VlachosSiteSpecificEQ", std::move(moment_magnitude),
+                     std::move(rupture_dist), std::move(vs30),
+                     std::move(orientation), std::move(num_spectra),
+                     std::move(num_sims), std::move(seed));
+      
+    auto test_model_factory2 =
+        Factory<stochastic::StochasticModel, double, double, double, double,
+                unsigned int, unsigned int, int>::instance()
+            ->create("VlachosSiteSpecificEQ", std::move(moment_magnitude),
+                     std::move(rupture_dist), std::move(vs30),
+                     std::move(orientation), std::move(num_spectra),
+                     std::move(num_sims), std::move(seed));
+
+    auto result1 = test_model_factory1->generate("TestHistory");
+    auto result2 = test_model_factory2->generate("TestHistory");
+    auto json1 = result1.get_library_json();
+    auto json2 = result2.get_library_json();
+
+    REQUIRE(json1["Events"][0]["timeSeries"][0]["data"] ==
+            json2["Events"][0]["timeSeries"][0]["data"]);
+  }  
 }

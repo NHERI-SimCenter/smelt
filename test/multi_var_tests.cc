@@ -110,4 +110,25 @@ TEST_CASE("Test generation of random numbers", "[RandomNumbers]") {
 
     REQUIRE(cov.lpNorm<2>() == Approx(calculated_cov.lpNorm<2>()).epsilon(0.01));
   }
+
+  SECTION("Check that number generated using the same seed match", "[RandomNumbers]") {
+    int seed = 500;
+    auto random_generator1 =
+        Factory<numeric_utils::RandomGenerator, int>::instance()->create(
+            "MultivariateNormal", std::move(seed));
+    auto random_generator2 =
+        Factory<numeric_utils::RandomGenerator, int>::instance()->create(
+            "MultivariateNormal", std::move(seed));    
+   
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> random_numbers1;
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> random_numbers2;
+    Eigen::VectorXd means(1);
+    Eigen::MatrixXd cov(1,1);    
+    means(0) = 1.789;
+    cov(0, 0) = 0.0123;
+
+    random_generator1->generate(random_numbers1, means, cov, 100);
+    random_generator2->generate(random_numbers2, means, cov, 100);    
+    REQUIRE(random_numbers1 == random_numbers2);
+  }
 }

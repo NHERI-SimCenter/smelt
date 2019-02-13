@@ -627,14 +627,12 @@ void stochastic::VlachosEtAl::simulate_time_history(
     frequencies[i] = i * freq_step_;
   }
 
-  // Create random number for phase angle
-  static int seed = seed_value_ == std::numeric_limits<int>::infinity()
-                        ? static_cast<int>(std::time(nullptr))
-                        : seed_value_ + 10;
-  // Increment seed to ensure that time histories are different since machine time might
-  // not have changed during iterations
-  seed = seed + 1;
-  auto generator = boost::random::mt19937(seed);
+  auto generator =
+      seed_value_ != std::numeric_limits<int>::infinity()
+          ? boost::random::mt19937(static_cast<unsigned int>(seed_value_ + 10))
+          : boost::random::mt19937(
+                static_cast<unsigned int>(std::time(nullptr)));
+
   boost::random::uniform_real_distribution<> distribution(0.0, 2.0 * M_PI);
   boost::random::variate_generator<boost::random::mt19937&,
                                    boost::random::uniform_real_distribution<>>
