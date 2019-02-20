@@ -37,8 +37,8 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
       cutoff_freq_{220.0},
       num_spectra_{num_spectra},
       num_sims_{num_sims},
-      model_parameters_(18),
-      seed_value_{std::numeric_limits<int>::infinity()} {
+      seed_value_{std::numeric_limits<int>::infinity()},
+      model_parameters_{18} {
   model_name_ = "VlachosEtAl";
   // Factors for site condition based on Vs30
   double site_soft = 0.0, site_medium = 0.0, site_hard = 0.0;
@@ -225,8 +225,8 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
       cutoff_freq_{220.0},
       num_spectra_{num_spectra},
       num_sims_{num_sims},
-      model_parameters_(18),
-      seed_value_{seed_value} {
+      seed_value_{seed_value},
+      model_parameters_{18} {
   model_name_ = "VlachosEtAl";
   // Factors for site condition based on Vs30
   double site_soft = 0.0, site_medium = 0.0, site_hard = 0.0;
@@ -304,13 +304,32 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
     -0.6701, -0.0510, 0.0245, 0.0631, -0.0844, 0.0281, 0.0626, -0.0599, 0.0320, 0.1000, 0.0037, -0.0354, 0.0243, -0.0411, -0.0637, 0.0503, -0.0930, 1.0000;
   // clang-format on
 
-  // Mean of transformed normal model parameters (described by Eq. 25 on page 12)
+  // UNCOMMENT THESE WHEN DONE TESTING //////////////////////////////////////////////
+  // Mean of transformed normal model parameters (described by Eq. 25 on page 12)   
   means_ = beta * conditional_means;
-
+  
   // Convert the standard deviation and correlation to covariance
   covariance_ = numeric_utils::corr_to_cov(correlation_matrix,
                                            (variance.array().sqrt()).matrix());
+  ///////////////////////////////////////////////////////////////////////////////////
+  
+  // Livermore-01 values for validation
+  // clang-format off
+  // means_ = 0.17, 0.85, 1.98, 1.19, 2.63, 3.73, 1.29, 2.5, 0.15, 0.12,
+  //          2.63, 0.24, 0.22, 1.66, 0.93, 0.28, 2556, 39.04;
+           
 
+  // covariance_ =
+  //   1.0, 0.05, -0.32, -0.2, -0.22, -0.29, -0.23, -0.25, 0.19, 0.16, 0.02, 0.01, -0.12, 0.0, -0.11, 0.1, 0.23, -0.34,
+  //   0.05, 1.0, 0.02, -0.13, -0.22, -0.05, -0.24, -0.32, -0.16, -0.07, -0.06, -0.02, -0.1, -0.1, -0.12, -0.02, -0.06, 0.12,
+  //   -0.32, 0.02, 1.0, 0.56, 0.53, 0.83, 0.25, 0.2, -0.02, -0.27, 0.03, -0.02, -0.07, 0.06, 0.11, -0.01, -0.28, -0.17,
+  //   -0.2, -0.13, 0.56, 1.0, 0.95, 0.39, 0.56, 0.53, 0.1, -0.16, 0.05, -0.07, 0.03, 0.06, 0.11, -0.02, -0.12, -0.01,
+  //   -0.22, -0.22, 0.53, 0.95, 1.0, 0.37, 0.58, 0.6, 0.13, -0.15, 0.05, -0.10, 0.01, 0.1, 0.12, -0.02, -0.12, 0.0,
+  //   -0.29, -0.05, 0.83, 0.39, 0.37, 1.0, 0.38, 0.34, 0.15, -0.22, -0.01, -0.11, -0.1, -0.
+
+
+  // clang-format on
+    
   // Generate realizations of model parameters
   sample_generator_ =
       Factory<numeric_utils::RandomGenerator, int>::instance()->create(
