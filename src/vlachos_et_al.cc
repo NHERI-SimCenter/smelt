@@ -1,3 +1,4 @@
+#include <fstream>
 #include <algorithm>
 #include <cmath>
 #include <ctime>
@@ -615,6 +616,15 @@ bool stochastic::VlachosEtAl::time_history_family(
 
   }
 
+  std::ofstream ps_spec("power_spectrum.txt");
+  if (ps_spec.is_open()) {
+    std::cout << "Time step size: " << time_step_
+              << "\nFreq step size: " << freq_step_ << std::endl;
+    std::cout << "Writing power spectrum of size: " << power_spectrum.rows()
+              << " x " << power_spectrum.cols() << "\n";
+    ps_spec << power_spectrum.transpose() << std::endl;
+  }
+							  
   // Get coefficients for highpass Butterworth filter  
   int num_samples =
       static_cast<int>(std::round(1.5 * static_cast<double>(filter_order) /
