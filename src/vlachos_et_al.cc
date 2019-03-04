@@ -627,11 +627,13 @@ void stochastic::VlachosEtAl::simulate_time_history(
     frequencies[i] = i * freq_step_;
   }
 
+  static unsigned int history_seed = static_cast<unsigned int>(std::time(nullptr));
+  history_seed = history_seed + 10;
+  
   auto generator =
-      seed_value_ != std::numeric_limits<int>::infinity()
-          ? boost::random::mt19937(static_cast<unsigned int>(seed_value_ + 10))
-          : boost::random::mt19937(
-                static_cast<unsigned int>(std::time(nullptr)));
+    seed_value_ != std::numeric_limits<int>::infinity()
+    ? boost::random::mt19937(static_cast<unsigned int>(seed_value_ + 10))
+    : boost::random::mt19937(history_seed);
 
   boost::random::uniform_real_distribution<> distribution(0.0, 2.0 * M_PI);
   boost::random::variate_generator<boost::random::mt19937&,
