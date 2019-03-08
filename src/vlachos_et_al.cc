@@ -137,10 +137,14 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
 
   // COMMENT WHEN DONE TESTING //////////////////////////////////////////////////////////
   // Livermore-01 values for validation
-
   means_.resize(18);
-  means_ << 0.17, 0.85, 1.98, 1.19, 2.63, 3.73, 1.29, 2.5, 0.15, 0.12,
+  means_ << 0.17, 0.85, 1.19, 2.63, 1.98, 1.29, 2.5, 3.73, 0.15, 0.12,
            2.63, 0.24, 0.22, 1.66, 0.93, 0.28, 2556.0, 39.04;
+
+  // Parkfield values for validation
+  // means_.resize(18);
+  // means_ << 0.14, 2.77, 2.0, 2.0, 2.43, 2.38, 2.82, 5.73, 0.16, 0.21,
+  //          1.11, 0.06, 0.08, 2.74, 0.39, 0.59, 23787, 25.28;
 
   physical_parameters_.resize(1, means_.size());
 
@@ -344,10 +348,15 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
 
   // COMMENT WHEN DONE TESTING //////////////////////////////////////////////////////////
   // Livermore-01 values for validation
-
   means_.resize(18);
-  means_ << 0.17, 0.85, 1.98, 1.19, 2.63, 3.73, 1.29, 2.5, 0.15, 0.12,
+  means_ << 0.17, 0.85, 1.19, 2.63, 1.98, 1.29, 2.5, 3.73, 0.15, 0.12,
            2.63, 0.24, 0.22, 1.66, 0.93, 0.28, 2556.0, 39.04;
+
+  // Parkfield values for validation
+  // means_.resize(18);
+  // means_ << 0.14, 2.77, 2.0, 2.0, 2.43, 2.38, 2.82, 5.73, 0.16, 0.21,
+  //          1.11, 0.06, 0.08, 2.74, 0.39, 0.59, 23787, 25.28;
+  
 
   physical_parameters_.resize(1, means_.size());
 
@@ -539,9 +548,9 @@ bool stochastic::VlachosEtAl::time_history_family(
   Eigen::VectorXd identified_parameters = parameters;
     
   unsigned int num_times =
-      static_cast<unsigned int>(std::ceil(identified_parameters[17] / time_step_));
+      static_cast<unsigned int>(std::ceil(identified_parameters[17] / time_step_)) + 1;
   unsigned int num_freqs =
-      static_cast<unsigned int>(std::ceil(cutoff_freq_ / freq_step_));
+      static_cast<unsigned int>(std::ceil(cutoff_freq_ / freq_step_)) + 1;
 
   std::vector<double> times(num_times);
   std::vector<double> frequencies(num_freqs);
@@ -616,14 +625,14 @@ bool stochastic::VlachosEtAl::time_history_family(
 
   }
 
-  std::ofstream ps_spec("power_spectrum.txt");
-  if (ps_spec.is_open()) {
-    std::cout << "Time step size: " << time_step_
-              << "\nFreq step size: " << freq_step_ << std::endl;
-    std::cout << "Writing power spectrum of size: " << power_spectrum.rows()
-              << " x " << power_spectrum.cols() << "\n";
-    ps_spec << power_spectrum.transpose() << std::endl;
-  }
+  // std::ofstream ps_spec("power_spectrum.txt");
+  // if (ps_spec.is_open()) {
+  //   std::cout << "Time step size: " << time_step_
+  //             << "\nFreq step size: " << freq_step_ << std::endl;
+  //   std::cout << "Writing power spectrum of size: " << power_spectrum.rows()
+  //             << " x " << power_spectrum.cols() << "\n";
+  //   ps_spec << power_spectrum.transpose() << std::endl;
+  // }
 							  
   // Get coefficients for highpass Butterworth filter  
   int num_samples =
