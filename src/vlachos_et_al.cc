@@ -330,7 +330,6 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
     -0.6701, -0.0510, 0.0245, 0.0631, -0.0844, 0.0281, 0.0626, -0.0599, 0.0320, 0.1000, 0.0037, -0.0354, 0.0243, -0.0411, -0.0637, 0.0503, -0.0930, 1.0000;
   // clang-format on
 
-  // UNCOMMENT THESE WHEN DONE TESTING //////////////////////////////////////////////
   // Mean of transformed normal model parameters (described by Eq. 25 on page 12)   
   // means_ = beta * conditional_means;
   
@@ -365,7 +364,6 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
     physical_parameters_(0, i) = means_(i);
   }  
   ////////////////////////////////////////////////////////////////////////////////////////
-
 
   // Create distributions for model parameters
   model_parameters_[0] =
@@ -688,11 +686,13 @@ void stochastic::VlachosEtAl::simulate_time_history(
     frequencies[i] = i * freq_step_;
   }
 
+  static unsigned int history_seed = static_cast<unsigned int>(std::time(nullptr));
+  history_seed = history_seed + 10;
+  
   auto generator =
-      seed_value_ != std::numeric_limits<int>::infinity()
-          ? boost::random::mt19937(static_cast<unsigned int>(seed_value_ + 10))
-          : boost::random::mt19937(
-                static_cast<unsigned int>(std::time(nullptr)));
+    seed_value_ != std::numeric_limits<int>::infinity()
+    ? boost::random::mt19937(static_cast<unsigned int>(seed_value_ + 10))
+    : boost::random::mt19937(history_seed);
 
   boost::random::uniform_real_distribution<> distribution(0.0, 2.0 * M_PI);
   boost::random::variate_generator<boost::random::mt19937&,
