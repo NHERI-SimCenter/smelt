@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include <fstream>
 #include <algorithm>
 #include <cmath>
@@ -618,7 +619,7 @@ bool stochastic::VlachosEtAl::time_history_family(
              frequencies, highpass_butter_energy);
 
     double freq_domain_integral =
-        numeric_utils::trapazoid_rule(power_spectrum.row(i), freq_step_);
+      2.0 * numeric_utils::trapazoid_rule(power_spectrum.row(i), freq_step_);
     
     power_spectrum.row(i) =
         power_spectrum.row(i) * amplitude_modulation[i] / freq_domain_integral;
@@ -644,7 +645,7 @@ bool stochastic::VlachosEtAl::time_history_family(
   auto hp_butter =
       Dispatcher<std::vector<std::vector<double>>, int, double>::instance()
           ->dispatch("HighPassButter", filter_order,
-                     norm_cutoff_freq / (1.0 / (time_step_ / 2.0)));
+                     norm_cutoff_freq / (1.0 / time_step_ / 2.0));
 
   // Calculate filter impulse response for calculated number of samples
   auto impulse_response =
@@ -954,7 +955,7 @@ void stochastic::VlachosEtAl::rotate_acceleration(
   x_accels.resize(acceleration.size());
   y_accels.resize(acceleration.size());
 
-  double conversion_factor = g_units ? 100.0 * 9.81 : 100.0;
+  double conversion_factor = g_units ? 9.81 : 1.0;
   
   // No orientation specified to acceleration oriented along x-axis
   if (std::abs(orientation_) < 1E-6) {
