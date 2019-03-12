@@ -119,39 +119,39 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
   // clang-format on
 
   // UNCOMMENT WHEN DONE TESTING ///////////////////////////////////////////////////////////
-  // // Mean of transformed normal model parameters (described by Eq. 25 on page 12)
-  // means_ = beta * conditional_means;
+  // Mean of transformed normal model parameters (described by Eq. 25 on page 12)
+  means_ = beta * conditional_means;
 
-  // // Convert the standard deviation and correlation to covariance
-  // covariance_ = numeric_utils::corr_to_cov(correlation_matrix,
-  //                                          (variance.array().sqrt()).matrix());
+  // Convert the standard deviation and correlation to covariance
+  covariance_ = numeric_utils::corr_to_cov(correlation_matrix,
+                                           (variance.array().sqrt()).matrix());
 
-  // // Generate realizations of model parameters
-  // sample_generator_ =
-  //     Factory<numeric_utils::RandomGenerator>::instance()->create(
-  //         "MultivariateNormal");
-  // sample_generator_->generate(parameter_realizations_, means_, covariance_,
-  //                             num_spectra_);
-  // parameter_realizations_.transposeInPlace();
+  // Generate realizations of model parameters
+  sample_generator_ =
+      Factory<numeric_utils::RandomGenerator>::instance()->create(
+          "MultivariateNormal");
+  sample_generator_->generate(parameter_realizations_, means_, covariance_,
+                              num_spectra_);
+  parameter_realizations_.transposeInPlace();
   /////////////////////////////////////////////////////////////////////////////////////////
   
 
   // COMMENT WHEN DONE TESTING //////////////////////////////////////////////////////////
   // Livermore-01 values for validation
-  means_.resize(18);
-  means_ << 0.17, 0.85, 1.19, 2.63, 1.98, 1.29, 2.5, 3.73, 0.15, 0.12,
-           2.63, 0.24, 0.22, 1.66, 0.93, 0.28, 2556.0, 39.04;
+  // means_.resize(18);
+  // means_ << 0.17, 0.85, 1.19, 2.63, 1.98, 1.29, 2.5, 3.73, 0.15, 0.12,
+  //          2.63, 0.24, 0.22, 1.66, 0.93, 0.28, 2556.0, 39.04;
 
   // Parkfield values for validation
   // means_.resize(18);
   // means_ << 0.14, 2.77, 2.0, 2.0, 2.43, 2.38, 2.82, 5.73, 0.16, 0.21,
   //          1.11, 0.06, 0.08, 2.74, 0.39, 0.59, 23787, 25.28;
 
-  physical_parameters_.resize(1, means_.size());
+  // physical_parameters_.resize(1, means_.size());
 
-  for (unsigned int i = 0; i < means_.size(); ++i) {
-    physical_parameters_(0, i) = means_(i);
-  }  
+  // for (unsigned int i = 0; i < means_.size(); ++i) {
+  //   physical_parameters_(0, i) = means_(i);
+  // }  
   ////////////////////////////////////////////////////////////////////////////////////////
   
   // Create distributions for model parameters
@@ -219,18 +219,18 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
 
 
   // UNCOMMENT WHEN DONE TESTING ////////////////////////////////////////////////////
-  // physical_parameters_.resize(parameter_realizations_.rows(),
-  //                             parameter_realizations_.cols());
+  physical_parameters_.resize(parameter_realizations_.rows(),
+                              parameter_realizations_.cols());
 
-  // // Transform sample normal model parameters to physical space
-  // for (unsigned int i = 0; i < parameter_realizations_.rows(); ++i) {
-  //   for (unsigned int j = 0; j < model_parameters_.size(); ++j) {
-  //     physical_parameters_(i, j) =
-  //         (model_parameters_[j]->inv_cumulative_dist_func(
-  //             std_normal_dist->cumulative_dist_func(
-  //                 std::vector<double>{parameter_realizations_(i, j)})))[0];
-  //   }
-  // }
+  // Transform sample normal model parameters to physical space
+  for (unsigned int i = 0; i < parameter_realizations_.rows(); ++i) {
+    for (unsigned int j = 0; j < model_parameters_.size(); ++j) {
+      physical_parameters_(i, j) =
+          (model_parameters_[j]->inv_cumulative_dist_func(
+              std_normal_dist->cumulative_dist_func(
+                  std::vector<double>{parameter_realizations_(i, j)})))[0];
+    }
+  }
   ///////////////////////////////////////////////////////////////////////////////////
 }
 
@@ -330,27 +330,28 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
     -0.6701, -0.0510, 0.0245, 0.0631, -0.0844, 0.0281, 0.0626, -0.0599, 0.0320, 0.1000, 0.0037, -0.0354, 0.0243, -0.0411, -0.0637, 0.0503, -0.0930, 1.0000;
   // clang-format on
 
+  // UNCOMMENT WHEN DONE TESTING ///////////////////////////////////////////////////////////  
   // Mean of transformed normal model parameters (described by Eq. 25 on page 12)   
-  // means_ = beta * conditional_means;
+  means_ = beta * conditional_means;
   
   // Convert the standard deviation and correlation to covariance
-  // covariance_ = numeric_utils::corr_to_cov(correlation_matrix,
-  //                                          (variance.array().sqrt()).matrix());
+  covariance_ = numeric_utils::corr_to_cov(correlation_matrix,
+                                           (variance.array().sqrt()).matrix());
 
-  // sample_generator_ =
-  //     Factory<numeric_utils::RandomGenerator, int>::instance()->create(
-  //         "MultivariateNormal", std::move(seed_value_));
-  // sample_generator_->generate(parameter_realizations_, means_, covariance_,
-  //                             num_spectra_);
-  // parameter_realizations_.transposeInPlace();
+  sample_generator_ =
+      Factory<numeric_utils::RandomGenerator, int>::instance()->create(
+          "MultivariateNormal", std::move(seed_value_));
+  sample_generator_->generate(parameter_realizations_, means_, covariance_,
+                              num_spectra_);
+  parameter_realizations_.transposeInPlace();
   ///////////////////////////////////////////////////////////////////////////////////
 
 
   // COMMENT WHEN DONE TESTING //////////////////////////////////////////////////////////
   // Livermore-01 values for validation
-  means_.resize(18);
-  means_ << 0.17, 0.85, 1.19, 2.63, 1.98, 1.29, 2.5, 3.73, 0.15, 0.12,
-           2.63, 0.24, 0.22, 1.66, 0.93, 0.28, 2556.0, 39.04;
+  // means_.resize(18);
+  // means_ << 0.17, 0.85, 1.19, 2.63, 1.98, 1.29, 2.5, 3.73, 0.15, 0.12,
+  //          2.63, 0.24, 0.22, 1.66, 0.93, 0.28, 2556.0, 39.04;
 
   // Parkfield values for validation
   // means_.resize(18);
@@ -358,11 +359,11 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
   //          1.11, 0.06, 0.08, 2.74, 0.39, 0.59, 23787, 25.28;
   
 
-  physical_parameters_.resize(1, means_.size());
+  // physical_parameters_.resize(1, means_.size());
 
-  for (unsigned int i = 0; i < means_.size(); ++i) {
-    physical_parameters_(0, i) = means_(i);
-  }  
+  // for (unsigned int i = 0; i < means_.size(); ++i) {
+  //   physical_parameters_(0, i) = means_(i);
+  // }  
   ////////////////////////////////////////////////////////////////////////////////////////
 
   // Create distributions for model parameters
@@ -429,18 +430,18 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
           "NormalDist", std::move(0.0), std::move(1.0));
 
   // UNCOMMENT WHEN DONE TESTING /////////////////////////////////////////////////////////////////////////////////////
-  // physical_parameters_.resize(parameter_realizations_.rows(),
-  //                             parameter_realizations_.cols());
+  physical_parameters_.resize(parameter_realizations_.rows(),
+                              parameter_realizations_.cols());
 
-  // // Transform sample normal model parameters to physical space
-  // for (unsigned int i = 0; i < parameter_realizations_.rows(); ++i) {
-  //   for (unsigned int j = 0; j < model_parameters_.size(); ++j) {
-  //     physical_parameters_(i, j) =
-  //         (model_parameters_[j]->inv_cumulative_dist_func(
-  //             std_normal_dist->cumulative_dist_func(
-  //                 std::vector<double>{parameter_realizations_(i, j)})))[0];
-  //   }
-  // }
+  // Transform sample normal model parameters to physical space
+  for (unsigned int i = 0; i < parameter_realizations_.rows(); ++i) {
+    for (unsigned int j = 0; j < model_parameters_.size(); ++j) {
+      physical_parameters_(i, j) =
+          (model_parameters_[j]->inv_cumulative_dist_func(
+              std_normal_dist->cumulative_dist_func(
+                  std::vector<double>{parameter_realizations_(i, j)})))[0];
+    }
+  }
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }
 
@@ -457,8 +458,8 @@ utilities::JsonObject stochastic::VlachosEtAl::generate(
   // specified by requested number of simulations per spectra.
   try {
     for (unsigned int i = 0; i < num_spectra_; ++i) {
-      time_history_family(acceleration_pool[i], means_);
-      // time_history_family(acceleration_pool[i], physical_parameters_.row(i));
+      // time_history_family(acceleration_pool[i], means_);
+      time_history_family(acceleration_pool[i], physical_parameters_.row(i));
     }
   } catch (const std::exception& e) {
     std::cerr << e.what();
@@ -543,8 +544,8 @@ bool stochastic::VlachosEtAl::time_history_family(
     std::vector<std::vector<double>>& time_histories,
     const Eigen::VectorXd& parameters) const {
   bool status = true;
-  // auto identified_parameters = identify_parameters(parameters);
-  Eigen::VectorXd identified_parameters = parameters;
+  auto identified_parameters = identify_parameters(parameters);
+  // Eigen::VectorXd identified_parameters = parameters;
     
   unsigned int num_times =
       static_cast<unsigned int>(std::ceil(identified_parameters[17] / time_step_)) + 1;
@@ -955,7 +956,7 @@ void stochastic::VlachosEtAl::rotate_acceleration(
   x_accels.resize(acceleration.size());
   y_accels.resize(acceleration.size());
 
-  double conversion_factor = g_units ? 9.81 : 1.0;
+  double conversion_factor = g_units ? 100 * 9.81 : 100.0;
   
   // No orientation specified to acceleration oriented along x-axis
   if (std::abs(orientation_) < 1E-6) {
