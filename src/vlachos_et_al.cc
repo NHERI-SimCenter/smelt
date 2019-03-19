@@ -181,7 +181,7 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
           "LognormalDist", std::move(3.356), std::move(0.473));    
   model_parameters_[8] =
     Factory<stochastic::Distribution, double, double>::instance()->create(
-          "BetaDist", std::move(2.516), std::move(9.714));
+          "BetaDist", std::move(2.516), std::move(9.174));
   model_parameters_[9] =
     Factory<stochastic::Distribution, double, double>::instance()->create(
           "BetaDist", std::move(3.582), std::move(15.209));
