@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include <algorithm>
 #include <cmath>
 #include <ctime>
@@ -158,7 +159,7 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
           "LognormalDist", std::move(3.356), std::move(0.473));    
   model_parameters_[8] =
     Factory<stochastic::Distribution, double, double>::instance()->create(
-          "BetaDist", std::move(2.516), std::move(9.714));
+          "BetaDist", std::move(2.516), std::move(9.174));
   model_parameters_[9] =
     Factory<stochastic::Distribution, double, double>::instance()->create(
           "BetaDist", std::move(3.582), std::move(15.209));
@@ -497,9 +498,9 @@ bool stochastic::VlachosEtAl::time_history_family(
   auto identified_parameters = identify_parameters(parameters);
   
   unsigned int num_times =
-      static_cast<unsigned int>(std::ceil(identified_parameters[17] / time_step_));
+      static_cast<unsigned int>(std::ceil(identified_parameters[17] / time_step_)) + 1;
   unsigned int num_freqs =
-      static_cast<unsigned int>(std::ceil(cutoff_freq_ / freq_step_));
+      static_cast<unsigned int>(std::ceil(cutoff_freq_ / freq_step_)) + 1;
 
   std::vector<double> times(num_times);
   std::vector<double> frequencies(num_freqs);
@@ -567,7 +568,7 @@ bool stochastic::VlachosEtAl::time_history_family(
              frequencies, highpass_butter_energy);
 
     double freq_domain_integral =
-        numeric_utils::trapazoid_rule(power_spectrum.row(i), freq_step_);
+      2.0 * numeric_utils::trapazoid_rule(power_spectrum.row(i), freq_step_);
     
     power_spectrum.row(i) =
         power_spectrum.row(i) * amplitude_modulation[i] / freq_domain_integral;
@@ -584,7 +585,7 @@ bool stochastic::VlachosEtAl::time_history_family(
   auto hp_butter =
       Dispatcher<std::vector<std::vector<double>>, int, double>::instance()
           ->dispatch("HighPassButter", filter_order,
-                     norm_cutoff_freq / (1.0 / (time_step_ / 2.0)));
+                     norm_cutoff_freq / (1.0 / time_step_ / 2.0));
 
   // Calculate filter impulse response for calculated number of samples
   auto impulse_response =
