@@ -17,23 +17,23 @@ set(CORE_LIB "ippcore")
 set(VM_LIB "ippvm")
 set(S_LIB "ipps")
 
-find_path(IPP_INCLUDE_DIR NAMES ipps.h HINTS ${PROJECT_SOURCE_DIR}/external/intel_ipp/include)
+find_path(IPP_INCLUDE_DIR NAMES ipps.h HINTS ${PROJECT_SOURCE_DIR}/external/intel_ipp/include /opt/intel/compilers_and_libraries_2018.2.199/linux/ipp/include)
 
 find_library(IPP_CORE_LIB
   NAMES ${CORE_LIB}
-  PATHS ${PROJECT_SOURCE_DIR}/external/intel_ipp/lib
+  PATHS ${PROJECT_SOURCE_DIR}/external/intel_ipp/lib /opt/intel/compilers_and_libraries_2018.2.199/linux/ipp/lib/intel64
   NO_DEFAULT_PATH
   )
 
 find_library(IPP_VM_LIB
   NAMES ${VM_LIB}
-  PATHS ${PROJECT_SOURCE_DIR}/external/intel_ipp/lib
+  PATHS ${PROJECT_SOURCE_DIR}/external/intel_ipp/lib /opt/intel/compilers_and_libraries_2018.2.199/linux/ipp/lib/intel64
   NO_DEFAULT_PATH
   )
 
 find_library(IPP_S_LIB
   NAMES ${S_LIB}
-  PATHS ${PROJECT_SOURCE_DIR}/external/intel_ipp/lib
+  PATHS ${PROJECT_SOURCE_DIR}/external/intel_ipp/lib /opt/intel/compilers_and_libraries_2018.2.199/linux/ipp/lib/intel64
   NO_DEFAULT_PATH
   )
 
