@@ -14,11 +14,11 @@
 
 set(INT_LIB "mkl_rt")
 
-find_path(MKL_INCLUDE_DIR NAMES mkl.h HINTS ${PROJECT_SOURCE_DIR}/external/intel_mkl/include)
+find_path(MKL_INCLUDE_DIR NAMES mkl.h HINTS ${PROJECT_SOURCE_DIR}/external/intel_mkl/include /opt/intel/compilers_and_libraries_2018.2.199/linux/mkl/include)
 
 find_library(MKL_SINGLE_SHARED_LIBRARY
   NAMES ${INT_LIB}
-  PATHS ${PROJECT_SOURCE_DIR}/external/intel_mkl/lib
+  PATHS ${PROJECT_SOURCE_DIR}/external/intel_mkl/lib /opt/intel/compilers_and_libraries_2018.2.199/linux/mkl/lib/intel64
   NO_DEFAULT_PATH
   )
 
