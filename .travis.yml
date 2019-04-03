@@ -2,13 +2,13 @@ sudo: true
 branches:
   only:
     - master
+language:
+  - cpp
 
 matrix:
   include:
     - os: linux
       dist: xenial
-      language:
-        - cpp
       compiler:
         - g++      
       addons:
@@ -28,8 +28,6 @@ matrix:
       dist: xenial
       language:
         - cpp
-      compiler:
-        - clang++
       addons:
         apt:
           packages:
