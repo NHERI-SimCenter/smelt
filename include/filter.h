@@ -4,7 +4,7 @@
 #include <memory>
 #include <stdexcept>
 #include <vector>
-#include <intel_ipp/include/ipps.h>
+#include <ipps.h>
 
 /**
  * Signal processing functionality

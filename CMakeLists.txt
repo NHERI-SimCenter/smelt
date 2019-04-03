@@ -33,11 +33,9 @@ include_directories(${EIGEN_INCLUDE_DIR})
 include_directories(${BOOST_INCLUDE_DIR})
 include_directories(${JSON_INCLUDE_DIR})
 
-# Add link library directories for MKL and IPP
+# Add link library and include directories for MKL and IPP
 find_package(MKL)
-include_directories(${MKL_INCLUDE_DIRS})
 find_package(IPP)
-include_directories(${IPP_INCLUDE_DIRS})
 
 # Include directories
 include_directories(BEFORE
