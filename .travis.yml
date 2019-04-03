@@ -1,10 +1,4 @@
-dist: xenial
 sudo: true
-language:
-  - cpp
-compiler:
-  - g++
-
 branches:
   only:
     - master
@@ -13,6 +7,10 @@ matrix:
   include:
     - os: linux
       dist: xenial
+      language:
+        - cpp
+      compiler:
+        - g++      
       addons:
         apt:
           sources:
@@ -25,35 +23,27 @@ matrix:
             - graphviz
             - cmake	  
             - g++-7
-      env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-    - os: osx
-      osx_image: xcode10.2
+	    
+    - os: linux
+      dist: xenial
+      language:
+        - cpp
+      compiler:
+        - clang++
       addons:
-        homebrew:
-	  packages:
-          - doxygen
-          - doxygen-doc
-          - doxygen-latex
-          - doxygen-gui
-          - graphviz
-          - cmake	  
-          update: true      
+        apt:
+          packages:
+            - doxygen
+            - doxygen-doc
+            - doxygen-latex
+            - doxygen-gui
+            - graphviz
+            - cmake	  
+      env:
+        - MATRIX_EVAL="CC=clang && CXX=clang++"
 
 before_install:
     - eval "${MATRIX_EVAL}"
-
-install:
-  - if "$TRAVIS_OS_NAME" == "osx"
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  - conda info -a
-  - conda create -q -n test-env python=$TRAVIS_PYTHON_VERSION
-  - source activate test-env
 
 script:
   - wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
