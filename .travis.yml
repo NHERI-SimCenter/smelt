@@ -1,5 +1,3 @@
-language:
-  - cpp
 branches:
   only:
     - master
@@ -23,7 +21,9 @@ matrix:
             - graphviz
             - cmake	  
             - g++-7
-	    
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+
     - os: linux
       dist: xenial
       sudo: true
