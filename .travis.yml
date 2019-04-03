@@ -41,8 +41,6 @@ script:
   - sudo apt-get install intel-ipp-2019.3-062
   - source /opt/intel/mkl/bin/mklvars.sh intel64
   - source /opt/intel/ipp/bin/ippvars.sh intel64 linux
-  - echo $MKLROOT
-  - echo $IPPROOT
   - mkdir build
   - cd build
   - cmake ..
