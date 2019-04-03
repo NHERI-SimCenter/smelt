@@ -1,7 +1,7 @@
 #include <stdexcept>
 #include <Eigen/Dense>
-#include <intel_mkl/include/mkl.h>
-#include <intel_mkl/include/mkl_vsl.h>
+#include <mkl.h>
+#include <mkl_vsl.h>
 #include "numeric_utils.h"
 
 namespace numeric_utils {
