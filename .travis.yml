@@ -27,4 +27,10 @@ script:
   - ls $HOME/miniconda/pkgs/mkl-2019.3-intel_199/info
   - ls $HOME/miniconda/pkgs/mkl-2019.3-intel_199/lib  
   - ls $HOME/miniconda/pkgs/ipp-2019.3-intel_199/info
-  - ls $HOME/miniconda/pkgs/ipp-2019.3-intel_199/lib  
+  - ls $HOME/miniconda/pkgs/ipp-2019.3-intel_199/lib
+  - ls /opt/intel
+  - mkdir build
+  - cd build
+  - cmake ..
+  - make
+  - make test  
