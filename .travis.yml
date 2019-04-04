@@ -24,6 +24,8 @@ script:
   - conda update --yes conda
   - conda install -c intel mkl --yes
   - conda install -c intel ipp --yes
+  - ls $HOME/miniconda/
+  - ls $HOME/miniconda/site-packages
   - ls $HOME/miniconda/lib
   - ls $HOME/miniconda/include
   - ls $HOME/miniconda/bin  
