@@ -8,19 +8,12 @@ matrix:
   fast_finish: true
   include:
     - os: osx
-      osx_image: xcode10.2
-      language:
-        - cpp      
-      addons:
-        homebrew:
-	  packages:
-          - doxygen
-          - doxygen-doc
-          - doxygen-latex
-          - doxygen-gui
-          - graphviz
-          - cmake	  
-          update: true      
+      osx_image: xcode10.2    
+  addons:
+    homebrew:
+      packages:
+      - doxygen
+      update: true
 
 deploy:
   provider: pages
