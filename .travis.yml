@@ -25,3 +25,4 @@ script:
   - conda install -c intel mkl --yes
   - conda install -c intel ipp --yes
   - echo $MKLROOT
+  - echo $IPPROOT  
