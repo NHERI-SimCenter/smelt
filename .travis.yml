@@ -24,5 +24,7 @@ script:
   - conda update --yes conda
   - conda install -c intel mkl --yes
   - conda install -c intel ipp --yes
-  - ls $HOME/miniconda/pkgs/mkl-2019.3-intel_199
-  - ls $HOME/miniconda/pkgs/ipp-2019.3-intel_199
+  - ls $HOME/miniconda/pkgs/mkl-2019.3-intel_199/info
+  - ls $HOME/miniconda/pkgs/mkl-2019.3-intel_199/lib  
+  - ls $HOME/miniconda/pkgs/ipp-2019.3-intel_199/info
+  - ls $HOME/miniconda/pkgs/ipp-2019.3-intel_199/lib  
