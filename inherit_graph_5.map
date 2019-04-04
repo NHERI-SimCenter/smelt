@@ -1,0 +1,8 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classstochastic_1_1_distribution.html" title="stochastic::Distribution" alt="" coords="5,123,161,149"/>
+<area shape="rect" id="node2" href="$classstochastic_1_1_beta_distribution.html" title="stochastic::BetaDistribution" alt="" coords="226,5,409,32"/>
+<area shape="rect" id="node3" href="$classstochastic_1_1_inverse_gaussian_distribution.html" title="stochastic::InverseGaussian\lDistribution" alt="" coords="223,57,411,98"/>
+<area shape="rect" id="node4" href="$classstochastic_1_1_lognormal_distribution.html" title="stochastic::LognormalDistribution" alt="" coords="209,123,425,149"/>
+<area shape="rect" id="node5" href="$classstochastic_1_1_normal_distribution.html" title="stochastic::NormalDistribution" alt="" coords="218,173,417,200"/>
+<area shape="rect" id="node6" href="$classstochastic_1_1_studentst_distribution.html" title="stochastic::StudentstDistribution" alt="" coords="211,224,423,251"/>
+</map>
