@@ -25,5 +25,8 @@ script:
   - conda install -c intel mkl --yes
   - conda install -c intel ipp --yes
   - ls /opt/conda
+  - ls $HOME/miniconda
+  - ls $HOME/miniconda3
+  - ls $MINICONDA_ROOT
   - echo $MKLROOT
   - echo $IPPROOT  
