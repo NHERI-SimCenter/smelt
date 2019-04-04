@@ -10,6 +10,7 @@ matrix:
     - os: osx
       osx_image: xcode10.2
       python: 3.4
+      sudo: true
   addons:
     homebrew:
       packages:
