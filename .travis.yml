@@ -24,5 +24,6 @@ script:
   - conda update --yes conda
   - conda install -c intel mkl --yes
   - conda install -c intel ipp --yes
+  - ls /opt/conda
   - echo $MKLROOT
   - echo $IPPROOT  
