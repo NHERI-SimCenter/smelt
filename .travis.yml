@@ -22,5 +22,5 @@ script:
   - bash ~/miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda update --yes conda
-  - conda install -c intel mkl
-  - conda install -c intel ipp
+  - conda install -c intel mkl --yes
+  - conda install -c intel ipp --yes
