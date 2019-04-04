@@ -24,4 +24,5 @@ before install:
   - conda update --yes conda
 
 script:
-  - cmake --version
+  - conda install -c intel mkl
+  - conda install -c intel ipp
