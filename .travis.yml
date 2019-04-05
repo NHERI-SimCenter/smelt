@@ -23,12 +23,11 @@ script:
   - export PATH="$HOME/miniconda/bin:$PATH"
   - conda update --yes conda
   - conda install -c intel mkl --yes
+  - conda install -c intel mkl-include --yes
   - conda install -c intel ipp --yes
-  - ls $HOME/miniconda/pkgs/mkl-2019.3-intel_199/info
-  - ls $HOME/miniconda/pkgs/mkl-2019.3-intel_199/lib  
-  - ls $HOME/miniconda/pkgs/ipp-2019.3-intel_199/info
-  - ls $HOME/miniconda/pkgs/ipp-2019.3-intel_199/lib
-  - ls /opt/intel
+  - conda install -c intel ipp-include --yes
+  - ls $HOME/miniconda/lib
+  - ls $HOME/miniconda/include
   - mkdir build
   - cd build
   - cmake ..
