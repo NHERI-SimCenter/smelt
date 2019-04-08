@@ -51,4 +51,5 @@ before_install:
     - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then eval "${MATRIX_EVAL}"; fi
 
 script:
+    - chmod +x .travis/build.sh
     - .travis/build.sh
