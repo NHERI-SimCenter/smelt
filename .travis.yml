@@ -16,8 +16,14 @@ matrix:
       osx_image: xcode10.2
       python: 3.4
       sudo: true
+      addons:
+        homebrew:
+	  packages:
+	    - gcc-7
+	    - g++-7
+	  update: true      
       env:
-        - MATRIX_EVAL="brew install gcc && CC=gcc-7 && CXX=g++-7"
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
       
     - os: linux
       dist: xenial
