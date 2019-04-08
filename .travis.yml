@@ -54,7 +54,7 @@ matrix:
         - MATRIX_EVAL="CC=clang && CXX=clang++"
 
 before_install:
-    - eval "${MATRIX_EVAL}"; fi
+    - eval "${MATRIX_EVAL}"
 
 script:
     - chmod +x .travis/build.sh
