@@ -2,6 +2,18 @@ cmake_minimum_required(VERSION 3.0)
 
 project(StochasticModule LANGUAGES CXX)
 
+if(WIN32)
+  message(STATUS "This is a Windows machine")
+endif()
+
+if(APPLE)
+  message(STATUS "This is a Mac")
+endif()
+
+if(UNIX AND NOT APPLE)
+  message(STATUS "This is a Linux machine")
+endif()
+
 # Require C++11-compliant compiler
 set(CMAKE_CXX_STANDARD 11)
 
@@ -21,6 +33,10 @@ option(BUILD_TESTING "Enable testing for stochastic module" ON)
 # CMake Modules
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
+# Add link library and include directories for MKL and IPP
+find_package(MKL)
+find_package(IPP)
+
 # Set path for external dependencies
 set(JSON_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/nlohmann_json)
 set(CATCH_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/catch)
@@ -32,10 +48,8 @@ set(BOOST_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/boost)
 include_directories(${EIGEN_INCLUDE_DIR})
 include_directories(${BOOST_INCLUDE_DIR})
 include_directories(${JSON_INCLUDE_DIR})
-
-# Add link library and include directories for MKL and IPP
-find_package(MKL)
-find_package(IPP)
+include_directories(${MKL_INCLUDE_DIRS})
+include_directories(${IPP_INCLUDE_DIRS})
 
 # Include directories
 include_directories(BEFORE
@@ -58,9 +72,9 @@ set(SOURCES
   )
 
 # Add library as target
-add_library(lstoc SHARED ${SOURCES})
+add_library(lsmelt SHARED ${SOURCES})
 # Add libraries to link target to
-target_link_libraries(lstoc ${MKL_LIBRARIES} ${IPP_LIBRARIES})
+target_link_libraries(lsmelt ${MKL_LIBRARIES} ${IPP_LIBRARIES})
 
 # Unit testing
 if (BUILD_TESTING)
@@ -81,7 +95,7 @@ if (BUILD_TESTING)
   )
 
   add_executable(unit_tests ${TEST_SOURCES})
-  target_link_libraries(unit_tests lstoc)
+  target_link_libraries(unit_tests lsmelt)
   add_test(NAME run_unit_tests COMMAND unit_tests)
   enable_testing()
 endif()  
