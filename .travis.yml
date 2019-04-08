@@ -11,6 +11,13 @@ matrix:
       osx_image: xcode10.2
       python: 3.4
       sudo: true
+
+    - os: osx
+      osx_image: xcode10.2
+      python: 3.4
+      sudo: true
+      env:
+        - MATRIX_EVAL="brew install gcc && CC=gcc-7 && CXX=g++-7"
       
     - os: linux
       dist: xenial
@@ -48,8 +55,17 @@ matrix:
         - MATRIX_EVAL="CC=clang && CXX=clang++"
 
 before_install:
-    - if [[ "$TRAVIS_OS_NAME" != "osx" ]]; then eval "${MATRIX_EVAL}"; fi
+    - eval "${MATRIX_EVAL}"
 
 script:
     - chmod +x .travis/build.sh
     - .travis/build.sh
+
+deploy:
+  if: os = linux
+  provider: pages
+  skip_cleanup: true
+  local_dir: docs/html
+  github_token: $GH_REPO_TOKEN
+  on:
+    branch: master
