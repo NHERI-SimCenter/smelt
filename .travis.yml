@@ -28,8 +28,7 @@ script:
   - conda install -c intel ipp-include --yes
   - export MKLROOT=$HOME/miniconda
   - export IPPROOT=$HOME/miniconda
-  - ls $HOME/miniconda/lib
-  - ls $HOME/miniconda/include
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/miniconda/lib  
   - mkdir build
   - cd build
   - cmake ..
