@@ -14,7 +14,11 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/miniconda/lib  
   mkdir build
   cd build
-  cmake ..
+  cmake .. -DCMAKE_BUILD_TYPE=Debug
+  make
+  make test
+  rm -rf *
+  cmake .. -DCMAKE_BUILD_TYPE=Release
   make
   make test  
 else
@@ -29,9 +33,13 @@ else
   source /opt/intel/ipp/bin/ippvars.sh intel64 linux
   mkdir build
   cd build
-  cmake ..
+  cmake .. -DCMAKE_BUILD_TYPE=Debug
   make
   make test
+  rm -rf *
+  cmake .. -DCMAKE_BUILD_TYPE=Release  
+  make
+  make test  
   cd ..
   doxygen Doxyfile
 fi
