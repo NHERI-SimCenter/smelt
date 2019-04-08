@@ -14,6 +14,10 @@ steps:
   displayName: 'Run a one-line script'
 
 - script: |
+    conda install -c intel mkl
+    conda install -c intel mkl-include
+    conda install -c intel ipp
+    conda install -c intel ipp-include
     mkdir build
     cd build
     cmake ..
