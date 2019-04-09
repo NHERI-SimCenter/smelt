@@ -18,8 +18,7 @@ steps:
     echo Conda installed!
     set PATH=%PATH%;%UserProfile%\Miniconda3
     echo %UserProfile%\Miniconda3
-    cd %UserProfile%\Miniconda3
-    dir
+    where conda
     conda install -c intel mkl
     conda install -c intel mkl-include
     conda install -c intel ipp
