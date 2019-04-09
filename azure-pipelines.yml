@@ -11,9 +11,11 @@ pool:
 
 steps:
 - script: |
+    echo Downloading conda!
     powershell -command "iwr -outf miniconda_installer.exe https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe"
+    echo Installing conda!
     start /wait "" miniconda_installer.exe /InstallationType=JustMe /RegisterPython=0 /S /D=%UserProfile%\Miniconda3
-    dir
+    echo Conda installed!
     conda install -c intel mkl
     conda install -c intel mkl-include
     conda install -c intel ipp
