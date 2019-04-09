@@ -11,8 +11,9 @@ pool:
 
 steps:
 - script: |
-    wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe -OutFile miniconda_installer.exe
+    powershell -command "iwr -outf miniconda_installer.exe https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe"
     start /wait "" miniconda_installer.exe /InstallationType=JustMe /RegisterPython=0 /S /D=%UserProfile%\Miniconda3
+    dir
     conda install -c intel mkl
     conda install -c intel mkl-include
     conda install -c intel ipp
