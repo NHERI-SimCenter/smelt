@@ -21,6 +21,8 @@ steps:
     conda install -c intel mkl-include
     conda install -c intel ipp
     conda install -c intel ipp-include
+    cd .\Miniconda3
+    ls
     ls libs
     ls include
     set MKLROOT=%UserProfile%\Miniconda3
