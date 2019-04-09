@@ -21,12 +21,10 @@ steps:
     conda install -c intel mkl-include
     conda install -c intel ipp
     conda install -c intel ipp-include
-    set MKLROOT=%UserProfile%\Miniconda3\Library
-    set IPPROOT=%UserProfile%\Miniconda3\Library
+    set MKLROOT=%UserProfile%\Miniconda3
+    set IPPROOT=%UserProfile%\Miniconda3
     echo %MKLROOT%
-    echo %IPPROOT%    
-    ls %MKLROOT%\include
-    ls %MKLROOT%\bin
+    echo %IPPROOT%
     mkdir build
     cd build
     cmake ..
