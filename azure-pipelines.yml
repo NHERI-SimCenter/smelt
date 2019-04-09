@@ -17,15 +17,14 @@ steps:
     start /wait "" miniconda_installer.exe /InstallationType=JustMe /RegisterPython=0 /S /D=%UserProfile%\Miniconda3
     echo Conda installed!
     set PATH=%PATH%;%UserProfile%\Miniconda3\Scripts
-    cd %UserProfile%\Miniconda3
-    ls lib
-    ls include
-    dir lib
-    dir include
     conda install -c intel mkl
     conda install -c intel mkl-include
     conda install -c intel ipp
     conda install -c intel ipp-include
+    ls libs
+    ls include
+    set MKLROOT=%UserProfile%\Miniconda3
+    set IPPROOT=%UserProfile%\Miniconda3    
     mkdir build
     cd build
     cmake ..
