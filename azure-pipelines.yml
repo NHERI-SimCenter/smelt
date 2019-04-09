@@ -17,6 +17,7 @@ steps:
     start /wait "" miniconda_installer.exe /InstallationType=JustMe /RegisterPython=0 /S /D=%UserProfile%\Miniconda3
     echo Conda installed!
     set PATH=%PATH%;%UserProfile%\Miniconda3
+    echo %UserProfile%\Miniconda3
     cd %UserProfile%\Miniconda3
     dir
     conda install -c intel mkl
