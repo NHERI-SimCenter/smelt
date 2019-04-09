@@ -25,7 +25,8 @@ steps:
     set IPPROOT=%UserProfile%\Miniconda3
     echo %MKLROOT%
     echo %IPPROOT%    
-    ls %MKLROOT%
+    ls %MKLROOT%\include
+    ls %MKLROOT%\libs
     mkdir build
     cd build
     cmake ..
