@@ -25,6 +25,8 @@ endfunction()
 
 # For Windows. NOTE: Assumes conda was used to install MKL
 function(mkl_libs_windows)
+  set(CMAKE_FIND_LIBRARY_PREFIXES "")
+  set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")  
   foreach(s ${ARGV})
     find_library(${s}_LIBRARY
       NAMES ${s}
