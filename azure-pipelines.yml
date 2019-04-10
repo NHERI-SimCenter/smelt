@@ -14,7 +14,7 @@ steps:
     echo Downloading conda!
     powershell -command "iwr -outf miniconda_installer.exe https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe"
     echo Installing conda!
-    start /wait "" miniconda_installer.exe /InstallationType=JustMe /RegisterPython=0 /S /D=%UserProfile%\Miniconda3
+    start /wait "" miniconda_installer.exe /InstallationType=JustMe /RegisterPython=1 /S /D=%UserProfile%\Miniconda3
     echo Conda installed!
     set PATH=%PATH%;%UserProfile%\Miniconda3\Scripts
     conda install -c intel mkl
