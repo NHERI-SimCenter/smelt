@@ -2,18 +2,6 @@ cmake_minimum_required(VERSION 3.0)
 
 project(StochasticModule LANGUAGES CXX)
 
-if(WIN32)
-  message(STATUS "This is a Windows machine")
-endif()
-
-if(APPLE)
-  message(STATUS "This is a Mac")
-endif()
-
-if(UNIX AND NOT APPLE)
-  message(STATUS "This is a Linux machine")
-endif()
-
 # Require C++11-compliant compiler
 set(CMAKE_CXX_STANDARD 11)
 
@@ -72,7 +60,16 @@ set(SOURCES
   )
 
 # Add library as target
-add_library(lsmelt SHARED ${SOURCES})
+# Adding MATH defines for M_PI when building on Windows
+if (WIN32)
+  add_library(lsmelt STATIC ${SOURCES})    
+  add_compile_definitions(_USE_MATH_DEFINES)
+endif()
+
+if (NOT WIN32)
+  add_library(lsmelt SHARED ${SOURCES})
+endif()
+
 # Add libraries to link target to
 target_link_libraries(lsmelt ${MKL_LIBRARIES} ${IPP_LIBRARIES})
 

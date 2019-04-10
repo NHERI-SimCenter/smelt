@@ -18,8 +18,10 @@ steps:
     echo Conda installed!
     set PATH=%PATH%;%UserProfile%\Miniconda3\Scripts
     conda install -c intel mkl
+    conda install -c intel mkl-devel    
     conda install -c intel mkl-include
     conda install -c intel ipp
+    conda install -c intel ipp-devel    
     conda install -c intel ipp-include
     set MKLROOT=%UserProfile%\Miniconda3
     set IPPROOT=%UserProfile%\Miniconda3
@@ -27,5 +29,14 @@ steps:
     echo %IPPROOT%
     mkdir build
     cd build
-    cmake ..
+    cmake -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE -DBUILD_SHARED_LIBS=TRUE ..
+    echo Building and testing debug
+    cmake --build . --target ALL_BUILD --config Debug
+    cd Debug
+    unit_tests.exe
+    cd ..
+    echo Building and testing release
+    cmake --build . --target ALL_BUILD --config Release
+    cd Release
+    unit_tests.exe
   displayName: 'Windows VS2017 Test'

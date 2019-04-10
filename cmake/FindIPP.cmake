@@ -26,7 +26,7 @@ endfunction()
 # For Windows. NOTE: Assumes conda was used to install IPP
 function(ipp_libs_windows)
   set(CMAKE_FIND_LIBRARY_PREFIXES "")
-  set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")  
+  set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
   foreach(s ${ARGV})
     find_library(${s}_LIBRARY
       NAMES ${s}
@@ -34,6 +34,7 @@ function(ipp_libs_windows)
       $ENV{IPPROOT}/lib/intel64
       $ENV{IPPROOT}/../compiler/lib/intel64
       $ENV{IPPROOT}/Library/bin      
+      $ENV{IPPROOT}/Library/lib 
       NO_DEFAULT_PATH)
     if(NOT ${s}_LIBRARY)
       message(FATAL_ERROR "NOT FOUND: " ${s})

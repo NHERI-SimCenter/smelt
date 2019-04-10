@@ -26,7 +26,7 @@ endfunction()
 # For Windows. NOTE: Assumes conda was used to install MKL
 function(mkl_libs_windows)
   set(CMAKE_FIND_LIBRARY_PREFIXES "")
-  set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")  
+  set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
   foreach(s ${ARGV})
     find_library(${s}_LIBRARY
       NAMES ${s}
@@ -34,6 +34,7 @@ function(mkl_libs_windows)
       $ENV{MKLROOT}/lib/intel64
       $ENV{MKLROOT}/../compiler/lib/intel64
       $ENV{MKLROOT}/Library/bin
+      $ENV{MKLROOT}/Library/lib
       NO_DEFAULT_PATH)
     if(NOT ${s}_LIBRARY)
       message(FATAL_ERROR "NOT FOUND: " ${s})
