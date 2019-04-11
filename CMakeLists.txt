@@ -2,18 +2,6 @@ cmake_minimum_required(VERSION 3.0)
 
 project(StochasticModule LANGUAGES CXX)
 
-if(WIN32)
-  message(STATUS "This is a Windows machine")
-endif()
-
-if(APPLE)
-  message(STATUS "This is a Mac")
-endif()
-
-if(UNIX AND NOT APPLE)
-  message(STATUS "This is a Linux machine")
-endif()
-
 # Require C++11-compliant compiler
 set(CMAKE_CXX_STANDARD 11)
 
@@ -68,13 +56,22 @@ set(SOURCES
   ${PROJECT_SOURCE_DIR}/src/students_t_dist.cc
   ${PROJECT_SOURCE_DIR}/src/json_object.cc
   ${PROJECT_SOURCE_DIR}/src/vlachos_et_al.cc
-  ${PROJECT_SOURCE_DIR}/src/configure.cc
+  ${PROJECT_SOURCE_DIR}/src/configure.cc  
   )
 
 # Add library as target
-add_library(lsmelt SHARED ${SOURCES})
+# Adding MATH defines for M_PI when building on Windows
+if (WIN32)
+  add_library(smelt STATIC ${SOURCES})    
+  add_compile_definitions(_USE_MATH_DEFINES)
+endif()
+
+if (NOT WIN32)
+  add_library(smelt SHARED ${SOURCES})
+endif()
+
 # Add libraries to link target to
-target_link_libraries(lsmelt ${MKL_LIBRARIES} ${IPP_LIBRARIES})
+target_link_libraries(smelt ${MKL_LIBRARIES} ${IPP_LIBRARIES})
 
 # Unit testing
 if (BUILD_TESTING)
@@ -95,7 +92,7 @@ if (BUILD_TESTING)
   )
 
   add_executable(unit_tests ${TEST_SOURCES})
-  target_link_libraries(unit_tests lsmelt)
+  target_link_libraries(unit_tests smelt)
   add_test(NAME run_unit_tests COMMAND unit_tests)
   enable_testing()
 endif()  

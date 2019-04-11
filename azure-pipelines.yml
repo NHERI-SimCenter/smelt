@@ -7,13 +7,44 @@ trigger:
 - master
 
 pool:
-  vmImage: 'Ubuntu-16.04'
+  vmImage: 'vs2017-win2016'
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x' 
+    addToPath: true 
+    architecture: 'x86'
 
 - script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+    echo Downloading conda!
+    powershell -command "iwr -outf miniconda_installer.exe https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe"    
+    echo Installing conda!
+    start /wait "" miniconda_installer.exe /InstallationType=AllUsers /RegisterPython=0 /S /D=%UserProfile%\Miniconda3
+    echo Conda installed!
+    set PATH=%PATH%;%UserProfile%\Miniconda3\Scripts
+    conda install -c intel mkl
+    conda install -c intel mkl-devel    
+    conda install -c intel mkl-include
+    conda install -c intel ipp
+    conda install -c intel ipp-devel    
+    conda install -c intel ipp-include
+    set MKLROOT=%UserProfile%\Miniconda3
+    set IPPROOT=%UserProfile%\Miniconda3
+    set PATH=%PATH%;%MKLROOT%\Library\bin
+    set PATH=%PATH%;%IPPROOT%\Library\bin
+    set PATH=%PATH%;%MKLROOT%\Library\lib
+    set PATH=%PATH%;%IPPROOT%\Library\lib
+    echo %MKLROOT%
+    echo %IPPROOT%
+    echo %PATH%
+    mkdir build
+    cd build
+    cmake -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE -DBUILD_SHARED_LIBS=TRUE -G "Visual Studio 15 2017 Win64" ..
+    echo Building and testing Debug
+    cmake --build . --target ALL_BUILD --config Debug
+    ctest -C Debug --verbose
+    echo Building and testing Release
+    cmake --build . --target ALL_BUILD --config Release
+    ctest -C Release --verbose    
+  displayName: 'Install dependencies using conda, then build and test Debug and Release using VS 2017'
