@@ -22,24 +22,19 @@ steps:
     echo Installing conda!
     start /wait "" miniconda_installer.exe /InstallationType=AllUsers /RegisterPython=0 /S /D=%UserProfile%\Miniconda3
     echo Conda installed!
-    setx PATH "%PATH%;%UserProfile%\Miniconda3\Scripts"
+    set PATH=%PATH%;%UserProfile%\Miniconda3\Scripts
     conda install -c intel mkl
     conda install -c intel mkl-devel    
     conda install -c intel mkl-include
     conda install -c intel ipp
     conda install -c intel ipp-devel    
     conda install -c intel ipp-include
-    setx MKLROOT "%UserProfile%\Miniconda3"
-    setx IPPROOT "%UserProfile%\Miniconda3"
-    setx PATH "%PATH%;%MKLROOT%\Library\bin"
-    setx PATH "%PATH%;%IPPROOT%\Library\bin"
-    setx PATH "%PATH%;%MKLROOT%\Library\lib"
-    setx PATH "%PATH%;%IPPROOT%\Library\lib"
-    echo %MKLROOT%
-    echo %IPPROOT%
-  displayName: 'Install conda, then install MKL and IPP using conda'
-
-- script: |
+    set MKLROOT=%UserProfile%\Miniconda3
+    set IPPROOT=%UserProfile%\Miniconda3
+    set PATH=%PATH%;%MKLROOT%\Library\bin
+    set PATH=%PATH%;%IPPROOT%\Library\bin
+    set PATH=%PATH%;%MKLROOT%\Library\lib
+    set PATH=%PATH%;%IPPROOT%\Library\lib
     echo %MKLROOT%
     echo %IPPROOT%
     echo %PATH%
@@ -49,16 +44,7 @@ steps:
     echo Building and testing Debug
     cmake --build . --target ALL_BUILD --config Debug
     ctest -C Debug --verbose
-  displayName: 'Build and test Debug version using VS 2017'    
-
-- script: |
-    echo %MKLROOT%
-    echo %IPPROOT%
-    echo %PATH%
-    mkdir build
-    cd build
-    cmake -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE -DBUILD_SHARED_LIBS=TRUE -G "Visual Studio 15 2017 Win64" ..    
     echo Building and testing Release
     cmake --build . --target ALL_BUILD --config Release
-    ctest -C Release --verbose
-  displayName: 'Build and test Release version using VS 2017'
+    ctest -C Release --verbose    
+  displayName: 'Install dependencies using conda, then build and test Debug and Release using VS 2017'
