@@ -20,7 +20,7 @@ steps:
     echo Downloading conda!
     powershell -command "iwr -outf miniconda_installer.exe https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe"    
     echo Installing conda!
-    start /wait "" miniconda_installer.exe /InstallationType=JustMe /RegisterPython=0 /S /D=%UserProfile%\Miniconda3
+    start /wait "" miniconda_installer.exe /InstallationType=AllUsers /RegisterPython=0 /S /D=%UserProfile%\Miniconda3
     echo Conda installed!
     setx PATH "%PATH%;%UserProfile%\Miniconda3\Scripts"
     conda install -c intel mkl
@@ -37,6 +37,7 @@ steps:
     setx PATH "%PATH%;%IPPROOT%\Library\lib"
     echo %MKLROOT%
     echo %IPPROOT%
+  displayName: 'Install conda, then install MKL and IPP using conda'
 
 - script: |
     echo %MKLROOT%
@@ -48,6 +49,7 @@ steps:
     echo Building and testing Debug
     cmake --build . --target ALL_BUILD --config Debug
     ctest -C Debug --verbose
+  displayName: 'Build and test Debug version using VS 2017'    
 
 - script: |
     echo %MKLROOT%
@@ -59,4 +61,4 @@ steps:
     echo Building and testing Release
     cmake --build . --target ALL_BUILD --config Release
     ctest -C Release --verbose
-  displayName: 'Windows VS2017 Test'
+  displayName: 'Build and test Release version using VS 2017'
