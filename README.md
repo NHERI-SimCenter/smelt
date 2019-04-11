@@ -15,9 +15,8 @@
 - [Intel Math Kernel Library (MKL)](https://software.intel.com/en-us/mkl)
 - [Intel Integrated Performance Primitives (IPP)](https://software.intel.com/en-us/intel-ipp)
 
-These packages are available for free from Intel and can be downloaded and installed directly. Otherwise, Mac and Windows users
-can install them through [`conda`](https://docs.conda.io/en/latest/) while Ubuntu users can install them using `apt`. Currently,
-`smelt` has been tested on the following system configurations:
+Mac and Windows users can install them through [`conda`](https://docs.conda.io/en/latest/) while Ubuntu users can install them using `apt`.
+Otherwise, these packages can alse be downloaded and installed directly from Intel. Currently, `smelt` has been tested on the following system configurations:
 
 - Ubuntu 18.04 with GCC 7.3.0
 - Ubuntu 16.04
@@ -28,7 +27,6 @@ can install them through [`conda`](https://docs.conda.io/en/latest/) while Ubunt
 - Windows Server 2016 with Visual Studio 17
 - Windows 10 with Visual Studio 19
 
-Both these 
 
 ## License
 
