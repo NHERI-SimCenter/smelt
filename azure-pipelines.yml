@@ -10,6 +10,12 @@ pool:
   vmImage: 'vs2017-win2016'
 
 steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x' 
+    addToPath: true 
+    architecture: 'x86'
+
 - script: |
     echo Downloading conda!
     powershell -command "iwr -outf miniconda_installer.exe https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe"    
