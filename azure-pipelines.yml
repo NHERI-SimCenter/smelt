@@ -4,7 +4,7 @@
 # https://aka.ms/yaml
 
 trigger:
-- windows
+- master
 
 pool:
   vmImage: 'vs2017-win2016'
