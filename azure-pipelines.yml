@@ -7,7 +7,7 @@ trigger:
 - windows
 
 pool:
-  vmImage: 'windows-2019'
+  vmImage: 'vs2017-win2016'
 
 steps:
 - script: |
@@ -39,4 +39,4 @@ steps:
     cmake --build . --target ALL_BUILD --config Release
     cd Release
     unit_tests.exe
-  displayName: 'Windows VS2019 Test'
+  displayName: 'Windows VS2017 Test'
