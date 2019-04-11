@@ -38,11 +38,8 @@ steps:
     cmake -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE -DBUILD_SHARED_LIBS=TRUE -G "Visual Studio 15 2017 Win64" ..
     echo Building and testing debug
     cmake --build . --target ALL_BUILD --config Debug
-    cd Debug
-    unit_tests.exe
-    cd ..
+    ctest -C Debug
     echo Building and testing release
     cmake --build . --target ALL_BUILD --config Release
-    cd Release
-    unit_tests.exe
+    ctest -C Release
   displayName: 'Windows VS2017 Test'
