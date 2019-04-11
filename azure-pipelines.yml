@@ -7,12 +7,12 @@ trigger:
 - windows
 
 pool:
-  vmImage: 'vs2017-win2016'
+  vmImage: 'windows-2019'
 
 steps:
 - script: |
     echo Downloading conda!
-    powershell -command "iwr -outf miniconda_installer.exe https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86.exe"    
+    powershell -command "iwr -outf miniconda_installer.exe https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe"    
     echo Installing conda!
     start /wait "" miniconda_installer.exe /InstallationType=JustMe /RegisterPython=0 /S /D=%UserProfile%\Miniconda3
     echo Conda installed!
@@ -39,4 +39,4 @@ steps:
     cmake --build . --target ALL_BUILD --config Release
     cd Release
     unit_tests.exe
-  displayName: 'Windows VS2017 Test'
+  displayName: 'Windows VS2019 Test'
