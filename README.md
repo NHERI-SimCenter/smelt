@@ -8,6 +8,13 @@
 
 ## What is `smelt`?
 
+`smelt` is a C++ library for stochastically generating time histories for different types of
+natural hazard---for example, acceleration time histories for earthquake scenarios or velocity
+time histories for wind loading. The library has been designed with modularity and extensiblity
+in mind such that new models can be easily added, making them available other software
+that uses `smelt`.
+
+The API documentation can be viewed [here](https://nheri-simcenter.github.io/smelt/).
 
 ## Requirements
 
@@ -16,7 +23,7 @@
 - [Intel Integrated Performance Primitives (IPP)](https://software.intel.com/en-us/intel-ipp)
 
 Mac and Windows users can install them through [`conda`](https://docs.conda.io/en/latest/) while Ubuntu users can install them using `apt`.
-Otherwise, these packages can alse be downloaded and installed directly from Intel. Currently, `smelt` has been tested on the following system configurations:
+Otherwise, these packages can alse be downloaded directly from Intel and installed manually. Currently, `smelt` has been tested on the following system configurations:
 
 - Ubuntu 18.04 with GCC 7.3.0
 - Ubuntu 16.04
@@ -24,9 +31,8 @@ Otherwise, these packages can alse be downloaded and installed directly from Int
   - Clang 7.0.0
 - MacOS 10.14 with Xcode 10.2
 - MacOS 10.13 with GCC 7.4.0
-- Windows Server 2016 with Visual Studio 17
 - Windows 10 with Visual Studio 19
-
+- Windows Server 2016 with Visual Studio 17
 
 ## License
 
