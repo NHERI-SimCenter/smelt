@@ -11,7 +11,7 @@
 `smelt` is a C++ library for stochastically generating time histories for different types of
 natural hazards&mdash;for example, acceleration time histories for earthquake scenarios or velocity
 time histories for wind loading. The library has been designed with modularity and extensiblity
-in mind such that new models can be easily added, making them available other software
+in mind such that new models can be easily added, making them available in other software
 that uses `smelt`.
 
 The API documentation can be viewed [here](https://nheri-simcenter.github.io/smelt/).
