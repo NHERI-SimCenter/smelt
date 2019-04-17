@@ -14,7 +14,7 @@ time histories for wind loading. The library has been designed with modularity a
 in mind such that new models can be easily added, making them available in other software
 that uses `smelt`.
 
-The API documentation can be viewed [here](https://nheri-simcenter.github.io/smelt/).
+More detailed information, including building instructions, are available in the [repository wiki](https://github.com/NHERI-SimCenter/smelt/wiki).
 
 ## Requirements
 
