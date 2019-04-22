@@ -22,34 +22,68 @@ class WittigSinha : public StochasticModel {
 
   /**
    * @constructor Construct wind load generator based on model input parameters
-   * using exposure category-based velocity profile
+   * using exposure category-based velocity profile. Divides building height
+   * equally by number of floors, providing time histories at floors.
    * @param[in] exposure_category Exposure category based on ASCE-7
    * @param[in] gust_speed Gust speed of wind
-   * @param[in] drag_coeff Drag coefficient for structure
    * @param[in] height Building height
-   * @param[in] section_width Width of section
    * @param[in] num_floors Number of floors in building
    * @param[in] total_time Total time desired for time history
    */
   WittigSinha(const std::string& exposure_category, double gust_speed,
-              double drag_coeff, double height, double section_width,
-              unsigned int num_floors, double total_time);
+              double height, unsigned int num_floors, double total_time);
 
   /**
-   * @constructor Construct wind load generator based on model input parameters with
-   * specified seed value
+   * @constructor Construct wind load generator based on model input parameters
+   * using exposure category-based velcoty profile with specified seed value.
+   * Divides building height equally by number of floors, providing time
+   * histories at floors.
    * @param[in] exposure_category Exposure category based on ASCE-7
    * @param[in] gust_speed Gust speed of wind
-   * @param[in] drag_coeff Drag coefficient for structure
    * @param[in] height Building height
-   * @param[in] section_width Width of section
    * @param[in] num_floors Number of floors in building
+   * @param[in] total_time Total time desired for time history
    * @param[in] seed_value Value to seed random variables with to ensure
    *                       repeatability
    */
   WittigSinha(const std::string& exposure_category, double gust_speed,
-              double drag_coeff, double height, double section_width,
-              unsigned int num_floors, int seed_value);
+              double height, unsigned int num_floors, unsigned int num_floors,
+              int seed_value);
+
+  /**
+   * @constructor Construct wind load generator based on model input parameters
+   * using exposure category-based velocity profile at specific horizontal and
+   * vertical locations.
+   * @param[in] exposure_category Exposure category based on ASCE-7
+   * @param[in] gust_speed Gust speed of wind
+   * @param[in] heights Vector of heights at which to calculate time histories
+   * @param[in] x_locations Vector of x locations at which to calculate time histories
+   * @param[in] y_locations Vector of y locations at which to calculate time histories
+   * @param[in] total_time Total time desired for time history
+   */
+  WittigSinha(const std::string& exposure_category, double gust_speed,
+              const std::vector<double>& heights,
+              const std::vector<double>& x_locations,
+              const std::vector<double>& y_locations, double total_time);
+
+  /**
+   * @constructor Construct wind load generator based on model input parameters
+   * using exposure category-based velocity profile at specific horizontal and
+   * vertical locations with specified seed value.
+   * @param[in] exposure_category Exposure category based on ASCE-7
+   * @param[in] gust_speed Gust speed of wind
+   * @param[in] heights Vector of heights at which to calculate time histories
+   * @param[in] x_locations Vector of x locations at which to calculate time histories
+   * @param[in] y_locations Vector of y locations at which to calculate time histories
+   * @param[in] total_time Total time desired for time history
+   * @param[in] seed_value Value to seed random variables with to ensure
+   *                       repeatability
+   */
+  WittigSinha(const std::string& exposure_category, double gust_speed,
+              const std::vector<double>& heights,
+              const std::vector<double>& x_locations,
+              const std::vector<double>& y_locations, double total_time,
+              int seed_value);
 
   /**
    * @destructor Virtual destructor
@@ -96,11 +130,14 @@ class WittigSinha : public StochasticModel {
   std::string exposure_category_; /**< Exposure category for building based on ASCE-7 */
   double gust_speed_; /**< Gust speed for wind */
   double bldg_height_; /**< Height of building */
-  double section_width_; /**< Width of section */
   unsigned int num_floors_; /**< Number of floors */
   int seed_value_; /**< Integer to seed random distributions with */
   std::vector<double> heights_; /**< Locations along building height at which
                                    velocities are generated */
+  std::vector<double> local_x_; /**< Locations along local x-axis at which to
+                                  generate velocities */
+  std::vector<double> local_y_; /**< Locations along local y-axis at which to
+                                  generate velocities */
   double freq_cutoff_; /**< Cut-off frequency */
   double time_step_; /**< Time step in time histories */
   unsigned int num_times_; /**< Total number of time steps */
