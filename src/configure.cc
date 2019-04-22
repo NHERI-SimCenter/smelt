@@ -11,6 +11,7 @@
 #include "normal_multivar.h"
 #include "students_t_dist.h"
 #include "vlachos_et_al.h"
+#include "wind_profile.h"
 #include "window.h"
 
 void config::initialize() {
@@ -68,4 +69,12 @@ void config::initialize() {
                           std::vector<double>, int, int>
       filter_impulse_response("ImpulseResponse",
                               signal_processing::impulse_response);
+
+  // WIND VELOCITY PROFILES
+  // Exposure category-based velocity profile using power law
+  static DispatchRegister<double, const std::string&,
+                          const std::vector<double>&, double, double,
+                          std::vector<double>&>
+      exposure_category_vel("ExposureCategoryVel",
+                            wind::exposure_category_velocity);
 }

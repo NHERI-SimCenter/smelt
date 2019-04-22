@@ -1,5 +1,5 @@
-#ifndef _STOCHASTIC_MODEL_H_
-#define _STOCHASTIC_MODEL_H_
+#ifndef _WITTIG_SINHA_H_
+#define _WITTIG_SINHA_H_
 
 #include <string>
 #include <vector>
@@ -22,6 +22,7 @@ class WittigSinha : public StochasticModel {
 
   /**
    * @constructor Construct wind load generator based on model input parameters
+   * using exposure category-based velocity profile
    * @param[in] exposure_category Exposure category based on ASCE-7
    * @param[in] gust_speed Gust speed of wind
    * @param[in] drag_coeff Drag coefficient for structure
@@ -94,7 +95,6 @@ class WittigSinha : public StochasticModel {
  private:
   std::string exposure_category_; /**< Exposure category for building based on ASCE-7 */
   double gust_speed_; /**< Gust speed for wind */
-  double drag_coeff_; /**< Drag coefficient for building */
   double bldg_height_; /**< Height of building */
   double section_width_; /**< Width of section */
   unsigned int num_floors_; /**< Number of floors */
@@ -105,7 +105,10 @@ class WittigSinha : public StochasticModel {
   double time_step_; /**< Time step in time histories */
   unsigned int num_times_; /**< Total number of time steps */
   unsigned int num_freqs_; /**< Total number of frequency steps */
+  std::vector<double> frequencies_; /**< Range of frequencies */
+  std::vector<double> wind_velocities_; /**< Vertical wind velocity profile */
+  double friction_velocity_; /**< Friction velocity */
 };
 }  // namespace stochastic
 
-#endif  // _STOCHASTIC_MODEL_H_
+#endif  // _WITTIG_SINHA_H_
