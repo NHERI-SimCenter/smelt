@@ -21,7 +21,7 @@ stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
       gust_speed_{gust_speed},
       bldg_height_{height},
       num_floors_{num_floors},
-      seed_value_{static_cast<int>(std::time(nullptr))},
+      seed_value_{std::numeric_limits<int>::infinity()},
       local_x_{std::vector<double>(1, 1.0)},
       local_y_{std::vector<double>(1, 1.0)},
       freq_cutoff_{5.0},
@@ -73,7 +73,7 @@ stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
     : StochasticModel(),
       exposure_category_{exposure_category_},
       gust_speed_{gust_speed},
-      seed_value_{static_cast<int>(std::time(nullptr))},
+      seed_value_{std::numeric_limits<int>::infinity()},
       heights_{heights},
       local_x_{x_locations},
       local_y_{y_locations},
@@ -118,60 +118,10 @@ utilities::JsonObject stochastic::WittigSinha::generate(const std::string& event
       std::vector<double>(local_y_.size(),
                           std::vector<double>(heights_.size(), 0.0)));
 
-  // Construct random number generator for standard normal distribution
-  auto generator = boost::random::mt19937(static_cast<unsigned int>(seed_value_));
-  boost::random::normal_distribution<double> distribution();
-  boost::random::variate_generator<boost::random::mt19937&,
-                                   boost::random::normal_distribution<>>
-      distribution_gen(generator, distribution);
+  // Generate complex random numbers to use for calculation of discrete time series
+  auto complex_random_vals = complex_random_numbers();
 
-  // Generate white noise consisting of complex numbers
-  Eigen::MatrixXcd white_noise(num_freqs_, heights_.size());
-
-  for (unsigned int i = 0; i < white_noise.rows(); ++i) {
-    for (unsigned int j = 0; j < white_noise.cols(); ++j) {
-      white_noise(i, j) = std::complex<double>(
-          distribution_gen() * std::sqrt(0.5),
-          distribution_gen() * std::sqrt(std::complex<double>(-0.5)).imag());
-    }
-  }
-
-  // Iterator over all frequencies and generate complex random numbers
-  // for discrete time series simulation
-  Eigen::MatrixXd cross_spectral_density(heights_.size(), heights_.size());
-  Eigen::MatrixXd complex_random(num_freqs_, heights_.size());
-
-  for (unsigned int i = 0; i < frequencies_.size(); ++i) {
-    // Calculate cross-spectral density matrix for current frequency
-    cross_spectral_density = cross_spectral_density(frequencies_[i]);
-
-    // Find lower Cholesky factorization of cross-spectral density
-    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> lower_cholesky;
-
-    try {
-      auto llt = cross_spectral_density.llt();
-      lower_cholesky = llt.matrixL();
-
-      if (llt.info() == Eigen::NumericalIssue) {
-        throw std::runtime_error(
-            "\nERROR: In stochastic::WittigSinha::generate method: Cross-Spectral Density "
-            "matrix is not positive semi-definite\n");
-      }
-    } catch (const std::exception& e) {
-      std::cerr << "\nERROR: In time history generation: " << e.what()
-                << std::endl;
-    }
-
-
-    // CONTINUE HERE--CHECK MATRIX MATH IN COMPARISON TO PAPER AND MATLAB CODE. IS IT REALLY
-    // NECESSARY TO TRANSPOSE A BUNCH OF RANDOM NUMBER TO USE OTHER RANDOM NUMBERS?
-    
-    // This is Equation 5(a) from Wittig & Sinha (1975)
-    complex_random.row(i) =
-        (num_freqs_ * std::sqrt(2.0 * freq_cutoff_ / num_freqs_) *
-         lower_cholesky * white_noise.col(i))
-            .transpose();
-  }
+  // CONTINUE HERE AFTER WRITING FUNCTION FOR ITERATING OVER HEIGHTS TO FIND WINDSPEED
 }
 
 Eigen::MatrixXd stochastic::WittigSinha::cross_spectral_density(double frequency) const {
@@ -202,3 +152,81 @@ Eigen::MatrixXd stochastic::WittigSinha::cross_spectral_density(double frequency
   return cross_spectral_density.transpose() + cross_spectral_density -
          cross_spectral_density.diagonal().asDiagonal();
 }
+
+Eigen::MatrixXcd stochastic::WittigSinha::complex_random_numbers() const {
+  // Construct random number generator for standard normal distribution
+  static unsigned int running_seed =
+      seed_value_ == std::numeric_limits<int>::infinity()
+          ? static_cast<unsigned int>(std::time(nullptr))
+          : seed_value_;
+  running_seed = running_seed + 10;
+  auto generator = boost::random::mt19937(running_seed);
+  boost::random::normal_distribution<double> distribution();
+  boost::random::variate_generator<boost::random::mt19937&,
+                                   boost::random::normal_distribution<>>
+      distribution_gen(generator, distribution);
+
+  // Generate white noise consisting of complex numbers
+  Eigen::MatrixXcd white_noise(heights_.size(), num_freqs_);
+
+  for (unsigned int i = 0; i < white_noise.rows(); ++i) {
+    for (unsigned int j = 0; j < white_noise.cols(); ++j) {
+      white_noise(i, j) = std::complex<double>(
+          distribution_gen() * std::sqrt(0.5),
+          distribution_gen() * std::sqrt(std::complex<double>(-0.5)).imag());
+    }
+  }
+
+  // Iterator over all frequencies and generate complex random numbers
+  // for discrete time series simulation
+  Eigen::MatrixXd cross_spectral_density(heights_.size(), heights_.size());
+  Eigen::MatrixXcd complex_random(num_freqs_, heights_.size());
+
+  for (unsigned int i = 0; i < frequencies_.size(); ++i) {
+    // Calculate cross-spectral density matrix for current frequency
+    cross_spectral_density = cross_spectral_density(frequencies_[i]);
+
+    // Find lower Cholesky factorization of cross-spectral density
+    Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> lower_cholesky;
+
+    try {
+      auto llt = cross_spectral_density.llt();
+      lower_cholesky = llt.matrixL();
+
+      if (llt.info() == Eigen::NumericalIssue) {
+        throw std::runtime_error(
+            "\nERROR: In stochastic::WittigSinha::generate method: Cross-Spectral Density "
+            "matrix is not positive semi-definite\n");
+      }
+    } catch (const std::exception& e) {
+      std::cerr << "\nERROR: In time history generation: " << e.what()
+                << std::endl;
+    }
+    
+    // This is Equation 5(a) from Wittig & Sinha (1975)
+    complex_random.row(i) = num_freqs_ *
+                            std::sqrt(2.0 * freq_cutoff_ / num_freqs_) *
+                            lower_cholesky * white_noise.col(i);
+  }
+
+  return complex_random;
+}
+
+Eigen::VectorXd stochastic::WittigSinha::gen_vertical_hist(
+    const Eigen::MatrixXcd& random_numbers, unsigned int column_index) const {
+
+  // This following block implements what is expressed in Equations 7 & 8
+  Eigen::VectorXcd complex_full_range = Eigen::VectorXcd::Zero(2 * num_freqs_);
+  complex_full_range.segment(1, num_freqs_) = random_numbers.col(column_index);
+  complex_full_range.segment(num_freqs_ + 1, 2 * num_freqs_) =
+      random_numbers.block(1, column_index, num_freqs_ - 2, column_index)
+          .reverse()
+          .conjugate();
+  complex_full_range(num_freqs) = std::abs(complex_full_range(num_freqs_ - 1, column_index));
+
+  // Calculate wind speed using real portion of inverse Fast Fourier Transform
+  // full range of random numbers
+
+  // CONTINUE HERE AFTER FINISHING ADDING INVERSE FFT WRAPPER
+}
+

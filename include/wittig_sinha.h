@@ -133,6 +133,24 @@ class WittigSinha : public StochasticModel {
    */
   Eigen::MatrixXd cross_spectral_density(double frequency) const;
 
+  /**
+   * Generate matrix of complex random number from standard normal distribution scaled
+   * by lower Cholesky decomposition of the cross-spectral density matrix
+   * @return A matrix containing complex random numbers
+   */
+  Eigen::MatrixXcd complex_random_numbers() const;
+
+  /**
+   * Generate velocity time histories at each height specified
+   * @param[in] random_numbers Matrix of complex random numbers to use for
+   *                           velocity time history generation
+   * @param[in] column_index Index for column to use in matrix
+   * @return Vector containing velocity time histories for vertical location
+   *         requested
+   */
+  Eigen::VectorXd gen_vertical_hist(const Eigen::MatrixXcd& random_numbers,
+                                    unsigned int column_index) const;
+
  private:
   std::string exposure_category_; /**< Exposure category for building based on ASCE-7 */
   double gust_speed_; /**< Gust speed for wind */
