@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <Eigen/Dense>
 #include "json_object.h"
 
 namespace stochastic {
@@ -101,30 +102,36 @@ class WittigSinha : public StochasticModel {
   WittigSinha& operator=(const WittigSinha&) = delete;
 
   /**
-   * Generate loading based on stochastic model and store
-   * outputs as JSON object
+   * Generate wind velocity time histories based on Wittig & Sinha (1975) model
+   * with provided inputs and store outputs as JSON object
    * @param[in] event_name Name to assign to event
-   * @param[in] g_units Indicates that time histories should be returned in
-   *                    units of g. Defaults to false where time histories
-   *                    are returned in units of m/s^2
+   * @param[in] units Indicates that time histories should be returned in
+   *                  units of ft/s. Defaults to false where time histories
+   *                  are returned in units of m/s
    * @return JsonObject containing loading time histories
    */
-  virtual utilities::JsonObject generate(const std::string& event_name,
-                                         bool g_units = false) = 0;
+  utilities::JsonObject generate(const std::string& event_name,
+                                 bool units = false) override;
 
   /**
-   * Generate loading based on stochastic model and write
-   * results to file in JSON format
+   * Generate wind velocity time histories based on Wittig & Sinha (1975) model
+   * with provided inputs and write results to file in JSON format
    * @param[in] event_name Name to assign to event
    * @param[in, out] output_location Location to write outputs to
-   * @param[in] g_units Indicates that time histories should be returned in
-   *                    units of g. Defaults to false where time histories
-   *                    are returned in units of m/s^2
+   * @param[in] units Indicates that time histories should be returned in
+   *                  units of ft/s. Defaults to false where time histories
+   *                  are returned in units of m/s
    * @return Returns true if successful, false otherwise
    */
-  virtual bool generate(const std::string& event_name,
-                        const std::string& output_location,
-                        bool g_units = false) = 0;
+  bool generate(const std::string& event_name,
+                const std::string& output_location, bool units = false) override;
+
+  /**
+   * Calculate the cross-spectral density matrix 
+   * @param[in] frequency Frequency at which to calculate cross-spectral density
+   * @return Matrix containing cross-spectral density functions
+   */
+  Eigen::MatrixXd cross_spectral_density(double frequency) const;
 
  private:
   std::string exposure_category_; /**< Exposure category for building based on ASCE-7 */

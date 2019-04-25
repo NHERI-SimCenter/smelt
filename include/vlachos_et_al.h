@@ -88,13 +88,13 @@ class VlachosEtAl : public StochasticModel {
    * and store outputs as JSON object. Throws exception if errors
    * are encountered during time history generation.
    * @param[in] event_name Name to assign to event
-   * @param[in] g_units Indicates that time histories should be returned in
-   *                    units of g. Defaults to false where time histories
-   *                    are returned in units of m/s^2
+   * @param[in] units Indicates that time histories should be returned in
+   *                  units of g. Defaults to false where time histories
+   *                  are returned in units of m/s^2
    * @return JsonObject containing time histories
    */
   utilities::JsonObject generate(const std::string& event_name,
-                                 bool g_units = false) override;
+                                 bool units = false) override;
 
   /**
    * Generate ground motion time histories based on input parameters
@@ -102,14 +102,14 @@ class VlachosEtAl : public StochasticModel {
    * errors are encountered during time history generation.
    * @param[in] event_name Name to assign to event
    * @param[in, out] output_location Location to write outputs to
-   * @param[in] g_units Indicates that time histories should be returned in
-   *                    units of g. Defaults to false where time histories
-   *                    are returned in units of m/s^2
+   * @param[in] units Indicates that time histories should be returned in
+   *                  units of g. Defaults to false where time histories
+   *                  are returned in units of m/s^2
    * @return Returns true if successful, false otherwise
    */
   bool generate(const std::string& event_name,
                 const std::string& output_location,
-                bool g_units = false) override;
+                bool units = false) override;
 
   /**
    * Compute a family of time histories for a particular power spectrum
