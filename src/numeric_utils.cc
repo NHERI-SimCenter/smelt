@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <Eigen/Dense>
 #include <mkl.h>
+#include <mkl_dfti.h>
 #include <mkl_vsl.h>
 #include "numeric_utils.h"
 
@@ -59,6 +60,60 @@ bool convolve_1d(const std::vector<double>& input_x,
   vslConvDeleteTask(&conv_task);
 
   return status;
+}
+
+bool inverse_fft(const std::vector<double>& input_vector,
+                 std::vector<double>& output_vector) {
+  output_vector.resize(input_vector.size());
+
+  // Create task descriptor and MKL status
+  DFTI_DESCRIPTOR_HANDLE fft_descriptor;
+  MKL_LONG fft_status;
+
+  // Allocate the descriptor data structure and initializes it with default
+  // configuration values
+  fft_status = DftiCreateDescriptor(&fft_descriptor, DFTI_DOUBLE, DFTI_REAL, 1,
+                                input_vector.size());
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::inverse_fft: Error in descriptor creation");
+    return false;
+  }
+  
+  // Set configuration value to not do inplace transformation
+  fft_status = DftiSetValue(fft_descriptor, DFTI_PLACEMENT, DFTI_NOT_INPLACE);
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::inverse_fft: Error in setting configuration");
+    return false;
+  }
+  
+  // Perform all initialization for the actual FFT computation
+  fft_status = DftiCommitDescriptor(fft_descriptor);
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::inverse_fft: Error in committing descriptor");
+    return false;
+  }
+  
+  // Compute the backward FFT
+  fft_status = DftiComputeBackward(fft_descriptor, input_vector.data(),
+                                   output_vector.data());
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::inverse_fft: Error in computing backward FFT");
+    return false;
+  }
+  
+  // Free the memory allocated for descriptor
+  fft_status = DftiFreeDescriptor(fft_descriptor);
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::inverse_fft: Error in freeing FFT descriptor");
+    return false;
+  }  
+
+  return true;
 }
 
 double trapazoid_rule(const std::vector<double>& input_vector, double spacing) {

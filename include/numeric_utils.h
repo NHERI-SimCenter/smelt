@@ -32,6 +32,16 @@ bool convolve_1d(const std::vector<double>& input_x,
                  std::vector<double>& response);
 
 /**
+ * Computes the real portion of the 1-dimensional inverse Fast Fourier Transform
+ * (FFT) of the input vector
+ * @param[in] input_vector Input vector to compute the inverse FFT of
+ * @param[in, out] output_vector Vector to write output to
+ * @return Returns true if computations were successful, false otherwise
+ */
+bool inverse_fft(const std::vector<double>& input_vector,
+                 std::vector<double>& output_vector);
+
+/**
  * Calculate the integral of the input vector with uniform spacing
  * between data points
  * @param[in] input_vector Vector containing function values
