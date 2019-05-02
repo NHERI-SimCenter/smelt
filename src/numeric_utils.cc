@@ -1,4 +1,5 @@
 #include <complex>
+#include <iostream>
 #include <stdexcept>
 #include <Eigen/Dense>
 #include <mkl.h>
@@ -126,6 +127,43 @@ bool inverse_fft(std::vector<std::complex<double>> input_vector,
   }  
 
   return true;
+}
+
+bool inverse_fft(const Eigen::VectorXcd& input_vector,
+                 Eigen::VectorXd& output_vector) {
+  // Convert input Eigen vector to std vector
+  std::vector<std::complex<double>> input_vals(input_vector.size());
+  std::vector<double> outputs(input_vals.size());
+  Eigen::VectorXcd::Map(&input_vals[0], input_vector.size()) = input_vector;
+ 
+  try {
+    inverse_fft(input_vals, outputs);
+  } catch (const std::exception& e) {
+    std::cerr << "\nERROR: In numeric_utils::inverse_fft (With Eigen Vectors):"
+              << e.what() << std::endl;
+  }
+
+  // Convert output from std vector to Eigen vector
+  output_vector = Eigen::Map<Eigen::VectorXd>(outputs.data(), outputs.size());
+
+  return true;
+}
+
+bool inverse_fft(const Eigen::VectorXcd& input_vector,
+                 std::vector<double>& output_vector) {
+  // Convert input Eigen vector to std vector
+  std::vector<std::complex<double>> input_vals(input_vector.size());
+  Eigen::VectorXcd::Map(&input_vals[0], input_vector.size()) = input_vector;
+  output_vector.resize(input_vector.size());  
+ 
+  try {
+    inverse_fft(input_vals, output_vector);
+  } catch (const std::exception& e) {
+    std::cerr << "\nERROR: In numeric_utils::inverse_fft (With Eigen Vectors):"
+              << e.what() << std::endl;
+  }
+
+  return true;  
 }
 
 double trapazoid_rule(const std::vector<double>& input_vector, double spacing) {

@@ -11,6 +11,7 @@
 
 #include "function_dispatcher.h"
 #include "json_object.h"
+#include "numeric_utils.h"
 #include "wittig_sinha.h"
 
 stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
@@ -117,11 +118,26 @@ utilities::JsonObject stochastic::WittigSinha::generate(const std::string& event
       local_x_.size(),
       std::vector<double>(local_y_.size(),
                           std::vector<double>(heights_.size(), 0.0)));
+  Eigen::MatrixXcd complex_random_vals(num_freqs_, heights_.size());
+  
+  // Loop over heights to find time histories
+  try {
+    for (unsigned int i = 0; i < local_x_.size(); ++i) {
+      for (unsigned int j = 0; j < local_y_.size(); ++j) {
+        // Generate complex random numbers to use for calculation of discrete
+        // time series
+        complex_random_vals = complex_random_numbers();
+        for (unsigned int k = 0; k < heights_.size(); ++k) {
+          wind_vels[0][0][k] = gen_location_hist(complex_random_vals, k);
+        }
+      }
+    }
+  } catch (const std::exception& e) {
+    std::cerr << "\nERROR: In stochastic::WittigSinha::generate: "
+              << e.what() << std::endl;
+  }
 
-  // Generate complex random numbers to use for calculation of discrete time series
-  auto complex_random_vals = complex_random_numbers();
-
-  // CONTINUE HERE AFTER WRITING FUNCTION FOR ITERATING OVER HEIGHTS TO FIND WINDSPEED
+  // CONTINUE HERE TO WRITE TO JSON
 }
 
 Eigen::MatrixXd stochastic::WittigSinha::cross_spectral_density(double frequency) const {
@@ -212,7 +228,7 @@ Eigen::MatrixXcd stochastic::WittigSinha::complex_random_numbers() const {
   return complex_random;
 }
 
-Eigen::VectorXd stochastic::WittigSinha::gen_vertical_hist(
+std::vector<double> stochastic::WittigSinha::gen_location_hist(
     const Eigen::MatrixXcd& random_numbers, unsigned int column_index) const {
 
   // This following block implements what is expressed in Equations 7 & 8
@@ -226,7 +242,8 @@ Eigen::VectorXd stochastic::WittigSinha::gen_vertical_hist(
 
   // Calculate wind speed using real portion of inverse Fast Fourier Transform
   // full range of random numbers
-
-  // CONTINUE HERE AFTER FINISHING ADDING INVERSE FFT WRAPPER
+  std::vector<double> node_time_history(complex_full_range.size());
+  numeric_utils::inverse_fft(complex_full_range, node_time_history);
+  
+  return node_time_history;
 }
-

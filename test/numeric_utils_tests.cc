@@ -135,4 +135,23 @@ TEST_CASE("Test 1-D inverse Fast Fourier Transform", "[Helpers][FFT]") {
     REQUIRE(output_vector[3] == Approx(4.0).epsilon(0.01));
     REQUIRE(output_vector[4] == Approx(5.0).epsilon(0.01));
   }
+
+  SECTION("Calculate real portion of one-dimesional inverse FFT") {
+    Eigen::VectorXcd input_vector(5);
+    input_vector << std::complex<double>(15.0, 0.0),
+      std::complex<double>(-2.5, 3.440954801177933),
+      std::complex<double>(-2.5, 0.812299240582266),
+      std::complex<double>(-2.5, -0.812299240582266),
+      std::complex<double>(-2.5, -3.440954801177933);
+
+    Eigen::VectorXd output_vector;
+    auto status = numeric_utils::inverse_fft(input_vector, output_vector);
+
+    REQUIRE(status);
+    REQUIRE(output_vector[0] == Approx(1.0).epsilon(0.01));
+    REQUIRE(output_vector[1] == Approx(2.0).epsilon(0.01));
+    REQUIRE(output_vector[2] == Approx(3.0).epsilon(0.01));
+    REQUIRE(output_vector[3] == Approx(4.0).epsilon(0.01));
+    REQUIRE(output_vector[4] == Approx(5.0).epsilon(0.01));
+  }  
 }
