@@ -1,6 +1,7 @@
 #ifndef _NUMERIC_UTILS_H_
 #define _NUMERIC_UTILS_H_
 
+#include <complex>
 #include <ctime>
 #include <utility>
 #include <vector>
@@ -38,7 +39,7 @@ bool convolve_1d(const std::vector<double>& input_x,
  * @param[in, out] output_vector Vector to write output to
  * @return Returns true if computations were successful, false otherwise
  */
-bool inverse_fft(const std::vector<double>& input_vector,
+bool inverse_fft(std::vector<std::complex<double>> input_vector,
                  std::vector<double>& output_vector);
 
 /**

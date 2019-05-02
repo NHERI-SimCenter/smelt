@@ -1,3 +1,4 @@
+#include <complex>
 #include <stdexcept>
 #include <Eigen/Dense>
 #include <mkl.h>
@@ -62,7 +63,7 @@ bool convolve_1d(const std::vector<double>& input_x,
   return status;
 }
 
-bool inverse_fft(const std::vector<double>& input_vector,
+bool inverse_fft(std::vector<std::complex<double>> input_vector,
                  std::vector<double>& output_vector) {
   output_vector.resize(input_vector.size());
 
@@ -76,7 +77,7 @@ bool inverse_fft(const std::vector<double>& input_vector,
                                 input_vector.size());
   if (fft_status != DFTI_NO_ERROR) {
     throw std::runtime_error(
-        "\nERROR: in numeric_utils::inverse_fft: Error in descriptor creation");
+        "\nERROR: in numeric_utils::inverse_fft: Error in descriptor creation\n");
     return false;
   }
   
@@ -84,15 +85,26 @@ bool inverse_fft(const std::vector<double>& input_vector,
   fft_status = DftiSetValue(fft_descriptor, DFTI_PLACEMENT, DFTI_NOT_INPLACE);
   if (fft_status != DFTI_NO_ERROR) {
     throw std::runtime_error(
-        "\nERROR: in numeric_utils::inverse_fft: Error in setting configuration");
+        "\nERROR: in numeric_utils::inverse_fft: Error in setting configuration\n");
     return false;
   }
-  
+
+  // Set the backward scale factor to be 1 divided by the size of the input vector
+  // to make the backward tranform the inverse of the forward transform
+  fft_status = DftiSetValue(fft_descriptor, DFTI_BACKWARD_SCALE,
+                            static_cast<double>(1.0 / input_vector.size()));
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::inverse_fft: Error in setting backward "
+        "scale factor\n");
+    return false;
+  }  
+
   // Perform all initialization for the actual FFT computation
   fft_status = DftiCommitDescriptor(fft_descriptor);
   if (fft_status != DFTI_NO_ERROR) {
     throw std::runtime_error(
-        "\nERROR: in numeric_utils::inverse_fft: Error in committing descriptor");
+        "\nERROR: in numeric_utils::inverse_fft: Error in committing descriptor\n");
     return false;
   }
   
@@ -101,15 +113,15 @@ bool inverse_fft(const std::vector<double>& input_vector,
                                    output_vector.data());
   if (fft_status != DFTI_NO_ERROR) {
     throw std::runtime_error(
-        "\nERROR: in numeric_utils::inverse_fft: Error in computing backward FFT");
+        "\nERROR: in numeric_utils::inverse_fft: Error in computing backward FFT\n");
     return false;
   }
   
   // Free the memory allocated for descriptor
-  fft_status = DftiFreeDescriptor(fft_descriptor);
+  fft_status = DftiFreeDescriptor(&fft_descriptor);
   if (fft_status != DFTI_NO_ERROR) {
     throw std::runtime_error(
-        "\nERROR: in numeric_utils::inverse_fft: Error in freeing FFT descriptor");
+        "\nERROR: in numeric_utils::inverse_fft: Error in freeing FFT descriptor\n");
     return false;
   }  
 

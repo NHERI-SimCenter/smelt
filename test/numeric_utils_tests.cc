@@ -115,3 +115,24 @@ TEST_CASE("Test trapazoid rule", "[Helpers][Trapazoid]") {
     REQUIRE(integral == Approx(1.9998).epsilon(0.01));
   }    
 }
+
+TEST_CASE("Test 1-D inverse Fast Fourier Transform", "[Helpers][FFT]") {
+  SECTION("Calculate real portion of one-dimesional inverse FFT") {
+    std::vector<std::complex<double>> input_vector = {
+        {15.0, 0.0},
+        {-2.5, 3.440954801177933},
+        {-2.5, 0.812299240582266},
+        {-2.5, -0.812299240582266},
+        {-2.5, -3.440954801177933}};
+
+    std::vector<double> output_vector(4);
+    auto status = numeric_utils::inverse_fft(input_vector, output_vector);
+
+    REQUIRE(status);
+    REQUIRE(output_vector[0] == Approx(1.0).epsilon(0.01));
+    REQUIRE(output_vector[1] == Approx(2.0).epsilon(0.01));
+    REQUIRE(output_vector[2] == Approx(3.0).epsilon(0.01));
+    REQUIRE(output_vector[3] == Approx(4.0).epsilon(0.01));
+    REQUIRE(output_vector[4] == Approx(5.0).epsilon(0.01));
+  }
+}
