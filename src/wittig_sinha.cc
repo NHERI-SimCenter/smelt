@@ -28,9 +28,10 @@ stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
       freq_cutoff_{5.0},
       time_step_{1.0 / (2.0 * freq_cutoff_)} {
   model_name_ = "WittigSinha";
-  num_times_ = std::ceil(total_time / time_step_) % 2 == 0
-                   ? std::ceil(total_time / time_step_)
-                   : std::ceil(total_time / time_step_) + 1;
+  num_times_ =
+      static_cast<unsigned int>(std::ceil(total_time / time_step_)) % 2 == 0
+          ? static_cast<unsigned int>(std::ceil(total_time / time_step_))
+          : static_cast<unsigned int>(std::ceil(total_time / time_step_) + 1);
 
   // Calculate range of frequencies based on cutoff frequency
   num_freqs_ = num_times_ / 2;
@@ -61,9 +62,10 @@ stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
                                      unsigned int num_floors, double total_time,
                                      int seed_value)
     : WittigSinha(exposure_category, gust_speed, height, num_floors,
-                  total_time),
-      seed_value_{seed_value}
-{}
+                  total_time)
+{
+  seed_value_ = seed_value;
+}
 
 stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
                                      double gust_speed,
@@ -82,9 +84,10 @@ stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
       time_step_{1.0 / (2.0 * freq_cutoff_)}
 {
   model_name_ = "WittigSinha";
-  num_times_ = std::ceil(total_time / time_step_) % 2 == 0
-                   ? std::ceil(total_time / time_step_)
-                   : std::ceil(total_time / time_step_) + 1;
+  num_times_ =
+      static_cast<unsigned int>(std::ceil(total_time / time_step_)) % 2 == 0
+          ? static_cast<unsigned int>(std::ceil(total_time / time_step_))
+          : static_cast<unsigned int>(std::ceil(total_time / time_step_) + 1);
 
   // Calculate range of frequencies based on cutoff frequency
   num_freqs_ = num_times_ / 2;
@@ -108,16 +111,20 @@ stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
                                      const std::vector<double>& x_locations,
                                      const std::vector<double>& y_locations,
                                      double total_time, int seed_value)
-  : WittigSinha(exposure_category, gust_speed, heights, x_locations, y_locations, total_time),
-    seed_value_{seed_value}
-{}
+  : WittigSinha(exposure_category, gust_speed, heights, x_locations, y_locations, total_time)
+{
+  seed_value_ = seed_value;
+}
 
 utilities::JsonObject stochastic::WittigSinha::generate(const std::string& event_name, bool units) {
   // Initialize wind velocity vectors
-  std::vector<std::vector<std::vector<double>>> wind_vels(
+  std::vector<std::vector<std::vector<std::vector<double>>>> wind_vels(
       local_x_.size(),
-      std::vector<double>(local_y_.size(),
-                          std::vector<double>(heights_.size(), 0.0)));
+      std::vector<std::vector<std::vector<double>>>(
+          local_y_.size(),
+          std::vector<std::vector<double>>(
+              heights_.size(), std::vector<double>(num_times_, 0.0))));
+
   Eigen::MatrixXcd complex_random_vals(num_freqs_, heights_.size());
   
   // Loop over heights to find time histories
@@ -219,7 +226,7 @@ Eigen::MatrixXd stochastic::WittigSinha::cross_spectral_density(double frequency
           std::sqrt(cross_spectral_density(i, i) *
                     cross_spectral_density(j, j)) *
           std::exp(-coherence_coeff * frequency *
-                   std::abs(heights_(i) - heights_(j)) /
+                   std::abs(heights_[i] - heights_[j]) /
                    (0.5 * (wind_velocities_[i] + wind_velocities_[j]))) *
           0.999;
     }

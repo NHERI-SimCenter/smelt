@@ -58,7 +58,7 @@ std::function<double(const std::string&, const std::vector<double>&, double,
   velocity_prof.resize(heights.size());
 
   for (unsigned int i = 0; i < heights.size(); ++i) {
-    velocity_prof =
+    velocity_prof[i] =
         gust_speed * power_factor * std::pow(heights[i] / 10.0, power_exponent);
   }
 

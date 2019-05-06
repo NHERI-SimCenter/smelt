@@ -5,6 +5,7 @@
 #include <vector>
 #include <Eigen/Dense>
 #include "json_object.h"
+#include "stochastic_model.h"
 
 namespace stochastic {
 
@@ -48,7 +49,7 @@ class WittigSinha : public StochasticModel {
    *                       repeatability
    */
   WittigSinha(const std::string& exposure_category, double gust_speed,
-              double height, unsigned int num_floors, unsigned int num_floors,
+              double height, unsigned int num_floors, double total_time,
               int seed_value);
 
   /**
