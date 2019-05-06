@@ -137,7 +137,67 @@ utilities::JsonObject stochastic::WittigSinha::generate(const std::string& event
               << e.what() << std::endl;
   }
 
-  // CONTINUE HERE TO WRITE TO JSON
+  // Create JsonObject for event
+  auto event = utilities::JsonObject();
+  event.add_value("dT", time_step_);
+  event.add_value("numSteps", num_times_);
+  
+  // Consider case when only looking at floor loads, so only have time histories as
+  // one location along the z-axis
+  if (local_x_.size() == 1 && local_y_.size() == 1) {
+    // Arrays of patterns and time histories for each floor
+    std::vector<utilities::JsonObject> pattern_array(heights_.size());
+    std::vector<utilities::JsonObject> event_array(1);
+    std::vector<utilities::JsonObject> time_history_array(heights_.size());
+    auto time_history = utilities::JsonObject();
+    event_array[0].add_value("type", "Wind");
+    event_array[0].add_value("subtype", model_name_);
+
+    for (unsigned int i = 0; i < heights_.size(); ++i) {
+      // Create pattern
+      pattern_array[i].add_value("name", std::to_string(i + 1));
+      pattern_array[i].add_value("timeSeries", std::to_string(i + 1));
+      pattern_array[i].add_value("type", "WindFloorLoad");
+      pattern_array[i].add_value("floor", std::to_string(i + 1));
+      pattern_array[i].add_value("dof", 1);
+      
+      // Create time histories
+      time_history.add_value("name", std::to_string(i + 1));
+      time_history.add_value("dT", time_step_);
+      time_history.add_value("type", "Value");
+      time_history.add_value("data", wind_vels[0][0][i]);
+      time_history_array[i] = time_history;
+      time_history.clear();
+    }
+    
+    event_array[0].add_value("timeSeries", time_history_array);
+    event_array[0].add_value("pattern", pattern_array);
+    event.add_value("Events", event_array);   
+  } else {
+    throw std::runtime_error(
+        "ERROR: In stochastic::WittigSinha::generate: Currently, only supports "
+        "time histories along z-axis at single location\n");
+  }
+
+  return event;
+}
+
+bool stochastic::WittigSinha::generate(const std::string& event_name,
+                                       const std::string& output_location,
+                                       bool units) {
+
+  bool status = true;
+  // Generate time histories at specified locations
+  try {
+    auto json_output = generate(event_name, units);
+    json_output.write_to_file(output_location);
+  } catch (const std::exception& e) {
+    std::cerr << e.what();
+    status = false;
+    throw;
+  }
+
+  return status;
 }
 
 Eigen::MatrixXd stochastic::WittigSinha::cross_spectral_density(double frequency) const {
