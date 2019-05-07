@@ -232,8 +232,11 @@ Eigen::MatrixXd stochastic::WittigSinha::cross_spectral_density(double frequency
     }
   }
 
-  return cross_spectral_density.transpose() + cross_spectral_density -
-         cross_spectral_density.diagonal().asDiagonal();
+  // Get diagonal of cross spectral density matrix--avoids compiler errors where type
+  // of diagonal matrix is not correctly deduced
+  Eigen::MatrixXd diag_mat = cross_spectral_density.diagonal().asDiagonal();
+
+  return cross_spectral_density.transpose() + cross_spectral_density - diag_mat;
 }
 
 Eigen::MatrixXcd stochastic::WittigSinha::complex_random_numbers() const {
@@ -244,7 +247,7 @@ Eigen::MatrixXcd stochastic::WittigSinha::complex_random_numbers() const {
           : seed_value_;
   running_seed = running_seed + 10;
   auto generator = boost::random::mt19937(running_seed);
-  boost::random::normal_distribution<double> distribution();
+  boost::random::normal_distribution<> distribution;
   boost::random::variate_generator<boost::random::mt19937&,
                                    boost::random::normal_distribution<>>
       distribution_gen(generator, distribution);
@@ -262,18 +265,18 @@ Eigen::MatrixXcd stochastic::WittigSinha::complex_random_numbers() const {
 
   // Iterator over all frequencies and generate complex random numbers
   // for discrete time series simulation
-  Eigen::MatrixXd cross_spectral_density(heights_.size(), heights_.size());
+  Eigen::MatrixXd cross_spec_density_matrix(heights_.size(), heights_.size());
   Eigen::MatrixXcd complex_random(num_freqs_, heights_.size());
 
   for (unsigned int i = 0; i < frequencies_.size(); ++i) {
     // Calculate cross-spectral density matrix for current frequency
-    cross_spectral_density = cross_spectral_density(frequencies_[i]);
+    cross_spec_density_matrix = cross_spectral_density(frequencies_[i]);
 
     // Find lower Cholesky factorization of cross-spectral density
     Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> lower_cholesky;
 
     try {
-      auto llt = cross_spectral_density.llt();
+      auto llt = cross_spec_density_matrix.llt();
       lower_cholesky = llt.matrixL();
 
       if (llt.info() == Eigen::NumericalIssue) {
@@ -305,7 +308,7 @@ std::vector<double> stochastic::WittigSinha::gen_location_hist(
       random_numbers.block(1, column_index, num_freqs_ - 2, column_index)
           .reverse()
           .conjugate();
-  complex_full_range(num_freqs) = std::abs(complex_full_range(num_freqs_ - 1, column_index));
+  complex_full_range(num_freqs_) = std::abs(complex_full_range(num_freqs_ - 1, column_index));
 
   // Calculate wind speed using real portion of inverse Fast Fourier Transform
   // full range of random numbers
