@@ -13,6 +13,7 @@
 #include "vlachos_et_al.h"
 #include "wind_profile.h"
 #include "window.h"
+#include "wittig_sinha.h"
 
 void config::initialize() {
   // RANDOM VARIABLE GENERATION
@@ -46,12 +47,17 @@ void config::initialize() {
       student_t_dist("StudentstDist");
 
   // STOCHASTIC MODELS
+  // Earthquake
   static Register<stochastic::StochasticModel, stochastic::VlachosEtAl, double,
                   double, double, double, unsigned int, unsigned int>
       vlachos_et_al("VlachosSiteSpecificEQ");
   static Register<stochastic::StochasticModel, stochastic::VlachosEtAl, double,
                   double, double, double, unsigned int, unsigned int, int>
       vlachos_et_al_seed("VlachosSiteSpecificEQ");
+  // Wind
+  static Register<stochastic::StochasticModel, stochastic::WittigSinha,
+                  std::string, double, double, unsigned int, double>
+      wittig_sinha_equal_floors("WittigSinhaDiscreteFreqWind");
 
   // WINDOW FUNCTIONS
   // Register Hann window

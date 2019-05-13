@@ -14,11 +14,11 @@
 #include "numeric_utils.h"
 #include "wittig_sinha.h"
 
-stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
+stochastic::WittigSinha::WittigSinha(std::string exposure_category,
                                      double gust_speed, double height,
                                      unsigned int num_floors, double total_time)
     : StochasticModel(),
-      exposure_category_{exposure_category_},
+      exposure_category_{exposure_category},
       gust_speed_{gust_speed},
       bldg_height_{height},
       num_floors_{num_floors},
@@ -38,11 +38,11 @@ stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
   frequencies_.resize(num_freqs_);
 
   for (unsigned int i = 0; i < frequencies_.size(); ++i) {
-    frequencies_[i] = i * freq_cutoff_ / num_freqs_;
+    frequencies_[i] = (i + 1) * freq_cutoff_ / num_freqs_;
   }
   
   // Calculate heights of each floor
-  heights_ = std::vector<double>(0.0, num_floors_);  
+  heights_ = std::vector<double>(num_floors_);  
   heights_[0] = bldg_height_ / num_floors_;
 
   for (unsigned int i = 1; i < heights_.size(); ++i) {
@@ -57,7 +57,7 @@ stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
                      gust_speed, wind_velocities_);
 }
 
-stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
+stochastic::WittigSinha::WittigSinha(std::string exposure_category,
                                      double gust_speed, double height,
                                      unsigned int num_floors, double total_time,
                                      int seed_value)
@@ -67,14 +67,14 @@ stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
   seed_value_ = seed_value;
 }
 
-stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
+stochastic::WittigSinha::WittigSinha(std::string exposure_category,
                                      double gust_speed,
                                      const std::vector<double>& heights,
                                      const std::vector<double>& x_locations,
                                      const std::vector<double>& y_locations,
                                      double total_time)
     : StochasticModel(),
-      exposure_category_{exposure_category_},
+      exposure_category_{exposure_category},
       gust_speed_{gust_speed},
       seed_value_{std::numeric_limits<int>::infinity()},
       heights_{heights},
@@ -105,7 +105,7 @@ stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
                      gust_speed, wind_velocities_);  
 }
 
-stochastic::WittigSinha::WittigSinha(const std::string& exposure_category,
+stochastic::WittigSinha::WittigSinha(std::string exposure_category,
                                      double gust_speed,
                                      const std::vector<double>& heights,
                                      const std::vector<double>& x_locations,
@@ -210,8 +210,10 @@ bool stochastic::WittigSinha::generate(const std::string& event_name,
 Eigen::MatrixXd stochastic::WittigSinha::cross_spectral_density(double frequency) const {
   // Coefficient for coherence function
   double coherence_coeff = 10.0;
-  Eigen::MatrixXd cross_spectral_density(heights_.size(), heights_.size());
-
+  // Eigen::MatrixXd cross_spectral_density(heights_.size(), heights_.size());
+  Eigen::MatrixXd cross_spectral_density =
+      Eigen::MatrixXd::Zero(heights_.size(), heights_.size());
+  
   for (unsigned int i = 0; i < cross_spectral_density.rows(); ++i) {
     cross_spectral_density(i, i) =
         200.0 * friction_velocity_ * friction_velocity_ * heights_[i] /
@@ -221,7 +223,7 @@ Eigen::MatrixXd stochastic::WittigSinha::cross_spectral_density(double frequency
   }
 
   for (unsigned int i = 0; i < cross_spectral_density.rows(); ++i) {
-    for (unsigned int j = 0; j < cross_spectral_density.cols(); ++j) {
+    for (unsigned int j = i + 1; j < cross_spectral_density.cols(); ++j) {
       cross_spectral_density(i, j) =
           std::sqrt(cross_spectral_density(i, i) *
                     cross_spectral_density(j, j)) *

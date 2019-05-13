@@ -3,7 +3,7 @@
 #include <vector>
 
 /**< Add value to key */
-template <typename Tparam>
+template <typename Tparam> inline
 bool utilities::JsonObject::add_value(const std::string& key,
                                       const Tparam& value) {
   bool status = true;

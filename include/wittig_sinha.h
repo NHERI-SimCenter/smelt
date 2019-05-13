@@ -32,7 +32,7 @@ class WittigSinha : public StochasticModel {
    * @param[in] num_floors Number of floors in building
    * @param[in] total_time Total time desired for time history
    */
-  WittigSinha(const std::string& exposure_category, double gust_speed,
+  WittigSinha(std::string exposure_category, double gust_speed,
               double height, unsigned int num_floors, double total_time);
 
   /**
@@ -48,7 +48,7 @@ class WittigSinha : public StochasticModel {
    * @param[in] seed_value Value to seed random variables with to ensure
    *                       repeatability
    */
-  WittigSinha(const std::string& exposure_category, double gust_speed,
+  WittigSinha(std::string exposure_category, double gust_speed,
               double height, unsigned int num_floors, double total_time,
               int seed_value);
 
@@ -63,7 +63,7 @@ class WittigSinha : public StochasticModel {
    * @param[in] y_locations Vector of y locations at which to calculate time histories
    * @param[in] total_time Total time desired for time history
    */
-  WittigSinha(const std::string& exposure_category, double gust_speed,
+  WittigSinha(std::string exposure_category, double gust_speed,
               const std::vector<double>& heights,
               const std::vector<double>& x_locations,
               const std::vector<double>& y_locations, double total_time);
@@ -81,7 +81,7 @@ class WittigSinha : public StochasticModel {
    * @param[in] seed_value Value to seed random variables with to ensure
    *                       repeatability
    */
-  WittigSinha(const std::string& exposure_category, double gust_speed,
+  WittigSinha(std::string exposure_category, double gust_speed,
               const std::vector<double>& heights,
               const std::vector<double>& x_locations,
               const std::vector<double>& y_locations, double total_time,
