@@ -207,4 +207,15 @@ TEST_CASE("Test Wittig & Sinha (1975) implementation", "[Stochastic][Wind]") {
       }
     }
   }
+
+  SECTION("Test single location time history generation") {
+    auto complex_numbers = test_wittig_sinha.complex_random_numbers();
+    auto location_hist = test_wittig_sinha.gen_location_hist(complex_numbers, 0);
+
+    // std::cout << "\nAcceleration time history:\n";
+    // for (auto const& val : location_hist) {
+    //   std::cout << val << ", ";
+    // }
+    // std::cout << std::endl;
+  }
 }

@@ -210,7 +210,6 @@ bool stochastic::WittigSinha::generate(const std::string& event_name,
 Eigen::MatrixXd stochastic::WittigSinha::cross_spectral_density(double frequency) const {
   // Coefficient for coherence function
   double coherence_coeff = 10.0;
-  // Eigen::MatrixXd cross_spectral_density(heights_.size(), heights_.size());
   Eigen::MatrixXd cross_spectral_density =
       Eigen::MatrixXd::Zero(heights_.size(), heights_.size());
   
@@ -305,12 +304,16 @@ std::vector<double> stochastic::WittigSinha::gen_location_hist(
 
   // This following block implements what is expressed in Equations 7 & 8
   Eigen::VectorXcd complex_full_range = Eigen::VectorXcd::Zero(2 * num_freqs_);
-  complex_full_range.segment(1, num_freqs_) = random_numbers.col(column_index);
-  complex_full_range.segment(num_freqs_ + 1, 2 * num_freqs_) =
-      random_numbers.block(1, column_index, num_freqs_ - 2, column_index)
+
+  complex_full_range.segment(1, num_freqs_) =
+      random_numbers.block(0, column_index, num_freqs_, 1);
+
+  complex_full_range.segment(num_freqs_ + 1, num_freqs_ - 1) =
+      random_numbers.block(0, column_index, num_freqs_ - 1, 1)
           .reverse()
           .conjugate();
-  complex_full_range(num_freqs_) = std::abs(complex_full_range(num_freqs_ - 1, column_index));
+ 
+  complex_full_range(num_freqs_) = std::abs(random_numbers(num_freqs_ - 1, column_index)); 
 
   // Calculate wind speed using real portion of inverse Fast Fourier Transform
   // full range of random numbers
