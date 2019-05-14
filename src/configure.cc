@@ -58,6 +58,19 @@ void config::initialize() {
   static Register<stochastic::StochasticModel, stochastic::WittigSinha,
                   std::string, double, double, unsigned int, double>
       wittig_sinha_equal_floors("WittigSinhaDiscreteFreqWind");
+  static Register<stochastic::StochasticModel, stochastic::WittigSinha,
+                  std::string, double, double, unsigned int, double, int>
+      wittig_sinha_equal_floors_seed("WittigSinhaDiscreteFreqWind");
+  static Register<stochastic::StochasticModel, stochastic::WittigSinha,
+                  std::string, double, const std::vector<double>&,
+                  const std::vector<double>&, const std::vector<double>&,
+                  double>
+      wittig_sinha_unequal_floors("WittigSinhaDiscreteFreqWind");
+  static Register<stochastic::StochasticModel, stochastic::WittigSinha,
+                  std::string, double, const std::vector<double>&,
+                  const std::vector<double>&, const std::vector<double>&,
+                  double, int>
+      wittig_sinha_unequal_floors_seed("WittigSinhaDiscreteFreqWind");  
 
   // WINDOW FUNCTIONS
   // Register Hann window

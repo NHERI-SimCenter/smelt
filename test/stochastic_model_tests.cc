@@ -160,13 +160,6 @@ TEST_CASE("Test Wittig & Sinha (1975) implementation", "[Stochastic][Wind]") {
   stochastic::WittigSinha test_wittig_sinha(exposure_category, gust_speed,
                                             height, num_floors, total_time);
 
-  auto test_model_factory1 =
-      Factory<stochastic::StochasticModel, std::string, double, double,
-              unsigned int, double>::instance()
-          ->create("WittigSinhaDiscreteFreqWind", std::move(exposure_category),
-                   std::move(gust_speed), std::move(height),
-                   std::move(num_floors), std::move(total_time));
-
   SECTION("Test cross spectral density matrix computation") {
 
     Eigen::MatrixXd expected_density_matrix(num_floors, num_floors);
@@ -215,5 +208,83 @@ TEST_CASE("Test Wittig & Sinha (1975) implementation", "[Stochastic][Wind]") {
     
     auto time_histories_json = test_wittig_sinha.generate("Test", "./test_wind.json", false);
     REQUIRE(time_histories_json);
+  }
+
+  SECTION("Test different constructors") {
+    REQUIRE_NOTHROW(Factory<stochastic::StochasticModel, std::string, double,
+                            double, unsigned int, double>::instance()
+                        ->create("WittigSinhaDiscreteFreqWind",
+                                 std::move(exposure_category),
+                                 std::move(gust_speed), std::move(height),
+                                 std::move(num_floors), std::move(total_time)));
+
+    REQUIRE_NOTHROW(Factory<stochastic::StochasticModel, std::string, double,
+                            double, unsigned int, double, int>::instance()
+                        ->create("WittigSinhaDiscreteFreqWind", std::move("D"),
+                                 std::move(30.0), std::move(123.0),
+                                 std::move(8), std::move(200.0),
+                                 std::move(100)));
+
+    REQUIRE_NOTHROW(
+        Factory<stochastic::StochasticModel, std::string, double,
+                const std::vector<double> &, const std::vector<double> &,
+                const std::vector<double> &, double>::instance()
+            ->create("WittigSinhaDiscreteFreqWind", std::move("D"),
+                     std::move(30.0), std::move(std::vector<double>(1, 0.0)),
+                     std::move(std::vector<double>(1, 0.0)),
+                     std::move(std::vector<double>{10.0, 23.0, 50.0}),
+                     std::move(200.0)));
+
+    REQUIRE_NOTHROW(
+        Factory<stochastic::StochasticModel, std::string, double,
+                const std::vector<double> &, const std::vector<double> &,
+                const std::vector<double> &, double, int>::instance()
+            ->create("WittigSinhaDiscreteFreqWind", std::move("D"),
+                     std::move(30.0), std::move(std::vector<double>(1, 0.0)),
+                     std::move(std::vector<double>(1, 0.0)),
+                     std::move(std::vector<double>{10.0, 23.0, 50.0}),
+                     std::move(200.0), std::move(25)));
+  }
+
+  SECTION("Test that when seed provided subsequent runs are identical") {
+    auto run1 = Factory<stochastic::StochasticModel, std::string, double,
+                        double, unsigned int, double, int>::instance()
+                    ->create("WittigSinhaDiscreteFreqWind", std::move("D"),
+                             std::move(30.0), std::move(123.0), std::move(8),
+                             std::move(200.0), std::move(100));
+    auto run1_history = run1->generate("Run1");
+    
+    auto run2 = Factory<stochastic::StochasticModel, std::string, double,
+                        double, unsigned int, double, int>::instance()
+                    ->create("WittigSinhaDiscreteFreqWind", std::move("D"),
+                             std::move(30.0), std::move(123.0), std::move(8),
+                             std::move(200.0), std::move(100));
+    auto run2_history = run2->generate("Run2");
+
+    auto run1_data = run1_history.get_library_json()["Events"][0]["timeSeries"][7]["data"].get<std::vector<double>>();
+    auto run2_data = run2_history.get_library_json()["Events"][0]["timeSeries"][7]["data"].get<std::vector<double>>();
+    // std::cout << run1_data << std::endl;
+
+    REQUIRE(run1_data.size() == run2_data.size());
+    for (unsigned int i = 0; i < run1_data.size(); ++i) {
+      REQUIRE(run1_data[i] - run2_data[i] + 1.0 == Approx(1.0).epsilon(0.01));
+    }
+  }
+
+  SECTION(
+      "Test that trying to generate time histories when x and y are vectors "
+      "throws exception since this capability isn't currently implemented") {
+
+    auto vector_case =
+        Factory<stochastic::StochasticModel, std::string, double,
+                const std::vector<double> &, const std::vector<double> &,
+                const std::vector<double> &, double, int>::instance()
+            ->create("WittigSinhaDiscreteFreqWind", std::move("D"),
+                     std::move(30.0), std::move(std::vector<double>{1.0, 2.0}),
+                     std::move(std::vector<double>(1, 0.0)),
+                     std::move(std::vector<double>{10.0, 23.0, 50.0}),
+                     std::move(200.0), std::move(25));
+
+    REQUIRE_THROWS_AS(vector_case->generate("Test"), std::runtime_error);
   }
 }

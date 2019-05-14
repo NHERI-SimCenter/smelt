@@ -135,7 +135,7 @@ utilities::JsonObject stochastic::WittigSinha::generate(const std::string& event
         // time series
         complex_random_vals = complex_random_numbers();
         for (unsigned int k = 0; k < heights_.size(); ++k) {
-          wind_vels[0][0][k] = gen_location_hist(complex_random_vals, k);
+          wind_vels[i][j][k] = gen_location_hist(complex_random_vals, k);
         }
       }
     }
@@ -242,12 +242,14 @@ Eigen::MatrixXd stochastic::WittigSinha::cross_spectral_density(double frequency
 
 Eigen::MatrixXcd stochastic::WittigSinha::complex_random_numbers() const {
   // Construct random number generator for standard normal distribution
-  static unsigned int running_seed =
-      seed_value_ == std::numeric_limits<int>::infinity()
-          ? static_cast<unsigned int>(std::time(nullptr))
-          : seed_value_;
-  running_seed = running_seed + 10;
-  auto generator = boost::random::mt19937(running_seed);
+  static unsigned int history_seed = static_cast<unsigned int>(std::time(nullptr));
+  history_seed = history_seed + 10;
+
+  auto generator =
+    seed_value_ != std::numeric_limits<int>::infinity()
+    ? boost::random::mt19937(static_cast<unsigned int>(seed_value_ + 10))
+    : boost::random::mt19937(history_seed);
+  
   boost::random::normal_distribution<> distribution;
   boost::random::variate_generator<boost::random::mt19937&,
                                    boost::random::normal_distribution<>>
