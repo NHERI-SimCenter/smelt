@@ -286,5 +286,19 @@ TEST_CASE("Test Wittig & Sinha (1975) implementation", "[Stochastic][Wind]") {
                      std::move(200.0), std::move(25));
 
     REQUIRE_THROWS_AS(vector_case->generate("Test"), std::runtime_error);
+
+    auto non_vector_case =
+        Factory<stochastic::StochasticModel, std::string, double,
+                const std::vector<double> &, const std::vector<double> &,
+                const std::vector<double> &, double>::instance()
+            ->create("WittigSinhaDiscreteFreqWind", std::move("D"),
+                     std::move(30.0),
+                     std::move(std::vector<double>{10.0, 23.0, 50.0}),
+                     std::move(std::vector<double>(1, 0.0)),
+                     std::move(std::vector<double>(1, 0.0)), std::move(200.0));
+
+    auto non_vector_case_history = non_vector_case->generate("NonVectorCase");
+
+    REQUIRE(non_vector_case_history.get_library_json()["Events"][0]["timeSeries"].size() == 3);
   }
 }
