@@ -27,7 +27,7 @@ class WittigSinha : public StochasticModel {
    * using exposure category-based velocity profile. Divides building height
    * equally by number of floors, providing time histories at floors.
    * @param[in] exposure_category Exposure category based on ASCE-7
-   * @param[in] gust_speed Gust speed of wind
+   * @param[in] gust_speed Gust speed of wind in mph
    * @param[in] height Building height
    * @param[in] num_floors Number of floors in building
    * @param[in] total_time Total time desired for time history
@@ -41,7 +41,7 @@ class WittigSinha : public StochasticModel {
    * Divides building height equally by number of floors, providing time
    * histories at floors.
    * @param[in] exposure_category Exposure category based on ASCE-7
-   * @param[in] gust_speed Gust speed of wind
+   * @param[in] gust_speed Gust speed of wind in mph
    * @param[in] height Building height
    * @param[in] num_floors Number of floors in building
    * @param[in] total_time Total time desired for time history
@@ -57,7 +57,7 @@ class WittigSinha : public StochasticModel {
    * using exposure category-based velocity profile at specific horizontal and
    * vertical locations.
    * @param[in] exposure_category Exposure category based on ASCE-7
-   * @param[in] gust_speed Gust speed of wind
+   * @param[in] gust_speed Gust speed of wind in mph
    * @param[in] heights Vector of heights at which to calculate time histories
    * @param[in] x_locations Vector of x locations at which to calculate time histories
    * @param[in] y_locations Vector of y locations at which to calculate time histories
@@ -73,7 +73,7 @@ class WittigSinha : public StochasticModel {
    * using exposure category-based velocity profile at specific horizontal and
    * vertical locations with specified seed value.
    * @param[in] exposure_category Exposure category based on ASCE-7
-   * @param[in] gust_speed Gust speed of wind
+   * @param[in] gust_speed Gust speed of wind in mph
    * @param[in] heights Vector of heights at which to calculate time histories
    * @param[in] x_locations Vector of x locations at which to calculate time histories
    * @param[in] y_locations Vector of y locations at which to calculate time histories
@@ -147,11 +147,15 @@ class WittigSinha : public StochasticModel {
    *                           velocity time history generation
    * @param[in] column_index Index for column to use in input random numbers
    *                         matrix
+   * @param[in] units Indicates that time histories should be returned in
+   *                  units of ft/s. Otherwise time histories are returned
+   *                  in units of m/s
    * @return Vector containing velocity time history for vertical location
    *         requested
    */
   std::vector<double> gen_location_hist(const Eigen::MatrixXcd& random_numbers,
-                                        unsigned int column_index) const;
+                                        unsigned int column_index,
+                                        bool units) const;
 
  private:
   std::string exposure_category_; /**< Exposure category for building based on ASCE-7 */

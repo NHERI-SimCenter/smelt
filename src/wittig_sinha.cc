@@ -19,7 +19,7 @@ stochastic::WittigSinha::WittigSinha(std::string exposure_category,
                                      unsigned int num_floors, double total_time)
     : StochasticModel(),
       exposure_category_{exposure_category},
-      gust_speed_{gust_speed},
+      gust_speed_{gust_speed * 0.44704}, // Convert from mph to m/s
       bldg_height_{height},
       num_floors_{num_floors},
       seed_value_{std::numeric_limits<int>::infinity()},
@@ -75,7 +75,7 @@ stochastic::WittigSinha::WittigSinha(std::string exposure_category,
                                      double total_time)
     : StochasticModel(),
       exposure_category_{exposure_category},
-      gust_speed_{gust_speed},
+      gust_speed_{gust_speed * 0.44704}, // Convert from mph to m/s
       seed_value_{std::numeric_limits<int>::infinity()},
       heights_{heights},
       local_x_{x_locations},
@@ -135,7 +135,7 @@ utilities::JsonObject stochastic::WittigSinha::generate(const std::string& event
         // time series
         complex_random_vals = complex_random_numbers();
         for (unsigned int k = 0; k < heights_.size(); ++k) {
-          wind_vels[i][j][k] = gen_location_hist(complex_random_vals, k);
+          wind_vels[i][j][k] = gen_location_hist(complex_random_vals, k, units);
         }
       }
     }
@@ -302,7 +302,8 @@ Eigen::MatrixXcd stochastic::WittigSinha::complex_random_numbers() const {
 }
 
 std::vector<double> stochastic::WittigSinha::gen_location_hist(
-    const Eigen::MatrixXcd& random_numbers, unsigned int column_index) const {
+    const Eigen::MatrixXcd& random_numbers, unsigned int column_index,
+    bool units) const {
 
   // This following block implements what is expressed in Equations 7 & 8
   Eigen::VectorXcd complex_full_range = Eigen::VectorXcd::Zero(2 * num_freqs_);
@@ -321,6 +322,13 @@ std::vector<double> stochastic::WittigSinha::gen_location_hist(
   // full range of random numbers
   std::vector<double> node_time_history(complex_full_range.size());
   numeric_utils::inverse_fft(complex_full_range, node_time_history);
+
+  // Check if time histories need to be converted to ft/s
+  if (units) {
+    for (auto & val : node_time_history) {
+      val = val * 3.28084;
+    }
+  }
   
   return node_time_history;
 }
