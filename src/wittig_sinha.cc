@@ -167,6 +167,7 @@ utilities::JsonObject stochastic::WittigSinha::generate(const std::string& event
       pattern_array[i].add_value("type", "WindFloorLoad");
       pattern_array[i].add_value("floor", std::to_string(i + 1));
       pattern_array[i].add_value("dof", 1);
+      pattern_array[i].add_value("profileVelocity", wind_velocities_[i]);
       
       // Create time histories
       time_history.add_value("name", std::to_string(i + 1));
