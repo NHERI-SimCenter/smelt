@@ -46,3 +46,5 @@ This material is based upon work supported by the National Science Foundation un
 ## Contact
 
 Michael Gardner, NHERI SimCenter, UC Berkeley, mhgardner@berkeley.edu
+
+Please visit the [NHERI Simcenter](https://simcenter.designsafe-ci.org/) webpage for more information on the SimCenter, including other SimCenter applications, FAQ, and how to collaborate.
