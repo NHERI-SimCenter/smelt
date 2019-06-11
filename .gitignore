@@ -1,6 +1,7 @@
 # Build directory
 build
 validation
+smelt.wiki
 
 # Compiled Object files
 *.slo

@@ -11,7 +11,9 @@
 #include "normal_multivar.h"
 #include "students_t_dist.h"
 #include "vlachos_et_al.h"
+#include "wind_profile.h"
 #include "window.h"
+#include "wittig_sinha.h"
 
 void config::initialize() {
   // RANDOM VARIABLE GENERATION
@@ -45,12 +47,30 @@ void config::initialize() {
       student_t_dist("StudentstDist");
 
   // STOCHASTIC MODELS
+  // Earthquake
   static Register<stochastic::StochasticModel, stochastic::VlachosEtAl, double,
                   double, double, double, unsigned int, unsigned int>
       vlachos_et_al("VlachosSiteSpecificEQ");
   static Register<stochastic::StochasticModel, stochastic::VlachosEtAl, double,
                   double, double, double, unsigned int, unsigned int, int>
       vlachos_et_al_seed("VlachosSiteSpecificEQ");
+  // Wind
+  static Register<stochastic::StochasticModel, stochastic::WittigSinha,
+                  std::string, double, double, unsigned int, double>
+      wittig_sinha_equal_floors("WittigSinhaDiscreteFreqWind");
+  static Register<stochastic::StochasticModel, stochastic::WittigSinha,
+                  std::string, double, double, unsigned int, double, int>
+      wittig_sinha_equal_floors_seed("WittigSinhaDiscreteFreqWind");
+  static Register<stochastic::StochasticModel, stochastic::WittigSinha,
+                  std::string, double, const std::vector<double>&,
+                  const std::vector<double>&, const std::vector<double>&,
+                  double>
+      wittig_sinha_unequal_floors("WittigSinhaDiscreteFreqWind");
+  static Register<stochastic::StochasticModel, stochastic::WittigSinha,
+                  std::string, double, const std::vector<double>&,
+                  const std::vector<double>&, const std::vector<double>&,
+                  double, int>
+      wittig_sinha_unequal_floors_seed("WittigSinhaDiscreteFreqWind");  
 
   // WINDOW FUNCTIONS
   // Register Hann window
@@ -68,4 +88,12 @@ void config::initialize() {
                           std::vector<double>, int, int>
       filter_impulse_response("ImpulseResponse",
                               signal_processing::impulse_response);
+
+  // WIND VELOCITY PROFILES
+  // Exposure category-based velocity profile using power law
+  static DispatchRegister<double, const std::string&,
+                          const std::vector<double>&, double, double,
+                          std::vector<double>&>
+      exposure_category_vel("ExposureCategoryVel",
+                            wind::exposure_category_velocity);
 }

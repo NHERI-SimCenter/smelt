@@ -56,7 +56,8 @@ set(SOURCES
   ${PROJECT_SOURCE_DIR}/src/students_t_dist.cc
   ${PROJECT_SOURCE_DIR}/src/json_object.cc
   ${PROJECT_SOURCE_DIR}/src/vlachos_et_al.cc
-  ${PROJECT_SOURCE_DIR}/src/configure.cc  
+  ${PROJECT_SOURCE_DIR}/src/configure.cc
+  ${PROJECT_SOURCE_DIR}/src/wittig_sinha.cc  
   )
 
 # Add library as target
@@ -89,6 +90,7 @@ if (BUILD_TESTING)
     ${PROJECT_SOURCE_DIR}/test/filter_func_tests.cc
     ${PROJECT_SOURCE_DIR}/test/json_object_tests.cc
     ${PROJECT_SOURCE_DIR}/test/stochastic_model_tests.cc
+    ${PROJECT_SOURCE_DIR}/test/wind_profile_tests.cc
   )
 
   add_executable(unit_tests ${TEST_SOURCES})

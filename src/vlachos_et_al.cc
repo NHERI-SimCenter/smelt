@@ -398,7 +398,7 @@ stochastic::VlachosEtAl::VlachosEtAl(double moment_magnitude,
 }
 
 utilities::JsonObject stochastic::VlachosEtAl::generate(
-    const std::string& event_name, bool g_units) {
+    const std::string& event_name, bool units) {
 
   // Pool of acceleration time histories based on number of spectra and
   // simulations requested
@@ -448,7 +448,7 @@ utilities::JsonObject stochastic::VlachosEtAl::generate(
       // Rotate accelerations, if necessary      
       std::vector<double> x_accels(acceleration_pool[i][j].size());
       std::vector<double> y_accels(acceleration_pool[i][j].size());
-      rotate_acceleration(acceleration_pool[i][j], x_accels, y_accels, g_units);
+      rotate_acceleration(acceleration_pool[i][j], x_accels, y_accels, units);
 
       // Add time histories for x and y directions to event
       auto time_history_x = utilities::JsonObject();
@@ -475,12 +475,12 @@ utilities::JsonObject stochastic::VlachosEtAl::generate(
 
 bool stochastic::VlachosEtAl::generate(const std::string& event_name,
                                        const std::string& output_location,
-                                       bool g_units) {
+                                       bool units) {
   bool status = true;
   
   // Generate pool of acceleration time histories
   try{
-    auto json_output = generate(event_name, g_units);
+    auto json_output = generate(event_name, units);
     json_output.write_to_file(output_location);
   } catch (const std::exception& e) {
     std::cerr << e.what();
@@ -892,12 +892,12 @@ Eigen::VectorXd stochastic::VlachosEtAl::kt_2(
 
 void stochastic::VlachosEtAl::rotate_acceleration(
     const std::vector<double>& acceleration, std::vector<double>& x_accels,
-    std::vector<double>& y_accels, bool g_units) const {
+    std::vector<double>& y_accels, bool units) const {
 
   x_accels.resize(acceleration.size());
   y_accels.resize(acceleration.size());
 
-  double conversion_factor = g_units ? 100.0 * 9.81 : 100.0;
+  double conversion_factor = units ? 100.0 * 9.81 : 100.0;
   
   // No orientation specified to acceleration oriented along x-axis
   if (std::abs(orientation_) < 1E-6) {

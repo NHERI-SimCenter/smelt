@@ -1,6 +1,9 @@
+#include <complex>
+#include <iostream>
 #include <stdexcept>
 #include <Eigen/Dense>
 #include <mkl.h>
+#include <mkl_dfti.h>
 #include <mkl_vsl.h>
 #include "numeric_utils.h"
 
@@ -59,6 +62,108 @@ bool convolve_1d(const std::vector<double>& input_x,
   vslConvDeleteTask(&conv_task);
 
   return status;
+}
+
+bool inverse_fft(std::vector<std::complex<double>> input_vector,
+                 std::vector<double>& output_vector) {
+  output_vector.resize(input_vector.size());
+
+  // Create task descriptor and MKL status
+  DFTI_DESCRIPTOR_HANDLE fft_descriptor;
+  MKL_LONG fft_status;
+
+  // Allocate the descriptor data structure and initializes it with default
+  // configuration values
+  fft_status = DftiCreateDescriptor(&fft_descriptor, DFTI_DOUBLE, DFTI_REAL, 1,
+                                input_vector.size());
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::inverse_fft: Error in descriptor creation\n");
+    return false;
+  }
+  
+  // Set configuration value to not do inplace transformation
+  fft_status = DftiSetValue(fft_descriptor, DFTI_PLACEMENT, DFTI_NOT_INPLACE);
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::inverse_fft: Error in setting configuration\n");
+    return false;
+  }
+
+  // Set the backward scale factor to be 1 divided by the size of the input vector
+  // to make the backward tranform the inverse of the forward transform
+  fft_status = DftiSetValue(fft_descriptor, DFTI_BACKWARD_SCALE,
+                            static_cast<double>(1.0 / input_vector.size()));
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::inverse_fft: Error in setting backward "
+        "scale factor\n");
+    return false;
+  }  
+
+  // Perform all initialization for the actual FFT computation
+  fft_status = DftiCommitDescriptor(fft_descriptor);
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::inverse_fft: Error in committing descriptor\n");
+    return false;
+  }
+  
+  // Compute the backward FFT
+  fft_status = DftiComputeBackward(fft_descriptor, input_vector.data(),
+                                   output_vector.data());
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::inverse_fft: Error in computing backward FFT\n");
+    return false;
+  }
+  
+  // Free the memory allocated for descriptor
+  fft_status = DftiFreeDescriptor(&fft_descriptor);
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::inverse_fft: Error in freeing FFT descriptor\n");
+    return false;
+  }  
+
+  return true;
+}
+
+bool inverse_fft(const Eigen::VectorXcd& input_vector,
+                 Eigen::VectorXd& output_vector) {
+  // Convert input Eigen vector to std vector
+  std::vector<std::complex<double>> input_vals(input_vector.size());
+  std::vector<double> outputs(input_vals.size());
+  Eigen::VectorXcd::Map(&input_vals[0], input_vector.size()) = input_vector;
+ 
+  try {
+    inverse_fft(input_vals, outputs);
+  } catch (const std::exception& e) {
+    std::cerr << "\nERROR: In numeric_utils::inverse_fft (With Eigen Vectors):"
+              << e.what() << std::endl;
+  }
+
+  // Convert output from std vector to Eigen vector
+  output_vector = Eigen::Map<Eigen::VectorXd>(outputs.data(), outputs.size());
+
+  return true;
+}
+
+bool inverse_fft(const Eigen::VectorXcd& input_vector,
+                 std::vector<double>& output_vector) {
+  // Convert input Eigen vector to std vector
+  std::vector<std::complex<double>> input_vals(input_vector.size());
+  Eigen::VectorXcd::Map(&input_vals[0], input_vector.size()) = input_vector;
+  output_vector.resize(input_vector.size());  
+ 
+  try {
+    inverse_fft(input_vals, output_vector);
+  } catch (const std::exception& e) {
+    std::cerr << "\nERROR: In numeric_utils::inverse_fft (With Eigen Vectors):"
+              << e.what() << std::endl;
+  }
+
+  return true;  
 }
 
 double trapazoid_rule(const std::vector<double>& input_vector, double spacing) {
