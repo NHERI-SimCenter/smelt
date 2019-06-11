@@ -253,6 +253,15 @@ TEST_CASE("Test Wittig & Sinha (1975) implementation", "[Stochastic][Wind]") {
                              std::move(30.0), std::move(123.0), std::move(8),
                              std::move(200.0), std::move(100));
     auto run1_history = run1->generate("Run1");
+
+    auto generateTest =
+        Factory<stochastic::StochasticModel, std::string, double, double,
+                unsigned int, double>::instance()
+            ->create("WittigSinhaDiscreteFreqWind", std::move("D"),
+                     std::move(30.0), std::move(5.08), std::move(3),
+                     std::move(13107.2));
+    auto genTest = generateTest->generate("Blah", "./another_wind_test.json", false);
+    generateTest->generate("Blah", "./yet_another_wind_test.json", false);
     
     auto run2 = Factory<stochastic::StochasticModel, std::string, double,
                         double, unsigned int, double, int>::instance()
@@ -261,9 +270,12 @@ TEST_CASE("Test Wittig & Sinha (1975) implementation", "[Stochastic][Wind]") {
                              std::move(200.0), std::move(100));
     auto run2_history = run2->generate("Run2");
 
-    auto run1_data = run1_history.get_library_json()["Events"][0]["timeSeries"][7]["data"].get<std::vector<double>>();
-    auto run2_data = run2_history.get_library_json()["Events"][0]["timeSeries"][7]["data"].get<std::vector<double>>();
-    // std::cout << run1_data << std::endl;
+    auto run1_data =
+        run1_history.get_library_json()["Events"][0]["timeSeries"][7]["data"]
+            .get<std::vector<double>>();
+    auto run2_data =
+        run2_history.get_library_json()["Events"][0]["timeSeries"][7]["data"]
+            .get<std::vector<double>>();
 
     REQUIRE(run1_data.size() == run2_data.size());
     for (unsigned int i = 0; i < run1_data.size(); ++i) {
