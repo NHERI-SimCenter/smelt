@@ -1,5 +1,6 @@
 # smelt
 **S**tochastic, **M**odular, and **E**xtensible **L**ibrary for **T**ime histories
+
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3246520.svg)](https://doi.org/10.5281/zenodo.3246520)
 [![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://raw.githubusercontent.com/NHERI-SimCenter/smelt/master/LICENSE)
 [![Documentation](https://img.shields.io/badge/docs-doxygen-blue.svg)](https://nheri-simcenter.github.io/smelt/)
