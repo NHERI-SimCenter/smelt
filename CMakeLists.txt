@@ -57,7 +57,9 @@ set(SOURCES
   ${PROJECT_SOURCE_DIR}/src/json_object.cc
   ${PROJECT_SOURCE_DIR}/src/vlachos_et_al.cc
   ${PROJECT_SOURCE_DIR}/src/configure.cc
-  ${PROJECT_SOURCE_DIR}/src/wittig_sinha.cc  
+  ${PROJECT_SOURCE_DIR}/src/wittig_sinha.cc
+  ${PROJECT_SOURCE_DIR}/src/filter.cc
+  ${PROJECT_SOURCE_DIR}/src/wind_profile.cc  
   )
 
 # Add library as target

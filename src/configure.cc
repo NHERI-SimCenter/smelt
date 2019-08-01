@@ -81,13 +81,13 @@ void config::initialize() {
   // Register highpass Butterworth filter
   static DispatchRegister<std::vector<std::vector<double>>, int, double>
       hp_butterworth_function("HighPassButter",
-                              signal_processing::hp_butterworth);
+                              signal_processing::hp_butterworth());
 
   // Register filter impulse response
   static DispatchRegister<std::vector<double>, std::vector<double>,
                           std::vector<double>, int, int>
       filter_impulse_response("ImpulseResponse",
-                              signal_processing::impulse_response);
+                              signal_processing::impulse_response());
 
   // WIND VELOCITY PROFILES
   // Exposure category-based velocity profile using power law
@@ -95,5 +95,5 @@ void config::initialize() {
                           const std::vector<double>&, double, double,
                           std::vector<double>&>
       exposure_category_vel("ExposureCategoryVel",
-                            wind::exposure_category_velocity);
+                            wind::exposure_category_velocity());
 }
