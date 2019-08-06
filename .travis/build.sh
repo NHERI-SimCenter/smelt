@@ -16,11 +16,11 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/miniconda/lib  
   mkdir build
   cd build
-  cmake .. -DCMAKE_BUILD_TYPE=Debug
+  cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_STATIC_LIBS=ON -DBUILD_SHARED_LIBS=ON
   make
   ctest --verbose
   rm -rf *
-  cmake .. -DCMAKE_BUILD_TYPE=Release
+  cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=ON -DBUILD_SHARED_LIBS=ON
   make
   ctest --verbose  
 else
@@ -35,11 +35,11 @@ else
   source /opt/intel/ipp/bin/ippvars.sh intel64 linux
   mkdir build
   cd build
-  cmake .. -DCMAKE_BUILD_TYPE=Debug
+  cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_STATIC_LIBS=ON -DBUILD_SHARED_LIBS=ON
   make
   ctest --verbose
   rm -rf *
-  cmake .. -DCMAKE_BUILD_TYPE=Release  
+  cmake .. -DCMAKE_BUILD_TYPE=Release -DBUILD_STATIC_LIBS=ON -DBUILD_SHARED_LIBS=ON
   make
   ctest --verbose  
   cd ..
