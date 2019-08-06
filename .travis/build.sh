@@ -6,8 +6,10 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
   export PATH="$HOME/miniconda/bin:$PATH"
   conda update --yes conda
   conda install -c intel mkl --yes
+  conda install -c intel mkl-static --yes  
   conda install -c intel mkl-include --yes
   conda install -c intel ipp --yes
+  conda install -c intel ipp-static --yes  
   conda install -c intel ipp-include --yes
   export MKLROOT=$HOME/miniconda
   export IPPROOT=$HOME/miniconda
