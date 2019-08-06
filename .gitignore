@@ -1,5 +1,6 @@
 # Build directory
 build
+tmp
 validation
 smelt.wiki
 

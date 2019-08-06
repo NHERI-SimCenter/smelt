@@ -4,9 +4,10 @@ project(StochasticModule LANGUAGES CXX)
 
 # Require C++11-compliant compiler
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_COLOR_MAKEFILE ON)
+set(CMAKE_VERBOSE_MAKEFILE OF)
 
-SET(CMAKE_COLOR_MAKEFILE ON)
-SET(CMAKE_VERBOSE_MAKEFILE OF)
+include(CMakeParseArguments)
 
 # General compile settings
 IF (NOT CMAKE_BUILD_TYPE)
@@ -17,6 +18,8 @@ ENDIF (NOT CMAKE_BUILD_TYPE)
 
 # Provide option for building testing
 option(BUILD_TESTING "Enable testing for stochastic module" ON)
+option(BUILD_STATIC_LIBS "Build the static library" ON)
+option(BUILD_SHARED_LIBS "Build the shared library" ON)
 
 # CMake Modules
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
@@ -36,8 +39,17 @@ set(BOOST_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/boost)
 include_directories(${EIGEN_INCLUDE_DIR})
 include_directories(${BOOST_INCLUDE_DIR})
 include_directories(${JSON_INCLUDE_DIR})
-include_directories(${MKL_INCLUDE_DIRS})
-include_directories(${IPP_INCLUDE_DIRS})
+
+if (BUILD_STATIC_LIBS)
+  include_directories(${mkl_static_INCLUDE_DIRS})
+  include_directories(${ipp_static_INCLUDE_DIRS})
+endif()
+
+if (BUILD_SHARED_LIBS)
+  include_directories(${mkl_shared_INCLUDE_DIRS})
+  include_directories(${ipp_shared_INCLUDE_DIRS})
+endif()
+
 
 # Include directories
 include_directories(BEFORE
@@ -62,19 +74,23 @@ set(SOURCES
   ${PROJECT_SOURCE_DIR}/src/wind_profile.cc  
   )
 
-# Add library as target
+# Add library as target and add libraries to link target to
+if (BUILD_STATIC_LIBS)
+  add_library(smelt_static STATIC ${SOURCES})
+  set_target_properties(smelt_static PROPERTIES OUTPUT_NAME smelt)
+  target_link_libraries(smelt_static ${mkl_static_LIBRARIES} ${ipp_static_LIBRARIES})  
+endif()
+
+if (BUILD_SHARED_LIBS)
+  add_library(smelt_shared SHARED ${SOURCES})
+  set_target_properties(smelt_shared PROPERTIES OUTPUT_NAME smelt)
+  target_link_libraries(smelt_shared ${mkl_shared_LIBRARIES} ${ipp_shared_LIBRARIES})
+endif()
+
 # Adding MATH defines for M_PI when building on Windows
-if (WIN32)
-  add_library(smelt STATIC ${SOURCES})    
+if (WIN32)  
   add_compile_definitions(_USE_MATH_DEFINES)
 endif()
-
-if (NOT WIN32)
-  add_library(smelt SHARED ${SOURCES})
-endif()
-
-# Add libraries to link target to
-target_link_libraries(smelt ${MKL_LIBRARIES} ${IPP_LIBRARIES})
 
 # Unit testing
 if (BUILD_TESTING)
@@ -95,8 +111,17 @@ if (BUILD_TESTING)
     ${PROJECT_SOURCE_DIR}/test/wind_profile_tests.cc
   )
 
-  add_executable(unit_tests ${TEST_SOURCES})
-  target_link_libraries(unit_tests smelt)
-  add_test(NAME run_unit_tests COMMAND unit_tests)
+  if (BUILD_STATIC_LIBS)
+    add_executable(unit_tests_static ${TEST_SOURCES})
+    target_link_libraries(unit_tests_static smelt_static -static)
+    add_test(NAME run_static_unit_tests COMMAND unit_tests_static)
+  endif()
+
+  if (BUILD_SHARED_LIBS)
+    add_executable(unit_tests_shared ${TEST_SOURCES})
+    target_link_libraries(unit_tests_shared smelt_shared)
+    add_test(NAME run_shared_unit_tests COMMAND unit_tests_shared)
+  endif()
+
   enable_testing()
 endif()  
