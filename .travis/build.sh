@@ -16,11 +16,11 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
   cd build
   cmake .. -DCMAKE_BUILD_TYPE=Debug
   make
-  make test
+  ctest --verbose
   rm -rf *
   cmake .. -DCMAKE_BUILD_TYPE=Release
   make
-  make test  
+  ctest --verbose  
 else
   wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
   sudo apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2019.PUB
@@ -35,11 +35,11 @@ else
   cd build
   cmake .. -DCMAKE_BUILD_TYPE=Debug
   make
-  make test
+  ctest --verbose
   rm -rf *
   cmake .. -DCMAKE_BUILD_TYPE=Release  
   make
-  make test  
+  ctest --verbose  
   cd ..
   doxygen Doxyfile
 fi
