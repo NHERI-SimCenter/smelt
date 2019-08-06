@@ -2,7 +2,12 @@ include(HelperFunctions)
 # Find the Math Kernel Library from Intel
 
 if (BUILD_STATIC_LIBS)
-  set(MKL_LIB "mkl_intel_lp64" "mkl_gnu_thread" "mkl_core")
+  if (APPLE)
+    set(MKL_LIB "mkl_intel_lp64" "mkl_intel_thread" "mkl_core")
+  else()
+    set(MKL_LIB "mkl_intel_lp64" "mkl_gnu_thread" "mkl_core")    
+  endif()
+  
   add_mkl_dependency(NAME mkl_static REQD_LIBS ${MKL_LIB} STATIC)
 endif()
 

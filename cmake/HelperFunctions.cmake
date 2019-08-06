@@ -79,7 +79,7 @@ function(add_mkl_dependency)
     elseif(APPLE)
       set(${ARG_NAME}_INCLUDE_DIRS $ENV{MKLROOT}/include PARENT_SCOPE)
       if (ARG_STATIC)
-
+	set(${ARG_NAME}_LIBRARIES ${${ARG_NAME}_FOUND_LIBRARIES} "-liomp5" "-lpthread" "-lm" "-ldl" PARENT_SCOPE)
       else()
 	set(${ARG_NAME}_LIBRARIES ${${ARG_NAME}_FOUND_LIBRARIES} PARENT_SCOPE)
       endif()
