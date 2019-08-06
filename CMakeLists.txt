@@ -113,7 +113,7 @@ if (BUILD_TESTING)
 
   if (BUILD_STATIC_LIBS)
     add_executable(unit_tests_static ${TEST_SOURCES})
-    target_link_libraries(unit_tests_static smelt_static -static)
+    target_link_libraries(unit_tests_static smelt_static)
     add_test(NAME run_static_unit_tests COMMAND unit_tests_static)
   endif()
 
