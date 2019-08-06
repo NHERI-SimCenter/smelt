@@ -3,6 +3,7 @@ language:
 branches:
   only:
     - master
+    - conan
 
 matrix:
   fast_finish: true
