@@ -20,30 +20,25 @@ function(add_mkl_dependency)
     # Set prefixes and suffixes for libraries based on type of compilation and OS
     if (ARG_STATIC)
       if (WIN32)
-	set(CMAKE_FIND_LIBRARY_PREFIXES "")
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")    	
       else()
-	set(CMAKE_FIND_LIBRARY_PREFIXES "lib")	
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")		
       endif()
       
     else()
       if (WIN32)
-	set(CMAKE_FIND_LIBRARY_PREFIXES "")
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")    	
       elseif(APPLE)
-	set(CMAKE_FIND_LIBRARY_PREFIXES "lib")	
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ".dylib")
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ".so")	
       else()
-	set(CMAKE_FIND_LIBRARY_PREFIXES "lib")		
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ".so")	
       endif()
     endif()
 
     # Find libraries
     foreach(s ${ARG_REQD_LIBS})
-      if (WIN32)
+      if (WIN32 OR APPLE)
 	find_library(${s}_LIBRARY
 	  NAMES ${s}
 	  PATHS $ENV{MKLROOT}/lib
@@ -138,7 +133,7 @@ function(add_ipp_dependency)
 
     # Find libraries
     foreach(s ${ARG_REQD_LIBS})
-      if (WIN32)
+      if (WIN32 OR APPLE)
 	find_library(${s}_LIBRARY
 	  NAMES ${s}
 	  PATHS $ENV{IPPROOT}/lib
