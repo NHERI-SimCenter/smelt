@@ -37,24 +37,15 @@ function(add_mkl_dependency)
 
     # Find libraries
     foreach(s ${ARG_REQD_LIBS})
-      if (WIN32 OR APPLE)
-	find_library(${s}_LIBRARY
-	  NAMES ${s}
-	  PATHS $ENV{MKLROOT}/lib
-	  $ENV{MKLROOT}/lib/intel64
-	  $ENV{MKLROOT}/../compiler/lib/intel64
-	  $ENV{MKLROOT}/Library/bin
-	  $ENV{MKLROOT}/Library/lib
-	  NO_DEFAULT_PATH)	
-      else()
-	find_library(${s}_LIBRARY
-	  NAMES ${s}
-	  PATHS $ENV{MKLROOT}/lib
-	  $ENV{MKLROOT}/lib/intel64
-	  $ENV{MKLROOT}/../compiler/lib/intel64
-	  NO_DEFAULT_PATH)	
-      endif()
-
+      find_library(${s}_LIBRARY
+	NAMES ${s}
+	PATHS $ENV{MKLROOT}/lib
+	$ENV{MKLROOT}/lib/intel64
+	$ENV{MKLROOT}/../compiler/lib/intel64
+	$ENV{MKLROOT}/Library/bin
+	$ENV{MKLROOT}/Library/lib
+	NO_DEFAULT_PATH)
+      
       if(NOT ${s}_LIBRARY)
 	message(FATAL_ERROR "NOT FOUND: " ${s})
       endif()     
@@ -126,23 +117,14 @@ function(add_ipp_dependency)
 
     # Find libraries
     foreach(s ${ARG_REQD_LIBS})
-      if (WIN32 OR APPLE)
-	find_library(${s}_LIBRARY
-	  NAMES ${s}
-	  PATHS $ENV{IPPROOT}/lib
-	  $ENV{IPPROOT}/lib/intel64
-	  $ENV{IPPROOT}/../compiler/lib/intel64
-	  $ENV{IPPROOT}/Library/bin
-	  $ENV{IPPROOT}/Library/lib
-	  NO_DEFAULT_PATH)	
-      else()
-	find_library(${s}_LIBRARY
-	  NAMES ${s}
-	  PATHS $ENV{IPPROOT}/lib
-	  $ENV{IPPROOT}/lib/intel64
-	  $ENV{IPPROOT}/../compiler/lib/intel64
-	  NO_DEFAULT_PATH)	
-      endif()
+      find_library(${s}_LIBRARY
+	NAMES ${s}
+	PATHS $ENV{IPPROOT}/lib
+	$ENV{IPPROOT}/lib/intel64
+	$ENV{IPPROOT}/../compiler/lib/intel64
+	$ENV{IPPROOT}/Library/bin
+	$ENV{IPPROOT}/Library/lib
+	NO_DEFAULT_PATH)	
 
       if(NOT ${s}_LIBRARY)
 	message(FATAL_ERROR "NOT FOUND: " ${s})

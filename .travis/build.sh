@@ -11,6 +11,7 @@ if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
   conda install -c intel ipp --yes
   conda install -c intel ipp-static --yes  
   conda install -c intel ipp-include --yes
+  conda install -c anaconda intel-openmp  
   export MKLROOT=$HOME/miniconda
   export IPPROOT=$HOME/miniconda
   export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/miniconda/lib  
