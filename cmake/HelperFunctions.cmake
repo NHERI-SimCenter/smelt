@@ -71,7 +71,7 @@ function(add_mkl_dependency)
     else()
       set(${ARG_NAME}_INCLUDE_DIRS $ENV{MKLROOT}/include PARENT_SCOPE)
       if (ARG_STATIC)
-	set(${ARG_NAME}_LIBRARIES "-Wl,--start-group" ${${ARG_NAME}_FOUND_LIBRARIES} "-Wl,--end-group" "-fopenmp" "-lgomp" "-lpthread" "-lm" "-ldl" PARENT_SCOPE)
+	set(${ARG_NAME}_LIBRARIES "-Wl,--start-group" ${${ARG_NAME}_FOUND_LIBRARIES} "-Wl,--end-group" "-liomp5" "-lpthread" "-lm" "-ldl" PARENT_SCOPE)
       else()
 	set(${ARG_NAME}_LIBRARIES ${${ARG_NAME}_FOUND_LIBRARIES} PARENT_SCOPE)
       endif()
@@ -128,7 +128,7 @@ function(add_ipp_dependency)
 
       if(NOT ${s}_LIBRARY)
 	message(FATAL_ERROR "NOT FOUND: " ${s})
-      endif()     
+      endif()
             
       list(APPEND ${ARG_NAME}_FOUND_LIBRARIES ${${s}_LIBRARY})
     endforeach()
@@ -144,16 +144,45 @@ function(add_ipp_dependency)
     elseif(APPLE)
       set(${ARG_NAME}_INCLUDE_DIRS $ENV{IPPROOT}/include PARENT_SCOPE)
       if (ARG_STATIC)
-
+	set(${ARG_NAME}_LIBRARIES ${${ARG_NAME}_FOUND_LIBRARIES} "-liomp5" "-lpthread" "-lm" "-ldl" PARENT_SCOPE)
       else()
 	set(${ARG_NAME}_LIBRARIES ${${ARG_NAME}_FOUND_LIBRARIES} PARENT_SCOPE)
       endif()
     else()
       set(${ARG_NAME}_INCLUDE_DIRS $ENV{IPPROOT}/include PARENT_SCOPE)
       if (ARG_STATIC)
-	set(${ARG_NAME}_LIBRARIES ${${ARG_NAME}_FOUND_LIBRARIES} "-lgomp" "-lpthread" "-lm" "-ldl" PARENT_SCOPE)
+	set(${ARG_NAME}_LIBRARIES ${${ARG_NAME}_FOUND_LIBRARIES} "-liomp5" "-lpthread" "-lm" "-ldl" PARENT_SCOPE)	
       else()
 	set(${ARG_NAME}_LIBRARIES ${${ARG_NAME}_FOUND_LIBRARIES} PARENT_SCOPE)
       endif()
     endif()
 endfunction(add_ipp_dependency)
+
+# Create list of import libraries for archive
+#
+#   NAME        [required]  Name to store library locations and linker flags to
+#   IMPORT_LIBS [required]  List of libraries that should be imported
+#
+#  Example:
+#     add_import_library(NAME blah IMPORT_LIBS /usr/lib/blah1.a /usr/lib/blahblah.a /usr/lib/blah2.a)
+function(add_import_library)
+    set(options)
+    set(oneValueArgs NAME)
+    set(multiValueArgs IMPORT_LIBS)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if( NOT ARG_NAME )
+      message ( FATAL_ERROR "add_import_library called without a NAME" )
+    endif()
+    
+    # Find libraries
+    foreach(s ${ARG_IMPORT_LIBS})
+      get_filename_component(LIB_NAME ${s} NAME_WE)
+      add_library(${LIB_NAME} STATIC IMPORTED)
+      set_target_properties(${LIB_NAME} PROPERTIES IMPORTED_LOCATION ${s})
+      list(APPEND ${ARG_NAME}_IMPORT_LIBS ${LIB_NAME})
+    endforeach()
+
+    set(${ARG_NAME}_STATIC_IMPORT_LIBS ${${ARG_NAME}_IMPORT_LIBS} PARENT_SCOPE)
+    
+endfunction(add_import_library)

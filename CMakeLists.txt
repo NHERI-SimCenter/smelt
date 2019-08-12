@@ -50,7 +50,6 @@ if (BUILD_SHARED_LIBS)
   include_directories(${ipp_shared_INCLUDE_DIRS})
 endif()
 
-
 # Include directories
 include_directories(BEFORE
 	${PROJECT_SOURCE_DIR}/include/
@@ -78,7 +77,7 @@ set(SOURCES
 if (BUILD_STATIC_LIBS)
   add_library(smelt_static STATIC ${SOURCES})
   set_target_properties(smelt_static PROPERTIES OUTPUT_NAME smelt)
-  target_link_libraries(smelt_static ${mkl_static_LIBRARIES} ${ipp_static_LIBRARIES})  
+  target_link_libraries(smelt_static ${mkl_static_LIBRARIES} ${ipp_static_LIBRARIES})
 endif()
 
 if (BUILD_SHARED_LIBS)
@@ -113,7 +112,7 @@ if (BUILD_TESTING)
 
   if (BUILD_STATIC_LIBS)
     add_executable(unit_tests_static ${TEST_SOURCES})
-    target_link_libraries(unit_tests_static smelt_static)
+    target_link_libraries(unit_tests_static smelt_static -static-libgcc -static-libstdc++)
     add_test(NAME run_static_unit_tests COMMAND unit_tests_static)
   endif()
 
