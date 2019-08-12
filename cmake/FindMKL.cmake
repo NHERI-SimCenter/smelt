@@ -3,9 +3,9 @@ include(HelperFunctions)
 
 if (BUILD_STATIC_LIBS)
   if (APPLE)
-    set(MKL_LIB "mkl_intel_lp64" "mkl_intel_thread" "mkl_core")
+    set(MKL_LIB "mkl_intel_lp64" "mkl_tbb_thread" "mkl_core")
   else()
-    set(MKL_LIB "mkl_intel_lp64" "mkl_gnu_thread" "mkl_core")    
+    set(MKL_LIB "mkl_intel_lp64" "mkl_tbb_thread" "mkl_core")    
   endif()
   
   add_mkl_dependency(NAME mkl_static REQD_LIBS ${MKL_LIB} STATIC)
