@@ -35,6 +35,7 @@ else
   source /opt/intel/mkl/bin/mklvars.sh intel64
   source /opt/intel/ipp/bin/ippvars.sh intel64 linux
   source /opt/intel/compilers_and_libraries/linux/bin/compilervars.sh -arch intel64 -platform linux
+  export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/compilers_and_libraries/linux/lib/intel64
   mkdir build
   cd build
   cmake .. -DCMAKE_BUILD_TYPE=Debug -DBUILD_STATIC_LIBS=ON -DBUILD_SHARED_LIBS=ON
