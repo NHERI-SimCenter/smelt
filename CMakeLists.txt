@@ -111,10 +111,12 @@ if (BUILD_TESTING)
   )
 
   if (BUILD_STATIC_LIBS)
-    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-      set(STATIC_COMPILE_FLAGS)
-      set(STATIC_LINK_FLAGS "-static-libgcc")
+    set(STATIC_COMPILE_FLAGS  "-DMKL_ILP64 -m64")
+    
+    if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")      
+      set(STATIC_LINK_FLAGS    "-static-libgcc")
     endif()
+    
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${STATIC_COMPILE_FLAGS}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${STATIC_LINK_FLAGS}")
     add_executable(unit_tests_static ${TEST_SOURCES})    
