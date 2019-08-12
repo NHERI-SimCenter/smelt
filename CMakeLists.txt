@@ -118,9 +118,9 @@ if (BUILD_TESTING)
     endif()
     
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${STATIC_COMPILE_FLAGS}")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${STATIC_LINK_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${STATIC_LINK_FLAGS}")
     add_executable(unit_tests_static ${TEST_SOURCES})    
-    target_link_libraries(unit_tests_static smelt_static -Wl,--as-needed)
+    target_link_libraries(unit_tests_static smelt_static)
     add_test(NAME run_static_unit_tests COMMAND unit_tests_static)
   endif()
 
