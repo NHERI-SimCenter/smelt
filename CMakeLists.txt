@@ -118,6 +118,11 @@ if (BUILD_TESTING)
     else()
       set(STATIC_LINK_FLAGS    "-static-libstdc++ -lpthread -lm -ldl")      
     endif()
+
+    if (APPLE)
+      list(APPEND ${STATIC_LINK_FLAGS} "-fvisibility=default")
+    endif()
+    
     
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${STATIC_COMPILE_FLAGS}")
     # set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${STATIC_LINK_FLAGS}")
