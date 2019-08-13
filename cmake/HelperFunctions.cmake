@@ -55,7 +55,7 @@ function(add_mkl_dependency)
 
     # Set includes and linking based on OS and whether static or shared build
     if (WIN32)
-      set(${ARG_NAME}_INCLUDE_DIRS $ENV{MKLROOT}/include PARENT_SCOPE)
+      set(${ARG_NAME}_INCLUDE_DIRS $ENV{MKLROOT}/Library/include $ENV{MKLROOT}/include PARENT_SCOPE)
       if (ARG_STATIC)
 	set(${ARG_NAME}_LIBRARIES ${${ARG_NAME}_FOUND_LIBRARIES} PARENT_SCOPE)
       else()
@@ -137,7 +137,7 @@ function(add_ipp_dependency)
 
     # Set includes and linking based on OS and whether static or shared build
     if (WIN32)
-      set(${ARG_NAME}_INCLUDE_DIRS $ENV{IPPROOT}/include PARENT_SCOPE)
+      set(${ARG_NAME}_INCLUDE_DIRS $ENV{IPPROOT}/include $ENV{IPPROOT}/Library/include PARENT_SCOPE)
       if (ARG_STATIC)
 	set(${ARG_NAME}_LIBRARIES ${${ARG_NAME}_FOUND_LIBRARIES} PARENT_SCOPE)
       else()
