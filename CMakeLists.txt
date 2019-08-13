@@ -124,7 +124,7 @@ if (BUILD_TESTING)
     endif()
 
     if (APPLE)
-      list(APPEND ${STATIC_LINK_FLAGS} "-fvisibility=default")
+      list(APPEND ${STATIC_LINK_FLAGS} "-fvisibility=hidden")
     endif()
     
     
