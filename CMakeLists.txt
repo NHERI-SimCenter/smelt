@@ -77,7 +77,11 @@ set(SOURCES
 if (BUILD_STATIC_LIBS)
   add_library(smelt_static STATIC ${SOURCES})
   set_target_properties(smelt_static PROPERTIES OUTPUT_NAME smelt)
-  target_link_libraries(smelt_static ${mkl_static_LIBRARIES} ${ipp_static_LIBRARIES})
+  if (APPLE)
+    target_link_libraries(smelt_static "-fvisibility=default" ${mkl_static_LIBRARIES} ${ipp_static_LIBRARIES})
+  else()
+    target_link_libraries(smelt_static ${mkl_static_LIBRARIES} ${ipp_static_LIBRARIES})    
+  endif()  
 endif()
 
 if (BUILD_SHARED_LIBS)
