@@ -24,14 +24,16 @@ steps:
     start /wait "" miniconda_installer.exe /InstallationType=AllUsers /RegisterPython=0 /S /D=%UserProfile%\Miniconda3
     echo Conda installed!
     set PATH=%PATH%;%UserProfile%\Miniconda3\Scripts
-    conda install -c intel mkl
-    conda install -c intel mkl-static
-    conda install -c intel mkl-devel
-    conda install -c intel mkl-include
-    conda install -c intel ipp
-    conda install -c intel ipp-static    
-    conda install -c intel ipp-devel
-    conda install -c intel ipp-include
+    echo Path set, updating conda
+    conda update --yes conda
+    conda install -c intel mkl --yes
+    conda install -c intel mkl-static --yes
+    conda install -c intel mkl-devel --yes
+    conda install -c intel mkl-include --yes
+    conda install -c intel ipp --yes
+    conda install -c intel ipp-static     --yes
+    conda install -c intel ipp-devel --yes
+    conda install -c intel ipp-include --yes
     set MKLROOT=%UserProfile%\Miniconda3
     set IPPROOT=%UserProfile%\Miniconda3
     set PATH=%PATH%;%MKLROOT%\Library\bin
