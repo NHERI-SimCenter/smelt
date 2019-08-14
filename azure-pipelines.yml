@@ -26,15 +26,16 @@ steps:
     set PATH=%PATH%;%UserProfile%\Miniconda3\Scripts
     call %UserProfile%\Miniconda3\Scripts\activate
     echo Path set and activated, updating conda
-    conda update --yes conda
-    conda install -c intel mkl --yes
-    conda install -c intel mkl-static --yes
-    conda install -c intel mkl-devel --yes
-    conda install -c intel mkl-include --yes
-    conda install -c intel ipp --yes
-    conda install -c intel ipp-static     --yes
-    conda install -c intel ipp-devel --yes
-    conda install -c intel ipp-include --yes
+    conda deactivate
+    conda update conda
+    conda install -c intel mkl
+    conda install -c intel mkl-static
+    conda install -c intel mkl-devel
+    conda install -c intel mkl-include
+    conda install -c intel ipp
+    conda install -c intel ipp-static
+    conda install -c intel ipp-devel
+    conda install -c intel ipp-include
     set MKLROOT=%UserProfile%\Miniconda3
     set IPPROOT=%UserProfile%\Miniconda3
     set PATH=%PATH%;%MKLROOT%\Library\bin
