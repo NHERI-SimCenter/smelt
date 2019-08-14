@@ -25,7 +25,6 @@ steps:
     echo Conda installed!
     set PATH=%PATH%;%UserProfile%\Miniconda3\Scripts
     call %UserProfile%\Miniconda3\Scripts\activate
-    conda init cmd.exe    
     echo Path set and activated, updating conda
     conda update --yes conda
     conda install -c intel mkl --yes
