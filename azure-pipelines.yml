@@ -24,7 +24,8 @@ steps:
   displayName: Add conda to PATH
 
 - script: |
-    echo ${conda_path}
+    echo $(conda_path)
+    echo $(env:CONDA)
     conda update conda
     conda install -c intel mkl
     conda install -c intel mkl-static
@@ -34,8 +35,8 @@ steps:
     conda install -c intel ipp-static
     conda install -c intel ipp-devel
     conda install -c intel ipp-include
-    set MKLROOT=${conda_path}
-    set IPPROOT=${conda_path}
+    set MKLROOT=$(conda_path)
+    set IPPROOT=$(conda_path)
     set PATH=%PATH%;%MKLROOT%\Library\bin
     set PATH=%PATH%;%IPPROOT%\Library\bin
     set PATH=%PATH%;%MKLROOT%\Library\lib
