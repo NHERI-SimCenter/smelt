@@ -11,7 +11,7 @@ pool:
   vmImage: 'vs2017-win2016'
 
 variables:
-    conda_path: "${env:CONDA}"
+    conda_path: "$(env:CONDA)"
 
 steps:
 - task: UsePythonVersion@0
