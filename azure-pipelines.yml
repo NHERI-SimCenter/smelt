@@ -17,16 +17,10 @@ steps:
     addToPath: true 
     architecture: 'x86'
 
+- powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+  displayName: Add conda to PATH
+
 - script: |
-    echo Downloading conda!
-    powershell -command "iwr -outf miniconda_installer.exe https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe"    
-    echo Installing conda!
-    start /wait "" miniconda_installer.exe /InstallationType=AllUsers /RegisterPython=0 /S /D=%UserProfile%\Miniconda3
-    echo Conda installed!
-    set PATH=%PATH%;%UserProfile%\Miniconda3\Scripts
-    call %UserProfile%\Miniconda3\Scripts\activate
-    echo Path set and activated, updating conda
-    conda deactivate
     conda update conda
     conda install -c intel mkl
     conda install -c intel mkl-static
