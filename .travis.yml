@@ -28,7 +28,7 @@ matrix:
       python: 3.4
       env:
       - MATRIX_EVAL="brew install gcc@7 && CC=gcc-7 && CXX=g++-7"
-      - TEST_BUILD="YES"
+      - TEST_BUILD=YES
       
     - os: linux
       dist: xenial
@@ -49,7 +49,7 @@ matrix:
             - g++-7
       env:
       - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-      - TEST_BUILD="YES"
+      - TEST_BUILD=YES
 
     - os: linux
       dist: xenial
@@ -64,66 +64,66 @@ matrix:
             - graphviz
             - cmake
       env:
-      - BUILD_DOCS="YES"
-      - TEST_BUILD="YES"
+      - BUILD_DOCS=YES
+      - TEST_BUILD=YES
       
     - <<: *linux
       env:
       - CONAN_GCC_VERSIONS=7
       - CONAN_DOCKER_IMAGE=conanio/gcc7
-      - BUILD_PACKAGE="YES"
+      - BUILD_PACKAGE=YES
     - <<: *linux
       env:
       - CONAN_GCC_VERSIONS=8
       - CONAN_DOCKER_IMAGE=conanio/gcc8
-      - BUILD_PACKAGE="YES"
+      - BUILD_PACKAGE=YES
     - <<: *linux
       env:
       - CONAN_GCC_VERSIONS=9
       - CONAN_DOCKER_IMAGE=conanio/gcc9
-      - BUILD_PACKAGE="YES"
+      - BUILD_PACKAGE=YES
     - <<: *linux
       env:
       - CONAN_CLANG_VERSIONS=7.0
       - CONAN_DOCKER_IMAGE=conanio/clang7
-      - BUILD_PACKAGE="YES"
+      - BUILD_PACKAGE=YES
     - <<: *linux
       env:
       - CONAN_CLANG_VERSIONS=8
       - CONAN_DOCKER_IMAGE=conanio/clang8
-      - BUILD_PACKAGE="YES"
+      - BUILD_PACKAGE=YES
     - <<: *osx
       osx_image: xcode10.2 
       env:
       - CONAN_APPLE_CLANG_VERSIONS=10.0
-      - BUILD_PACKAGE="YES"
+      - BUILD_PACKAGE=YES
     - <<: *osx
       osx_image: xcode10.3
       env:
       - CONAN_APPLE_CLANG_VERSIONS=10.0
-      - BUILD_PACKAGE="YES"
+      - BUILD_PACKAGE=YES
 
 before_install:
   - eval "${MATRIX_EVAL}"     
 
 install:
-  if: BUILD_PACKAGE = "YES"
+  if: env(BUILD_PACKAGE)=YES
     - chmod +x .travis/install.sh
     - ./.travis/install.sh
-  if: BUILD_PACKAGE = "YES"
+  if: env(BUILD_PACKAGE)=YES
     - pip install conan
     - conan user    
 
 script:
-  if: TEST_BUILD = "YES"
+  if: env(TEST_BUILD)=YES
     - chmod +x .travis/build.sh    
     - .travis/build.sh
-  if: BUILD_PACKAGE = "YES"
+  if: env(BUILD_PACKAGE)=YES
     - chmod +x .travis/run.sh
     - ./.travis/run.sh 
 
 deploy:
-  if: BUILD_DOCS = "YES"
+  if: env(BUILD_DOCS)=YES
   provider: pages
   skip_cleanup: true
   local_dir: docs/html
