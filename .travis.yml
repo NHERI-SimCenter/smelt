@@ -10,6 +10,11 @@ conan-osx: &conan-osx
    os: osx
    language: generic
 
+branches:
+  only:
+    - master
+    - stable/1.1.0
+
 matrix:
   fast_finish: true
   include:
