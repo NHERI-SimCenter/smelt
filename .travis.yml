@@ -117,7 +117,7 @@ install:
     fi
 
 script:
-  - if ["${TEST_BUILD}" =="YES"]; then
+  - if ["${TEST_BUILD}" == "YES"]; then
       chmod +x .travis/build.sh;
       .travis/build.sh;
     fi
@@ -127,7 +127,7 @@ script:
     fi
 
 deploy:
-  if: env(BUILD_DOCS)="YES"
+  if: env(BUILD_DOCS)=YES
   provider: pages
   skip_cleanup: true
   local_dir: docs/html
