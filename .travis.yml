@@ -18,41 +18,90 @@ branches:
 matrix:
   fast_finish: true
   include:
+    - os: osx
+      osx_image: xcode10.2
+      python: 3.4
+      sudo: true
+
+    - os: osx
+      osx_image: xcode10    
+      python: 3.4
+      env:
+      - MATRIX_EVAL="brew install gcc@7 && CC=gcc-7 && CXX=g++-7"
+      - TEST_BUILD="YES"
+      
+    - os: linux
+      dist: xenial
+      sudo: true      
+      compiler:
+        - g++      
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - doxygen
+            - doxygen-doc
+            - doxygen-latex
+            - doxygen-gui
+            - graphviz
+            - cmake	  
+            - g++-7
+      env:
+      - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+      - TEST_BUILD="YES"
+
+    - os: linux
+      dist: xenial
+      sudo: true
+      addons:
+        apt:
+          packages:
+            - doxygen
+            - doxygen-doc
+            - doxygen-latex
+            - doxygen-gui
+            - graphviz
+            - cmake
+      env:
+      - BUILD_DOCS="YES"
+      - TEST_BUILD="YES"
+      
     - <<: *linux
       env:
-	- CONAN_GCC_VERSIONS=7
-	- CONAN_DOCKER_IMAGE=conanio/gcc7
-	- BUILD_PACKAGE="YES"
+      - CONAN_GCC_VERSIONS=7
+      - CONAN_DOCKER_IMAGE=conanio/gcc7
+      - BUILD_PACKAGE="YES"
     - <<: *linux
       env:
-	- CONAN_GCC_VERSIONS=8
-	- CONAN_DOCKER_IMAGE=conanio/gcc8
-	- BUILD_PACKAGE="YES"
+      - CONAN_GCC_VERSIONS=8
+      - CONAN_DOCKER_IMAGE=conanio/gcc8
+      - BUILD_PACKAGE="YES"
     - <<: *linux
       env:
-	- CONAN_GCC_VERSIONS=9
-	- CONAN_DOCKER_IMAGE=conanio/gcc9
-	- BUILD_PACKAGE="YES"
+      - CONAN_GCC_VERSIONS=9
+      - CONAN_DOCKER_IMAGE=conanio/gcc9
+      - BUILD_PACKAGE="YES"
     - <<: *linux
       env:
-	- CONAN_CLANG_VERSIONS=7.0
-	- CONAN_DOCKER_IMAGE=conanio/clang7
-	- BUILD_PACKAGE="YES"
+      - CONAN_CLANG_VERSIONS=7.0
+      - CONAN_DOCKER_IMAGE=conanio/clang7
+      - BUILD_PACKAGE="YES"
     - <<: *linux
       env:
-	- CONAN_CLANG_VERSIONS=8
-	- CONAN_DOCKER_IMAGE=conanio/clang8
-	- BUILD_PACKAGE="YES"
+      - CONAN_CLANG_VERSIONS=8
+      - CONAN_DOCKER_IMAGE=conanio/clang8
+      - BUILD_PACKAGE="YES"
     - <<: *osx
       osx_image: xcode10.2 
       env:
-	- CONAN_APPLE_CLANG_VERSIONS=10.0
-	- BUILD_PACKAGE="YES"
+      - CONAN_APPLE_CLANG_VERSIONS=10.0
+      - BUILD_PACKAGE="YES"
     - <<: *osx
       osx_image: xcode10.3
       env:
-	- CONAN_APPLE_CLANG_VERSIONS=10.0
-	- BUILD_PACKAGE="YES"
+      - CONAN_APPLE_CLANG_VERSIONS=10.0
+      - BUILD_PACKAGE="YES"
 
 before_install:
   - eval "${MATRIX_EVAL}"     
