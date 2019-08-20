@@ -18,55 +18,6 @@ branches:
 matrix:
   fast_finish: true
   include:
-    - os: osx
-      osx_image: xcode10.2
-      python: 3.4
-      sudo: true
-
-    - os: osx
-      osx_image: xcode10    
-      python: 3.4
-      env:
-        - MATRIX_EVAL="brew install gcc@7 && CC=gcc-7 && CXX=g++-7"
-	- TEST_BUILD="YES"
-      
-    - os: linux
-      dist: xenial
-      sudo: true      
-      compiler:
-        - g++      
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - doxygen
-            - doxygen-doc
-            - doxygen-latex
-            - doxygen-gui
-            - graphviz
-            - cmake	  
-            - g++-7
-      env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-	- TEST_BUILD="YES"
-
-    - os: linux
-      dist: xenial
-      sudo: true
-      addons:
-        apt:
-          packages:
-            - doxygen
-            - doxygen-doc
-            - doxygen-latex
-            - doxygen-gui
-            - graphviz
-            - cmake
-      env:
-        - BUILD_DOCS="YES"
-	- TEST_BUILD="YES"
-	    
     - <<: *linux
       env:
 	- CONAN_GCC_VERSIONS=7
@@ -105,3 +56,28 @@ matrix:
 
 before_install:
   - eval "${MATRIX_EVAL}"     
+
+install:
+  if: ${BUILD_PACKAGE} = "YES"
+    - chmod +x .travis/install.sh
+    - ./.travis/install.sh
+  if: ${BUILD_PACKAGE} = "YES"
+    - pip install conan
+    - conan user    
+
+script:
+  if: ${TEST_BUILD} = "YES"
+    - chmod +x .travis/build.sh    
+    - .travis/build.sh
+  if: ${BUILD_PACKAGE} = "YES"
+    - chmod +x .travis/run.sh
+    - ./.travis/run.sh 
+
+deploy:
+  if: ${BUILD_DOCS} = "YES"
+  provider: pages
+  skip_cleanup: true
+  local_dir: docs/html
+  github_token: $GH_REPO_TOKEN
+  on:
+    branch: master
