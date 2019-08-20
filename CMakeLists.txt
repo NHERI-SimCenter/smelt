@@ -42,8 +42,10 @@ set(BOOST_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/boost)
 include_directories(${EIGEN_INCLUDE_DIR})
 include_directories(${BOOST_INCLUDE_DIR})
 include_directories(${JSON_INCLUDE_DIR})
-include_directories(CONAN_PKG::mkl-include)
-include_directories(CONAN_PKG::ipp-include)
+include_directories(CONAN_PKG::CONAN_INCLUDE_DIRS_MKL-INCLUDE)
+include_directories(CONAN_PKG::CONAN_INCLUDE_DIRS_IPP-INCLUDE)
+# include_directories(CONAN_PKG::mkl-include)
+# include_directories(CONAN_PKG::ipp-include)
 
 # Include directories
 include_directories(BEFORE

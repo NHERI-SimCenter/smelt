@@ -20,12 +20,14 @@ matrix:
   include:
     - os: osx
       osx_image: xcode10.2
-      python: 3.4
       sudo: true
+      env:
+      - BUILD_DOCS="NO"      
+      - BUILD_PACKAGE="NO"
+      - TEST_BUILD="YES"
 
     - os: osx
       osx_image: xcode10    
-      python: 3.4
       env:
       - MATRIX_EVAL="brew install gcc@7 && CC=gcc-7 && CXX=g++-7"
       - TEST_BUILD="YES"
@@ -129,7 +131,7 @@ install:
       ./.travis/install.sh;
     fi
   - if [ "$TEST_BUILD" == "YES" ]; then
-      pip install conan;
+      pip install conan --user;
       conan user;
     fi
 
