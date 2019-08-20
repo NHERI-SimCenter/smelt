@@ -124,27 +124,27 @@ before_install:
   - eval "${MATRIX_EVAL}"     
 
 install:
-  - if ["${BUILD_PACKAGE}" == YES]; then
+  - if ["${BUILD_PACKAGE}" == "YES"]; then
       chmod +x .travis/install.sh;
       ./.travis/install.sh;
     fi
-  - if ["${TEST_BUILD}" == YES]; then
+  - if ["${TEST_BUILD}" == "YES"]; then
       pip install conan;
       conan user;
     fi
 
 script:
-  - if ["${TEST_BUILD}" == YES]; then
+  - if ["${TEST_BUILD}" == "YES"]; then
       chmod +x .travis/build.sh;
       .travis/build.sh;
     fi
-  - if ["${BUILD_PACKAGE}" == YES]; then
+  - if ["${BUILD_PACKAGE}" == "YES"]; then
       chmod +x .travis/run.sh;
       ./.travis/run.sh;
     fi
 
 deploy:
-  if: env(BUILD_DOCS)=YES
+  if: env(BUILD_DOCS)="YES"
   provider: pages
   skip_cleanup: true
   local_dir: docs/html
