@@ -107,7 +107,6 @@ before_install:
   - eval "${MATRIX_EVAL}"     
 
 install:
-  - echo "${BUILD_PACKAGE}"
   - if ["${BUILD_PACKAGE}" == "YES"]; then
       chmod +x .travis/install.sh;
       ./.travis/install.sh;
@@ -118,12 +117,14 @@ install:
     fi
 
 script:
-  if: env(TEST_BUILD)="YES"
-    - chmod +x .travis/build.sh    
-    - .travis/build.sh
-  if: env(BUILD_PACKAGE)="YES"
-    - chmod +x .travis/run.sh
-    - ./.travis/run.sh 
+  - if ["${TEST_BUILD}" =="YES"]; then
+      chmod +x .travis/build.sh;
+      .travis/build.sh;
+    fi
+  - if ["${BUILD_PACKAGE}" == "YES"]; then
+      chmod +x .travis/run.sh;
+      ./.travis/run.sh;
+    fi
 
 deploy:
   if: env(BUILD_DOCS)="YES"
