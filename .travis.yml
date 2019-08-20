@@ -49,6 +49,8 @@ matrix:
             - g++-7
       env:
       - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+      - BUILD_DOCS="NO"      
+      - BUILD_PACKAGE="NO"
       - TEST_BUILD="YES"
 
     - os: linux
@@ -65,43 +67,58 @@ matrix:
             - cmake
       env:
       - BUILD_DOCS="YES"
+      - BUILD_PACKAGE="NO"      
       - TEST_BUILD="YES"
       
     - <<: *linux
       env:
       - CONAN_GCC_VERSIONS=7
       - CONAN_DOCKER_IMAGE=conanio/gcc7
+      - BUILD_DOCS="NO"      
       - BUILD_PACKAGE="YES"
+      - TEST_BUILD="NO"
     - <<: *linux
       env:
       - CONAN_GCC_VERSIONS=8
       - CONAN_DOCKER_IMAGE=conanio/gcc8
+      - BUILD_DOCS="NO"      
       - BUILD_PACKAGE="YES"
+      - TEST_BUILD="NO"
     - <<: *linux
       env:
       - CONAN_GCC_VERSIONS=9
       - CONAN_DOCKER_IMAGE=conanio/gcc9
+      - BUILD_DOCS="NO"      
       - BUILD_PACKAGE="YES"
+      - TEST_BUILD="NO"
     - <<: *linux
       env:
       - CONAN_CLANG_VERSIONS=7.0
       - CONAN_DOCKER_IMAGE=conanio/clang7
+      - BUILD_DOCS="NO"      
       - BUILD_PACKAGE="YES"
+      - TEST_BUILD="NO"
     - <<: *linux
       env:
       - CONAN_CLANG_VERSIONS=8
       - CONAN_DOCKER_IMAGE=conanio/clang8
+      - BUILD_DOCS="NO"      
       - BUILD_PACKAGE="YES"
+      - TEST_BUILD="NO"
     - <<: *osx
       osx_image: xcode10.2 
       env:
       - CONAN_APPLE_CLANG_VERSIONS=10.0
+      - BUILD_DOCS="NO"      
       - BUILD_PACKAGE="YES"
+      - TEST_BUILD="NO"
     - <<: *osx
       osx_image: xcode10.3
       env:
       - CONAN_APPLE_CLANG_VERSIONS=10.0
+      - BUILD_DOCS="NO"      
       - BUILD_PACKAGE="YES"
+      - TEST_BUILD="NO"
 
 before_install:
   - eval "${MATRIX_EVAL}"     
