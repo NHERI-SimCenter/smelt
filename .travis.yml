@@ -13,7 +13,7 @@ conan-osx: &conan-osx
 branches:
   only:
     - master
-    - stable/1.1.0
+    - /^(?stable).*$/    
 
 matrix:
   fast_finish: true
