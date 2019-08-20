@@ -9,9 +9,16 @@ class smeltConan(ConanFile):
     url = "https://github.com/NHERI-SimCenter/smelt"
     settings = "os", "arch", "compiler", "build_type"
     options = {"shared": [True, False]}
-    default_options = {"shared": True}    
+    default_options = {"shared": False}    
     generators = "cmake"
     exports_sources = "src/*", "include/*", "CMakeLists.txt", "cmake/*", "test/*", "external/*"
+    requires = "mkl-include/2019.4@simcenter/stable", \
+               "mkl-shared/2019.4@simcenter/stable", \
+               "mkl-static/2019.4@simcenter/stable", \
+               "ipp-include/2019.4@simcenter/stable", \
+               "ipp-shared/2019.4@simcenter/stable", \
+               "ipp-static/2019.4@simcenter/stable", \
+               "intel-openmp/2019.4@simcenter/stable"
 
     def build(self):
         cmake = CMake(self)

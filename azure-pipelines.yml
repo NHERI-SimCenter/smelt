@@ -24,8 +24,6 @@ steps:
   displayName: Add conda to PATH
 
 - script: |
-    echo $(conda_path)
-    echo $(env:CONDA)
     conda update conda
     conda install -c intel mkl
     conda install -c intel mkl-static

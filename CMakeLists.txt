@@ -13,7 +13,6 @@ include(CMakeParseArguments)
 IF (NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE "Debug")
   SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -g")
- #SET(CMAKE_BUILD_TYPE "Release")
 ENDIF (NOT CMAKE_BUILD_TYPE)
 
 # Provide option for building testing
@@ -23,6 +22,10 @@ option(BUILD_SHARED_LIBS "Build the shared library" ON)
 
 # CMake Modules
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+
+# Bring in dependencies from Conan
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup(TARGETS)
 
 # Add link library and include directories for MKL and IPP
 find_package(MKL)
@@ -39,16 +42,8 @@ set(BOOST_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/boost)
 include_directories(${EIGEN_INCLUDE_DIR})
 include_directories(${BOOST_INCLUDE_DIR})
 include_directories(${JSON_INCLUDE_DIR})
-
-if (BUILD_STATIC_LIBS)
-  include_directories(${mkl_static_INCLUDE_DIRS})
-  include_directories(${ipp_static_INCLUDE_DIRS})
-endif()
-
-if (BUILD_SHARED_LIBS)
-  include_directories(${mkl_shared_INCLUDE_DIRS})
-  include_directories(${ipp_shared_INCLUDE_DIRS})
-endif()
+include_directories(CONAN_PKG::mkl-include)
+include_directories(CONAN_PKG::ipp-include)
 
 # Include directories
 include_directories(BEFORE
@@ -137,7 +132,7 @@ if (BUILD_TESTING)
 
   if (BUILD_SHARED_LIBS)
     add_executable(unit_tests_shared ${TEST_SOURCES})
-    target_link_libraries(unit_tests_shared smelt_shared)
+    target_link_libraries(unit_tests_shared smelt_shared CONAN_PKG::intel-openmp)
     add_test(NAME run_shared_unit_tests COMMAND unit_tests_shared)
   endif()
 

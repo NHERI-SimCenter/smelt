@@ -39,11 +39,8 @@ function(add_mkl_dependency)
     foreach(s ${ARG_REQD_LIBS})
       find_library(${s}_LIBRARY
 	NAMES ${s}
-	PATHS $ENV{MKLROOT}/lib
-	$ENV{MKLROOT}/lib/intel64
-	$ENV{MKLROOT}/../compiler/lib/intel64
-	$ENV{MKLROOT}/Library/bin
-	$ENV{MKLROOT}/Library/lib
+	PATHS ${CONAN_LIB_DIRS_MKL-STATIC}
+	${CONAN_LIB_DIRS_MKL-SHARED}	
 	NO_DEFAULT_PATH)
       
       if(NOT ${s}_LIBRARY)
@@ -55,13 +52,10 @@ function(add_mkl_dependency)
 
     # Set includes and linking based on OS and whether static or shared build
     if (WIN32)
-      set(${ARG_NAME}_INCLUDE_DIRS $ENV{MKLROOT}/Library/include $ENV{MKLROOT}/include PARENT_SCOPE)
       set(${ARG_NAME}_LIBRARIES ${${ARG_NAME}_FOUND_LIBRARIES} PARENT_SCOPE)
     elseif(APPLE)
-      set(${ARG_NAME}_INCLUDE_DIRS $ENV{MKLROOT}/include PARENT_SCOPE)
       set(${ARG_NAME}_LIBRARIES ${${ARG_NAME}_FOUND_LIBRARIES} PARENT_SCOPE)	
     else()
-      set(${ARG_NAME}_INCLUDE_DIRS $ENV{MKLROOT}/include PARENT_SCOPE)
       if (ARG_STATIC)
 	set(${ARG_NAME}_LIBRARIES "-Wl,--start-group" ${${ARG_NAME}_FOUND_LIBRARIES} "-Wl,--end-group" PARENT_SCOPE)	
       else()
@@ -111,12 +105,9 @@ function(add_ipp_dependency)
     foreach(s ${ARG_REQD_LIBS})
       find_library(${s}_LIBRARY
 	NAMES ${s}
-	PATHS $ENV{IPPROOT}/lib
-	$ENV{IPPROOT}/lib/intel64
-	$ENV{IPPROOT}/../compiler/lib/intel64
-	$ENV{IPPROOT}/Library/bin
-	$ENV{IPPROOT}/Library/lib
-	NO_DEFAULT_PATH)	
+	PATHS ${CONAN_LIB_DIRS_IPP-STATIC}
+	${CONAN_LIB_DIRS_IPP-SHARED}
+	NO_DEFAULT_PATH)      	
 
       if(NOT ${s}_LIBRARY)
 	message(FATAL_ERROR "NOT FOUND: " ${s})
@@ -127,13 +118,10 @@ function(add_ipp_dependency)
 
     # Set includes and linking based on OS and whether static or shared build
     if (WIN32)
-      set(${ARG_NAME}_INCLUDE_DIRS $ENV{IPPROOT}/include $ENV{IPPROOT}/Library/include PARENT_SCOPE)
       set(${ARG_NAME}_LIBRARIES ${${ARG_NAME}_FOUND_LIBRARIES} PARENT_SCOPE)
     elseif(APPLE)
-      set(${ARG_NAME}_INCLUDE_DIRS $ENV{IPPROOT}/include PARENT_SCOPE)
       set(${ARG_NAME}_LIBRARIES ${${ARG_NAME}_FOUND_LIBRARIES} PARENT_SCOPE)	
     else()
-      set(${ARG_NAME}_INCLUDE_DIRS $ENV{IPPROOT}/include PARENT_SCOPE)
       if (ARG_STATIC)
 	set(${ARG_NAME}_LIBRARIES "-Wl,--start-group" ${${ARG_NAME}_FOUND_LIBRARIES} "-Wl,--end-group" PARENT_SCOPE)	
       else()
