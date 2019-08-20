@@ -13,8 +13,8 @@ osx: &osx
 branches:
   only:
     - master
-    - /^(?stable).*$/    
-
+    - /^(?stable).*$/
+    
 matrix:
   fast_finish: true
   include:
