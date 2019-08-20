@@ -107,26 +107,11 @@ before_install:
   - eval "${MATRIX_EVAL}"     
 
 install:
-  if: env(BUILD_PACKAGE)=YES
-    - chmod +x .travis/install.sh
-    - ./.travis/install.sh
-  if: env(BUILD_PACKAGE)=YES
-    - pip install conan
-    - conan user    
-
-script:
-  if: env(TEST_BUILD)=YES
-    - chmod +x .travis/build.sh    
-    - .travis/build.sh
-  if: env(BUILD_PACKAGE)=YES
-    - chmod +x .travis/run.sh
-    - ./.travis/run.sh 
-
-deploy:
-  if: env(BUILD_DOCS)=YES
-  provider: pages
-  skip_cleanup: true
-  local_dir: docs/html
-  github_token: $GH_REPO_TOKEN
-  on:
-    branch: master
+  - if [${BUILD_PACKAGE} == "YES"]; then
+      chmod +x .travis/install.sh;
+      ./.travis/install.sh;
+    fi
+  - if [${TEST_BUILD} == "YES"]; then
+      pip install conan;
+      conan user;
+    fi
