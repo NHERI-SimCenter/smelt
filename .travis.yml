@@ -1,3 +1,15 @@
+conan-linux: &conan-linux
+   os: linux
+   dist: xenial
+   language: python
+   python: "3.7"
+   services:
+     - docker
+     
+conan-osx: &conan-osx
+   os: osx
+   language: generic
+
 language:
   - cpp
 branches:
@@ -37,7 +49,7 @@ matrix:
             - cmake	  
             - g++-7
       env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7" TEST_BUILD="YES"
 
     - os: linux
       dist: xenial
@@ -50,19 +62,48 @@ matrix:
             - doxygen-latex
             - doxygen-gui
             - graphviz
-            - cmake	  
+            - cmake
       env:
-        - MATRIX_EVAL="CC=clang && CXX=clang++"
+        - BUILD_DOCS="YES" TEST_BUILD="YES"
+	    
+    - <<: *conan-linux
+      env: CONAN_GCC_VERSIONS=7 CONAN_DOCKER_IMAGE=conanio/gcc7 BUILD_PACKAGE="YES"
+    - <<: *conan-linux
+      env: CONAN_GCC_VERSIONS=8 CONAN_DOCKER_IMAGE=conanio/gcc8 BUILD_PACKAGE="YES"
+    - <<: *conan-linux
+      env: CONAN_GCC_VERSIONS=9 CONAN_DOCKER_IMAGE=conanio/gcc9 BUILD_PACKAGE="YES"
+    - <<: *conan-linux
+      env: CONAN_CLANG_VERSIONS=7.0 CONAN_DOCKER_IMAGE=conanio/clang7 BUILD_PACKAGE="YES"
+    - <<: *conan-linux
+      env: CONAN_CLANG_VERSIONS=8 CONAN_DOCKER_IMAGE=conanio/clang8 BUILD_PACKAGE="YES"
+    - <<: *conan-osx
+      osx_image: xcode10.2 
+      env: CONAN_APPLE_CLANG_VERSIONS=10.0 BUILD_PACKAGE="YES"
+    - <<: *conan-osx
+      osx_image: xcode10.3
+      env: CONAN_APPLE_CLANG_VERSIONS=10.0 BUILD_PACKAGE="YES"
 
 before_install:
-    - eval "${MATRIX_EVAL}"
+  - eval "${MATRIX_EVAL}"     
+
+install:
+  if: ${BUILD_PACKAGE} = "YES"
+    - chmod +x .travis/install.sh
+    - ./.travis/install.sh
+  if: ${BUILD_PACKAGE} = "YES"
+    - pip install conan
+    - conan user    
 
 script:
-    - chmod +x .travis/build.sh
+  if: ${TEST_BUILD} = "YES"
+    - chmod +x .travis/build.sh    
     - .travis/build.sh
+  if: ${BUILD_PACKAGE} = "YES"
+    - chmod +x .travis/run.sh
+    - ./.travis/run.sh 
 
 deploy:
-  if: os = linux
+  if: ${BUILD_DOCS} = "YES"
   provider: pages
   skip_cleanup: true
   local_dir: docs/html

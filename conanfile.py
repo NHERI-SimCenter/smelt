@@ -1,4 +1,4 @@
-from conans import ConanFile, CMake
+from conans import ConanFile, CMake, tools
 
 class smeltConan(ConanFile):
     name = "smelt"
@@ -11,6 +11,7 @@ class smeltConan(ConanFile):
     options = {"shared": [True, False]}
     default_options = {"shared": False}    
     generators = "cmake"
+    build_policy = "missing"    
     exports_sources = "src/*", "include/*", "CMakeLists.txt", "cmake/*", "test/*", "external/*"
     requires = "mkl-include/2019.4@simcenter/stable", \
                "mkl-shared/2019.4@simcenter/stable", \
@@ -25,13 +26,31 @@ class smeltConan(ConanFile):
         cmake.configure(source_folder=".")
         cmake.build()
 
+    def build_id(self):
+        self.info_build.settings.build_type = "Any"            
+
     def package(self):
-        self.copy("*.h", dst="include", src="include")
-        self.copy("*.lib", dst="lib", keep_path=False)
-        self.copy("*.dll", dst="bin", keep_path=False)
-        self.copy("*.so", dst="lib", keep_path=False)
-        self.copy("*.dylib", dst="lib", keep_path=False)
-        self.copy("*.a", dst="lib", keep_path=False)
+        if self.settings.build_type == "Debug":
+            self.copy("*.h", dst="include", src="include")
+
+            if self.options.shared == "True":
+                self.copy("*.dll", dst="bin", keep_path=False)
+                self.copy("*.so", dst="lib", keep_path=False)
+                self.copy("*.dylib", dst="lib", keep_path=False)
+            else:
+                self.copy("*.a", dst="lib", keep_path=False)
+                self.copy("*.lib", dst="lib", keep_path=False)
+
+        else:
+            self.copy("*.h", dst="include", src="include")
+
+            if self.options.shared == "True":
+                self.copy("*.dll", dst="bin", keep_path=False)
+                self.copy("*.so", dst="lib", keep_path=False)
+                self.copy("*.dylib", dst="lib", keep_path=False)
+            else:
+                self.copy("*.a", dst="lib", keep_path=False)
+                self.copy("*.lib", dst="lib", keep_path=False)            
 
     def package_info(self):
-        self.cpp_info.libs = ["smelt"]
+        self.cpp_info.libs = tools.collect_libs(self)
