@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(StochasticModule LANGUAGES CXX)
+project(smelt LANGUAGES CXX)
 
 # Require C++11-compliant compiler
 set(CMAKE_CXX_STANDARD 11)
@@ -16,7 +16,7 @@ IF (NOT CMAKE_BUILD_TYPE)
 ENDIF (NOT CMAKE_BUILD_TYPE)
 
 # Provide option for building testing
-option(BUILD_TESTING "Enable testing for stochastic module" ON)
+option(BUILD_TESTING "Enable testing for smelt" ON)
 option(BUILD_STATIC_LIBS "Build the static library" ON)
 option(BUILD_SHARED_LIBS "Build the shared library" ON)
 
@@ -42,10 +42,8 @@ set(BOOST_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/boost)
 include_directories(${EIGEN_INCLUDE_DIR})
 include_directories(${BOOST_INCLUDE_DIR})
 include_directories(${JSON_INCLUDE_DIR})
-include_directories(CONAN_PKG::CONAN_INCLUDE_DIRS_MKL-INCLUDE)
-include_directories(CONAN_PKG::CONAN_INCLUDE_DIRS_IPP-INCLUDE)
-# include_directories(CONAN_PKG::mkl-include)
-# include_directories(CONAN_PKG::ipp-include)
+include_directories(${CONAN_INCLUDE_DIRS_MKL-INCLUDE})
+include_directories(${CONAN_INCLUDE_DIRS_IPP-INCLUDE})
 
 # Include directories
 include_directories(BEFORE
