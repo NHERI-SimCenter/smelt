@@ -2,159 +2,47 @@ linux: &linux
    os: linux
    dist: xenial
    language: python
-   python: 3.7
+   python: "3.7"
    services:
      - docker
      
 osx: &osx
    os: osx
-   python: 3.7
    language: generic
 
 branches:
   only:
-    - master
     - /^stable\/.*$/
-    
+
 matrix:
-  fast_finish: true
-  include:
-    - os: osx
-      osx_image: xcode10.2
-      sudo: true
-      python: 3.7
-      env:
-      - BUILD_DOCS="NO"      
-      - BUILD_PACKAGE="NO"
-      - TEST_BUILD="YES"
-
-    - os: osx
-      osx_image: xcode10    
-      python: 3.7
-      env:
-      - MATRIX_EVAL="brew install gcc@7 && CC=gcc-7 && CXX=g++-7"
-      - TEST_BUILD="YES"
-      
-    - os: linux
-      dist: xenial
-      python: 3.7
-      sudo: true      
-      compiler:
-        - g++      
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - doxygen
-            - doxygen-doc
-            - doxygen-latex
-            - doxygen-gui
-            - graphviz
-            - cmake	  
-            - g++-7
-      env:
-      - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-      - BUILD_DOCS="NO"      
-      - BUILD_PACKAGE="NO"
-      - TEST_BUILD="YES"
-
-    - os: linux
-      dist: xenial
-      sudo: true
-      python: 3.7     
-      addons:
-        apt:
-          packages:
-            - doxygen
-            - doxygen-doc
-            - doxygen-latex
-            - doxygen-gui
-            - graphviz
-            - cmake
-      env:
-      - BUILD_DOCS="YES"
-      - BUILD_PACKAGE="NO"      
-      - TEST_BUILD="YES"
-      
-    - <<: *linux
-      env:
-      - CONAN_GCC_VERSIONS=7
-      - CONAN_DOCKER_IMAGE=conanio/gcc7
-      - BUILD_DOCS="NO"      
-      - BUILD_PACKAGE="YES"
-      - TEST_BUILD="NO"
-    - <<: *linux
-      env:
-      - CONAN_GCC_VERSIONS=8
-      - CONAN_DOCKER_IMAGE=conanio/gcc8
-      - BUILD_DOCS="NO"      
-      - BUILD_PACKAGE="YES"
-      - TEST_BUILD="NO"
-    - <<: *linux
-      env:
-      - CONAN_GCC_VERSIONS=9
-      - CONAN_DOCKER_IMAGE=conanio/gcc9
-      - BUILD_DOCS="NO"      
-      - BUILD_PACKAGE="YES"
-      - TEST_BUILD="NO"
-    - <<: *linux
-      env:
-      - CONAN_CLANG_VERSIONS=7.0
-      - CONAN_DOCKER_IMAGE=conanio/clang7
-      - BUILD_DOCS="NO"      
-      - BUILD_PACKAGE="YES"
-      - TEST_BUILD="NO"
-    - <<: *linux
-      env:
-      - CONAN_CLANG_VERSIONS=8
-      - CONAN_DOCKER_IMAGE=conanio/clang8
-      - BUILD_DOCS="NO"      
-      - BUILD_PACKAGE="YES"
-      - TEST_BUILD="NO"
-    - <<: *osx
-      osx_image: xcode10.2 
-      env:
-      - CONAN_APPLE_CLANG_VERSIONS=10.0
-      - BUILD_DOCS="NO"      
-      - BUILD_PACKAGE="YES"
-      - TEST_BUILD="NO"
-    - <<: *osx
-      osx_image: xcode10.3
-      env:
-      - CONAN_APPLE_CLANG_VERSIONS=10.0
-      - BUILD_DOCS="NO"      
-      - BUILD_PACKAGE="YES"
-      - TEST_BUILD="NO"
-
-before_install:
-  - eval "${MATRIX_EVAL}"     
+   include:
+      - <<: *linux
+        env: CONAN_GCC_VERSIONS=7 CONAN_DOCKER_IMAGE=conanio/gcc7
+      - <<: *linux
+        env: CONAN_GCC_VERSIONS=8 CONAN_DOCKER_IMAGE=conanio/gcc8
+      - <<: *linux
+        env: CONAN_GCC_VERSIONS=9 CONAN_DOCKER_IMAGE=conanio/gcc9
+      - <<: *linux
+        env: CONAN_CLANG_VERSIONS=7.0 CONAN_DOCKER_IMAGE=conanio/clang7
+      - <<: *linux
+        env: CONAN_CLANG_VERSIONS=8 CONAN_DOCKER_IMAGE=conanio/clang8
+      - <<: *osx
+        osx_image: xcode10.2
+        env: CONAN_APPLE_CLANG_VERSIONS=10.0
 
 install:
-  - if [ "$BUILD_PACKAGE" == "YES" ]; then
-      chmod +x .travis/install.sh;
-      ./.travis/install.sh;
-    fi
-  - if [ "$TEST_BUILD" == "YES" ]; then
-      pip install conan --user;
-      conan user;
-    fi
+  - chmod +x .travis/install.sh
+  - ./.travis/install.sh
 
 script:
-  - if [ "$TEST_BUILD" == "YES" ]; then
-      chmod +x .travis/build.sh;
-      .travis/build.sh;
-    fi
-  - if [ "$BUILD_PACKAGE" == "YES" ]; then
-      chmod +x .travis/run.sh;
-      ./.travis/run.sh;
-    fi
+  - chmod +x .travis/run.sh
+  - ./.travis/run.sh
 
-deploy:
-  if: env(BUILD_DOCS)="YES"
-  provider: pages
-  skip_cleanup: true
-  local_dir: docs/html
-  github_token: $GH_REPO_TOKEN
-  on:
-    branch: master
+# deploy:
+#   if: env(BUILD_DOCS)="YES"
+#   provider: pages
+#   skip_cleanup: true
+#   local_dir: docs/html
+#   github_token: $GH_REPO_TOKEN
+#   on:
+#     branch: master
