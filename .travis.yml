@@ -2,13 +2,13 @@ linux: &linux
    os: linux
    dist: xenial
    language: python
-   python: "3.7"
+   python: 3.7"
    services:
      - docker
      
 osx: &osx
    os: osx
-   python: "3.7
+   python: 3.7
    language: generic
 
 branches:
@@ -22,7 +22,7 @@ matrix:
     - os: osx
       osx_image: xcode10.2
       sudo: true
-      python: "3.7
+      python: 3.7
       env:
       - BUILD_DOCS="NO"      
       - BUILD_PACKAGE="NO"
@@ -30,14 +30,14 @@ matrix:
 
     - os: osx
       osx_image: xcode10    
-      python: "3.7
+      python: 3.7
       env:
       - MATRIX_EVAL="brew install gcc@7 && CC=gcc-7 && CXX=g++-7"
       - TEST_BUILD="YES"
       
     - os: linux
       dist: xenial
-      python: "3.7
+      python: 3.7
       sudo: true      
       compiler:
         - g++      
@@ -62,7 +62,7 @@ matrix:
     - os: linux
       dist: xenial
       sudo: true
-      python: "3.7     
+      python: 3.7     
       addons:
         apt:
           packages:
