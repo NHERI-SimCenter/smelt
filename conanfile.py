@@ -7,7 +7,7 @@ class smeltConan(ConanFile):
     license = "BSD 2-Clause"
     author = "Michael Gardner mhgardner@berkeley.edu"
     url = "https://github.com/NHERI-SimCenter/smelt"
-    settings = {"os": None, "build_type": None, "compiler": None, "arch": ["x86_64"]}    
+    settings = {"os": None, "build_type": None, "compiler": None, "arch": ["x86_64"]}
     options = {"shared": [True, False]}
     default_options = {"shared": False}    
     generators = "cmake"
