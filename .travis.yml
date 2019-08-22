@@ -4,8 +4,8 @@ linux: &linux
    dist: xenial
    language: python
    python: "3.7"
-   packages:
-     - build-essential
+#   packages:
+#     - build-essential
    services:
      - docker
      

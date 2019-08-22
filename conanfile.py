@@ -3,7 +3,7 @@ import os
 
 class smeltConan(ConanFile):
     name = "smelt"
-    version = "1.1"
+    version = "1.1.0"
     description = "Stochastic, Modular, and Extensible Library for Time histories"
     license = "BSD 2-Clause"
     author = "Michael Gardner mhgardner@berkeley.edu"
@@ -44,7 +44,12 @@ class smeltConan(ConanFile):
     def build(self):
         cmake = self.configure_cmake()
         cmake.build()
-        self.run("ctest --verbose")        
+        
+        if self.settings.os == "Macos":
+            with tools.environment_append({"DYLD_LIBRARY_PATH": os.getcwd() + "/lib"}):
+                self.run("DYLD_LIBRARY_PATH=%s ctest --verbose" % os.environ['DYLD_LIBRARY_PATH'])
+        else:
+            self.run("ctest --verbose")
 
     # def build_id(self):
     #     self.info_build.settings.build_type = "Any"            
@@ -75,8 +80,17 @@ class smeltConan(ConanFile):
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
-        self.env_info.LD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))
-        self.env_info.DYLD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))
+        # Add to path so shared objects can be found        
         if self.options.shared:
             self.env_info.LD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))
-            self.env_info.DYLD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))        
+            self.env_info.DYLD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))
+
+        else:
+            if self.settings.os == "Linux":
+                # linker flags
+                if self.settings.compiler == "gcc":
+                    self.cpp_info.exelinkflags = ["-static-libgcc", "-static-libstdc++", "-lpthread", "-lm", "-ldl"]
+                else:
+                    self.cpp_info.exelinkflags = ["-static-libstdc++", "-lpthread", "-lm", "-ldl"]
+        # C++ compilation flags
+        self.cpp_info.cxxflags = ["-DMKL_ILP64", "-m64"]
