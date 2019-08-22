@@ -1,4 +1,5 @@
 from conans import ConanFile, CMake, tools
+import os
 
 class smeltConan(ConanFile):
     name = "smelt"
@@ -20,6 +21,10 @@ class smeltConan(ConanFile):
                "ipp-shared/2019.4@simcenter/stable", \
                "ipp-static/2019.4@simcenter/stable", \
                "intel-openmp/2019.4@simcenter/stable"
+
+    # Custom attributes for Bincrafters recipe conventions
+    _source_subfolder = "source_subfolder"
+    _build_subfolder = "build_subfolder"    
 
     def configure_cmake(self):
         cmake = CMake(self)
@@ -45,6 +50,10 @@ class smeltConan(ConanFile):
         self.info_build.settings.build_type = "Any"            
 
     def package(self):
+        self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
+        cmake = self.configure_cmake()
+        
+        include_folder = os.path.join(self._source_subfolder, "include")       
         self.copy("*.h", dst="include", src="include")        
         if self.settings.build_type == "Debug":
             if self.options.shared == "True":
