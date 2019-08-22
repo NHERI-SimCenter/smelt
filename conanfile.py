@@ -39,7 +39,7 @@ class smeltConan(ConanFile):
     def build(self):
         cmake = self.configure_cmake()
         cmake.build()
-        cmake.test()
+        # cmake.test()
 
     def build_id(self):
         self.info_build.settings.build_type = "Any"            
