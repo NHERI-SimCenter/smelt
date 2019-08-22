@@ -26,7 +26,7 @@ class smeltConan(ConanFile):
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
 
-    def imports():
+    def imports(self):
         self.copy("*.dll", "", "bin")
         self.copy("*.dylib", "", "lib")
         self.copy("*.so", "", "lib")
