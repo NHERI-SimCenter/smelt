@@ -21,10 +21,25 @@ class smeltConan(ConanFile):
                "ipp-static/2019.4@simcenter/stable", \
                "intel-openmp/2019.4@simcenter/stable"
 
-    def build(self):
+    def configure_cmake(self):
         cmake = CMake(self)
+        
+        # put definitions here so that they are re-used in cmake between
+        # build() and package()
+        if self.options.shared == "True":
+            cmake.definitions["BUILD_SHARED_LIBS"] = "ON"
+            cmake.definitions["BUILD_STATIC_LIBS"] = "OFF"
+        else:
+            cmake.definitions["BUILD_SHARED_LIBS"] = "OFF"
+            cmake.definitions["BUILD_STATIC_LIBS"] = "ON"
+
         cmake.configure(source_folder=".")
+        return cmake
+    
+    def build(self):
+        cmake = self.configure_cmake()
         cmake.build()
+        cmake.test()
 
     def build_id(self):
         self.info_build.settings.build_type = "Any"            
