@@ -25,15 +25,6 @@ class smeltConan(ConanFile):
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
-
-    def imports(self):
-        self.copy("*.dll", "", "bin")
-        self.copy("*.dylib", "", "bin")
-        self.copy("*.so", "", "bin")
-        
- # bin, *.dll -> ./bin # Copies all dll files from packages bin folder to my "bin" folder
- # lib, *.dylib* -> ./bin # Copies all dylib files from packages lib folder to my "bin" folder
- # lib, *.so* -> ./bin # Copies all dylib files from packages lib folder to my "bin" folder
     
     def configure_cmake(self):
         cmake = CMake(self)
@@ -54,17 +45,15 @@ class smeltConan(ConanFile):
         cmake = self.configure_cmake()
         cmake.build()
         self.run("ctest --verbose")        
-        # cmake.test(build_folder="bin")
 
-    def build_id(self):
-        self.info_build.settings.build_type = "Any"            
+    # def build_id(self):
+    #     self.info_build.settings.build_type = "Any"            
 
     def package(self):
         self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
-        cmake = self.configure_cmake()
         
         include_folder = os.path.join(self._source_subfolder, "include")       
-        self.copy("*.h", dst="include", src="include")        
+        self.copy("*.h", dst="include", src=include_folder)        
         if self.settings.build_type == "Debug":
             if self.options.shared == "True":
                 self.copy("*.dll", dst="bin", keep_path=False)
@@ -85,3 +74,9 @@ class smeltConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
+        self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
+        self.env_info.LD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))
+        self.env_info.DYLD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))
+        if self.options.shared:
+            self.env_info.LD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))
+            self.env_info.DYLD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))        
