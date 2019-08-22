@@ -26,8 +26,6 @@ class smeltConan(ConanFile):
         
         # put definitions here so that they are re-used in cmake between
         # build() and package()
-        cmake.definitions["CMAKE_CXX_COMPILER"] = self.settings.compiler
-        
         if self.options.shared == "True":
             cmake.definitions["BUILD_SHARED_LIBS"] = "ON"
             cmake.definitions["BUILD_STATIC_LIBS"] = "OFF"
