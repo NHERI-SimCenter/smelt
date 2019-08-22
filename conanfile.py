@@ -30,9 +30,8 @@ class smeltConan(ConanFile):
         self.info_build.settings.build_type = "Any"            
 
     def package(self):
+        self.copy("*.h", dst="include", src="include")        
         if self.settings.build_type == "Debug":
-            self.copy("*.h", dst="include", src="include")
-
             if self.options.shared == "True":
                 self.copy("*.dll", dst="bin", keep_path=False)
                 self.copy("*.so", dst="lib", keep_path=False)
@@ -42,8 +41,6 @@ class smeltConan(ConanFile):
                 self.copy("*.lib", dst="lib", keep_path=False)
 
         else:
-            self.copy("*.h", dst="include", src="include")
-
             if self.options.shared == "True":
                 self.copy("*.dll", dst="bin", keep_path=False)
                 self.copy("*.so", dst="lib", keep_path=False)
