@@ -24,8 +24,17 @@ class smeltConan(ConanFile):
 
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = "source_subfolder"
-    _build_subfolder = "build_subfolder"    
+    _build_subfolder = "build_subfolder"
 
+    def imports():
+        self.copy("*.dll", "", "bin")
+        self.copy("*.dylib", "", "lib")
+        self.copy("*.so", "", "lib")
+        
+ # bin, *.dll -> ./bin # Copies all dll files from packages bin folder to my "bin" folder
+ # lib, *.dylib* -> ./bin # Copies all dylib files from packages lib folder to my "bin" folder
+ # lib, *.so* -> ./bin # Copies all dylib files from packages lib folder to my "bin" folder
+    
     def configure_cmake(self):
         cmake = CMake(self)
         

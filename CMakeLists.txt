@@ -128,7 +128,6 @@ if (BUILD_TESTING)
     endif()
 
     target_link_libraries(unit_tests_static smelt_static ${mkl_static_LIBRARIES} ${ipp_static_LIBRARIES} ${STATIC_LINK_FLAGS})
-    # target_link_libraries(unit_tests_static "-Wl,--disable-new-dtags")    
     add_test(NAME run_static_unit_tests COMMAND unit_tests_static)    
   endif()
 
