@@ -4,6 +4,8 @@ linux: &linux
    dist: xenial
    language: python
    python: "3.7"
+   packages:
+     - build-essential
    services:
      - docker
      
@@ -32,7 +34,6 @@ matrix:
       env: CONAN_APPLE_CLANG_VERSIONS=10.0
 
 install:
-  - apt install build-essential
   - chmod +x .travis/install.sh
   - ./.travis/install.sh
 
