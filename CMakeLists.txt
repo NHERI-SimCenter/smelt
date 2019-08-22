@@ -123,7 +123,7 @@ if (BUILD_TESTING)
 	set(STATIC_LINK_FLAGS "-static-libstdc++" "-lpthread" "-lm" "-ldl")
       endif()
       set_target_properties(unit_tests_static PROPERTIES COMPILE_OPTIONS ${STATIC_COMPILE_FLAGS})
-      set_target_properties(unit_tests_static PROPERTIES LINK_OPTIONS ${STATIC_LINK_FLAGS})          
+      set_target_properties(unit_tests_static PROPERTIES LINK_OPTIONS ${STATIC_LINK_FLAGS})
     endif()
 
     target_link_libraries(unit_tests_static smelt_static ${mkl_static_LIBRARIES} ${ipp_static_LIBRARIES} ${STATIC_LINK_FLAGS})
