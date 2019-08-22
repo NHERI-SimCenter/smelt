@@ -31,6 +31,7 @@ matrix:
       env: CONAN_APPLE_CLANG_VERSIONS=10.0
 
 install:
+  - apt install build-essential
   - chmod +x .travis/install.sh
   - ./.travis/install.sh
 
