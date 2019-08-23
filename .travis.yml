@@ -4,8 +4,6 @@ linux: &linux
    dist: xenial
    language: python
    python: "3.7"
-#   packages:
-#     - build-essential
    services:
      - docker
      
@@ -48,19 +46,19 @@ matrix:
       - BUILD_DOCS="YES"
 
 install:
-  on:
-    branch: /^stable\/.*$/
-  - if [ "$BUILD_DOCS" != "YES" ]; then
-      chmod +x .travis/install.sh;
-      ./.travis/install.sh;
+  - if [ $TRAVIS_BRANCH != "master"]; then
+      if [ "$BUILD_DOCS" != "YES" ]; then
+        chmod +x .travis/install.sh;
+        ./.travis/install.sh;
+      fi
     fi
 
 script:
-  on:
-    branch: /^stable\/.*$/
-  - if [ "$BUILD_DOCS" != "YES" ]; then
-      chmod +x .travis/run.sh;
-      ./.travis/run.sh;
+  - if [ $TRAVIS_BRANCH != "master"]; then
+      if [ "$BUILD_DOCS" != "YES" ]; then
+        chmod +x .travis/run.sh;
+        ./.travis/run.sh;
+      fi
     fi
   - if [ "$BUILD_DOCS" == "YES" ]; then
       doxygen Doxyfile;
