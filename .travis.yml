@@ -46,19 +46,15 @@ matrix:
       - BUILD_DOCS="YES"
 
 install:
-  - if [ $TRAVIS_BRANCH != "master"]; then
-      if [ "$BUILD_DOCS" != "YES" ]; then
-        chmod +x .travis/install.sh;
-        ./.travis/install.sh;
-      fi
+  - if [ "$BUILD_DOCS" != "YES" ]; then
+      chmod +x .travis/install.sh;
+      ./.travis/install.sh;
     fi
 
 script:
-  - if [ $TRAVIS_BRANCH != "master"]; then
-      if [ "$BUILD_DOCS" != "YES" ]; then
-        chmod +x .travis/run.sh;
-        ./.travis/run.sh;
-      fi
+  - if [ "$BUILD_DOCS" != "YES" ]; then
+      chmod +x .travis/run.sh;
+      ./.travis/run.sh;
     fi
   - if [ "$BUILD_DOCS" == "YES" ]; then
       doxygen Doxyfile;
