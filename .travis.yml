@@ -59,7 +59,7 @@ script:
       ./.travis/run.sh;
     fi
   - if [ "$BUILD_DOCS" == "YES" ]; then
-      doxygen DoxyFile;
+      doxygen Doxyfile;
     fi    
 
 deploy:
