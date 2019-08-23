@@ -48,12 +48,16 @@ matrix:
       - BUILD_DOCS="YES"
 
 install:
+  on:
+    branch: /^stable\/.*$/
   - if [ "$BUILD_DOCS" != "YES" ]; then
       chmod +x .travis/install.sh;
       ./.travis/install.sh;
     fi
 
 script:
+  on:
+    branch: /^stable\/.*$/
   - if [ "$BUILD_DOCS" != "YES" ]; then
       chmod +x .travis/run.sh;
       ./.travis/run.sh;

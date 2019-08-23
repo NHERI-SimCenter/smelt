@@ -49,7 +49,14 @@ class smeltConan(ConanFile):
         #     with tools.environment_append({"DYLD_LIBRARY_PATH": os.getcwd() + "/lib"}):
         #         self.run("DYLD_LIBRARY_PATH=%s ctest --verbose" % os.environ['DYLD_LIBRARY_PATH'])
         # else:
-        self.copy("*.dylib", dst=self._build_subfolder + "/bin", src=self._build_subfolder + "/lib")
+        # if self.settings.os == "Macos":
+        if self.settings.os == "Macos":
+            if self.options.shared:
+                destination = os.getcwd() + "/bin/."
+                source_location = os.getcwd() + "/lib/*.dylib"
+                copy_command = "cp {} {}".format(source_location, destination)
+                self.run(copy_command)        
+            
         self.run("ctest --verbose")
 
     # def build_id(self):
