@@ -45,11 +45,11 @@ class smeltConan(ConanFile):
         cmake = self.configure_cmake()
         cmake.build()
         
-        if self.settings.os == "Macos":
-            with tools.environment_append({"DYLD_LIBRARY_PATH": os.getcwd() + "/lib"}):
-                self.run("DYLD_LIBRARY_PATH=%s ctest --verbose" % os.environ['DYLD_LIBRARY_PATH'])
-        else:
-            self.run("ctest --verbose")
+        # if self.settings.os == "Macos":
+        #     with tools.environment_append({"DYLD_LIBRARY_PATH": os.getcwd() + "/lib"}):
+        #         self.run("DYLD_LIBRARY_PATH=%s ctest --verbose" % os.environ['DYLD_LIBRARY_PATH'])
+        # else:
+        self.run("ctest --verbose")
 
     # def build_id(self):
     #     self.info_build.settings.build_type = "Any"            
