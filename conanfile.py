@@ -52,12 +52,14 @@ class smeltConan(ConanFile):
         # if self.settings.os == "Macos":
         if self.settings.os == "Macos":
             if self.options.shared:
-                destination = os.getcwd() + "/bin/."
-                source_location = os.getcwd() + "/lib/*.dylib"
-                copy_command = "cp {} {}".format(source_location, destination)
-                self.run(copy_command)        
+                smelt_path = os.getcwd() + "/lib/"
+                export_command = "export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:{}".format(smelt_path)
+                self.run(export_command)
+                self.run("ctest --verbose")
+            else:
+                self.run("ctest --verbose")                
         elif self.settings.os == "Windows":
-            if self.settings.os == "Release":
+            if self.settings.build_type == "Release":
                 self.run("ctest -C Release --verbose")
             else:
                 self.run("ctest -C Debug --verbose")
