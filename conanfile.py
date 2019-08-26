@@ -64,7 +64,7 @@ class smeltConan(ConanFile):
         
         include_folder = os.path.join(self._source_subfolder, "include")       
         self.copy("*.h", dst="include", src=include_folder)        
-        if self.settings.build_type == "Debug":
+        if self.settings.build_type == "Release":
             if self.options.shared == "True":
                 self.copy("*.dll", dst="bin", keep_path=False)
                 self.copy("*.lib", dst="lib", keep_path=False)
