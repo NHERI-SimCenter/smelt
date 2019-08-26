@@ -56,7 +56,7 @@ class smeltConan(ConanFile):
                 source_location = os.getcwd() + "/lib/*.dylib"
                 copy_command = "cp {} {}".format(source_location, destination)
                 self.run(copy_command)        
-        else if self.settings.os == "Windows":
+        elif self.settings.os == "Windows":
             if self.settings.os == "Release":
                 self.run("ctest -C Release --verbose")
             else:
