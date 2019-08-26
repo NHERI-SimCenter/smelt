@@ -53,7 +53,7 @@ class smeltConan(ConanFile):
         if self.settings.os == "Macos":
             if self.options.shared:
                 # self.run("./myexe") # won't work, even if 'DYLD_LIBRARY_PATH' is in the env
-                with tools.environment_append({"DYLD_LIBRARY_PATH": [os.getcwd + "/lib"]}):
+                with tools.environment_append({"DYLD_LIBRARY_PATH": [os.getcwd() + "/lib"]}):
                     self.run("DYLD_LIBRARY_PATH=%s ctest --verbose" % os.environ['DYLD_LIBRARY_PATH'])
                 
                 # smelt_path = os.getcwd() + "/lib/"
