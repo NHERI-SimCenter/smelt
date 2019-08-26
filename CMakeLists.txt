@@ -79,13 +79,17 @@ if (BUILD_SHARED_LIBS)
   # Adding MATH defines for M_PI when building on Windows
   if (WIN32)  
     add_library(smelt_shared STATIC ${SOURCES})
-    add_compile_definitions(_USE_MATH_DEFINES)    
   else()
     add_library(smelt_shared SHARED ${SOURCES})    
   endif()
   
   set_target_properties(smelt_shared PROPERTIES OUTPUT_NAME smelt)
   target_link_libraries(smelt_shared ${mkl_shared_LIBRARIES} ${ipp_shared_LIBRARIES})  
+endif()
+
+# Adding MATH defines for M_PI when building on Windows
+if (WIN32)
+  add_compile_definitions(_USE_MATH_DEFINES)
 endif()
 
 # Unit testing

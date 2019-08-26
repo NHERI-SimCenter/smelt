@@ -44,22 +44,11 @@ class smeltConan(ConanFile):
     def build(self):
         cmake = self.configure_cmake()
         cmake.build()
-        
-        # if self.settings.os == "Macos":
-        #     with tools.environment_append({"DYLD_LIBRARY_PATH": os.getcwd() + "/lib"}):
-        #         self.run("DYLD_LIBRARY_PATH=%s ctest --verbose" % os.environ['DYLD_LIBRARY_PATH'])
-        # else:
-        # if self.settings.os == "Macos":
+
         if self.settings.os == "Macos":
             if self.options.shared:
-                # self.run("./myexe") # won't work, even if 'DYLD_LIBRARY_PATH' is in the env
                 with tools.environment_append({"DYLD_LIBRARY_PATH": [os.getcwd() + "/lib"]}):
                     self.run("DYLD_LIBRARY_PATH=%s ctest --verbose" % os.environ['DYLD_LIBRARY_PATH'])
-                
-                # smelt_path = os.getcwd() + "/lib/"
-                # export_command = "export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:{}".format(smelt_path)
-                # self.run(export_command)
-                # self.run("ctest --verbose")
             else:
                 self.run("ctest --verbose")                
         elif self.settings.os == "Windows":
@@ -70,9 +59,6 @@ class smeltConan(ConanFile):
         else:
             self.run("ctest --verbose")
 
-    # def build_id(self):
-    #     self.info_build.settings.build_type = "Any"            
-
     def package(self):
         self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
         
@@ -81,6 +67,7 @@ class smeltConan(ConanFile):
         if self.settings.build_type == "Debug":
             if self.options.shared == "True":
                 self.copy("*.dll", dst="bin", keep_path=False)
+                self.copy("*.lib", dst="lib", keep_path=False)
                 self.copy("*.so", dst="lib", keep_path=False)
                 self.copy("*.dylib", dst="lib", keep_path=False)
             else:
@@ -90,6 +77,7 @@ class smeltConan(ConanFile):
         else:
             if self.options.shared == "True":
                 self.copy("*.dll", dst="bin", keep_path=False)
+                self.copy("*.lib", dst="lib", keep_path=False)
                 self.copy("*.so", dst="lib", keep_path=False)
                 self.copy("*.dylib", dst="lib", keep_path=False)
             else:
