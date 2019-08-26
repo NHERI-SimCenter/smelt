@@ -52,10 +52,14 @@ class smeltConan(ConanFile):
         # if self.settings.os == "Macos":
         if self.settings.os == "Macos":
             if self.options.shared:
-                smelt_path = os.getcwd() + "/lib/"
-                export_command = "export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:{}".format(smelt_path)
-                self.run(export_command)
-                self.run("ctest --verbose")
+                # self.run("./myexe") # won't work, even if 'DYLD_LIBRARY_PATH' is in the env
+                with tools.environment_append({"DYLD_LIBRARY_PATH": [os.getcwd + "/lib"]}):
+                    self.run("DYLD_LIBRARY_PATH=%s ctest --verbose" % os.environ['DYLD_LIBRARY_PATH'])
+                
+                # smelt_path = os.getcwd() + "/lib/"
+                # export_command = "export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:{}".format(smelt_path)
+                # self.run(export_command)
+                # self.run("ctest --verbose")
             else:
                 self.run("ctest --verbose")                
         elif self.settings.os == "Windows":
