@@ -10,7 +10,7 @@ class smeltConan(ConanFile):
     url = "https://github.com/NHERI-SimCenter/smelt"
     settings = {"os": None, "build_type": None, "compiler": None, "arch": ["x86_64"]}
     options = {"shared": [True, False]}
-    default_options = {"shared": False}    
+    default_options = {"shared": True}    
     generators = "cmake"
     build_policy = "missing"    
     exports_sources = "src/*", "include/*", "CMakeLists.txt", "cmake/*", "test/*", "external/*"
@@ -52,12 +52,16 @@ class smeltConan(ConanFile):
             else:
                 self.run("ctest --verbose")                
         elif self.settings.os == "Windows":
-            if self.settings.build_type == "Release":
-                self.run("ctest -C Release --verbose")
-            else:
-                self.run("ctest -C Debug --verbose")
+            path_command = ("set PATH=%PATH%;{}".format(os.getcwd() + "/lib"))
+            self.run(path_command)
+            cmake.test()
+            # if self.settings.build_type == "Release":
+            #     self.run("ctest -C Release --verbose")
+            # else:
+            #     self.run("ctest -C Debug --verbose")
         else:
-            self.run("ctest --verbose")
+            cmake.test()
+            # self.run("ctest --verbose")
 
     def package(self):
         self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
