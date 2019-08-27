@@ -139,7 +139,11 @@ if (BUILD_TESTING)
 
   if (BUILD_SHARED_LIBS)
     add_executable(unit_tests_shared ${TEST_SOURCES})
-    target_link_libraries(unit_tests_shared smelt_shared CONAN_PKG::intel-openmp)
+    if (WIN32)
+      target_link_libraries(unit_tests_shared smelt_shared)      
+    else()
+      target_link_libraries(unit_tests_shared smelt_shared CONAN_PKG::intel-openmp)      
+    endif()
     add_test(NAME run_shared_unit_tests COMMAND unit_tests_shared)
   endif()
 
