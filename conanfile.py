@@ -13,7 +13,6 @@ class smeltConan(ConanFile):
     default_options = {"shared": True}    
     generators = "cmake"
     build_policy = "missing"    
-    # exports_sources = "src/*", "include/*", "CMakeLists.txt", "cmake/*", "test/*", "external/*"
     requires = "mkl-include/2019.4@simcenter/stable", \
                "mkl-shared/2019.4@simcenter/stable", \
                "mkl-static/2019.4@simcenter/stable", \
@@ -56,9 +55,6 @@ class smeltConan(ConanFile):
             else:
                 self.run("ctest --verbose")                
         elif self.settings.os == "Windows":
-            # path_command = ("set PATH=%PATH%;{}".format(os.getcwd() + "/lib"))
-            # self.run(path_command)
-            # cmake.test()
             if self.settings.build_type == "Release":
                 self.run("ctest -C Release --verbose")
             else:
@@ -96,7 +92,8 @@ class smeltConan(ConanFile):
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
         # Add to path so shared objects can be found        
         if self.options.shared:
-            self.env_info.PATH.append(os.path.join(self.package_folder, "lib"))            
+            self.env_info.PATH.append(os.path.join(self.package_folder, "lib"))
+            self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))                        
             self.env_info.LD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))
             self.env_info.DYLD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))
 
