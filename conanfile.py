@@ -52,16 +52,15 @@ class smeltConan(ConanFile):
             else:
                 self.run("ctest --verbose")                
         elif self.settings.os == "Windows":
-            path_command = ("set PATH=%PATH%;{}".format(os.getcwd() + "/lib"))
-            self.run(path_command)
-            cmake.test()
+            # path_command = ("set PATH=%PATH%;{}".format(os.getcwd() + "/lib"))
+            # self.run(path_command)
+            # cmake.test()
             if self.settings.build_type == "Release":
                 self.run("ctest -C Release --verbose")
             else:
                 self.run("ctest -C Debug --verbose")
         else:
-            cmake.test()
-            # self.run("ctest --verbose")
+            self.run("ctest --verbose")
 
     def package(self):
         self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
@@ -93,6 +92,7 @@ class smeltConan(ConanFile):
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
         # Add to path so shared objects can be found        
         if self.options.shared:
+            self.env_info.PATH.append(os.path.join(self.package_folder, "lib"))            
             self.env_info.LD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))
             self.env_info.DYLD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))
 
