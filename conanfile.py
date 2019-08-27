@@ -55,10 +55,10 @@ class smeltConan(ConanFile):
             path_command = ("set PATH=%PATH%;{}".format(os.getcwd() + "/lib"))
             self.run(path_command)
             cmake.test()
-            # if self.settings.build_type == "Release":
-            #     self.run("ctest -C Release --verbose")
-            # else:
-            #     self.run("ctest -C Debug --verbose")
+            if self.settings.build_type == "Release":
+                self.run("ctest -C Release --verbose")
+            else:
+                self.run("ctest -C Debug --verbose")
         else:
             cmake.test()
             # self.run("ctest --verbose")
