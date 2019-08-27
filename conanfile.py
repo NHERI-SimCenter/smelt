@@ -13,7 +13,7 @@ class smeltConan(ConanFile):
     default_options = {"shared": True}    
     generators = "cmake"
     build_policy = "missing"    
-    exports_sources = "src/*", "include/*", "CMakeLists.txt", "cmake/*", "test/*", "external/*"
+    # exports_sources = "src/*", "include/*", "CMakeLists.txt", "cmake/*", "test/*", "external/*"
     requires = "mkl-include/2019.4@simcenter/stable", \
                "mkl-shared/2019.4@simcenter/stable", \
                "mkl-static/2019.4@simcenter/stable", \
@@ -25,6 +25,10 @@ class smeltConan(ConanFile):
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
+
+    def source(self):
+       git = tools.Git(folder="smelt")
+       git.clone("https://github.com/shellshocked2003/smelt.git", "stable/1.1.0")        
     
     def configure_cmake(self):
         cmake = CMake(self)
@@ -38,7 +42,7 @@ class smeltConan(ConanFile):
             cmake.definitions["BUILD_SHARED_LIBS"] = "OFF"
             cmake.definitions["BUILD_STATIC_LIBS"] = "ON"
 
-        cmake.configure(source_folder=".")
+        cmake.configure(source_folder="smelt")
         return cmake
     
     def build(self):
