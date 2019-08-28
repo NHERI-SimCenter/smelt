@@ -50,8 +50,6 @@ include_directories(${CONAN_INCLUDE_DIRS_JSONFORMODERNCPP})
 include_directories(${CONAN_INCLUDE_DIRS_CATCH2})
 include_directories(${CONAN_INCLUDE_DIRS_BOOST})
 
-message("THIS IS THE JSON LIB:\n" ${CONAN_INCLUDE_DIRS_JSONFORMODERNCPP})
-
 # Include directories
 include_directories(BEFORE
 	${PROJECT_SOURCE_DIR}/include/
