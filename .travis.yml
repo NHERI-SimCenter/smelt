@@ -18,7 +18,7 @@ branches:
 
 env:
    global:
-     - CONAN_REMOTES: "https://api.bintray.com/conan/conan-community/conan","https://api.bintray.com/conan/bincrafters/public-conan","https://api.bintray.com/conan/vthiery/conan-packages","https://api.bintray.com/conan/catchorg/Catch2"
+     - CONAN_REMOTES: "https://api.bintray.com/conan/conan-community/conan,https://api.bintray.com/conan/bincrafters/public-conan,https://api.bintray.com/conan/vthiery/conan-packages,https://api.bintray.com/conan/catchorg/Catch2"
 
 matrix:
    include:
