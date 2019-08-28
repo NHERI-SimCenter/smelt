@@ -1,5 +1,5 @@
 #include <iostream>
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 #include <Eigen/Dense>
 #include "factory.h"
 #include "normal_multivar.h"

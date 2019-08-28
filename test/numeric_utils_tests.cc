@@ -1,7 +1,7 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 #include <Eigen/Dense>
 #include "numeric_utils.h"
 

@@ -1,9 +1,9 @@
 #define _USE_MATH_DEFINES
 #include <iostream>
 #include <cmath>
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 #include <Eigen/Dense>
-#include <nlohmann_json/json.hpp>
+#include <nlohmann/json.hpp>
 #include "factory.h"
 #include "vlachos_et_al.h"
 #include "wittig_sinha.h"

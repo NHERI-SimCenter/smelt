@@ -32,11 +32,11 @@ find_package(MKL)
 find_package(IPP)
 
 # Set path for external dependencies
-set(JSON_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/nlohmann_json)
-set(CATCH_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/catch)
-set(EIGEN_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/Eigen)
-set(TROMPELOEIL_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/trompeloeil)
-set(BOOST_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/boost)
+# set(JSON_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/nlohmann_json)
+# set(CATCH_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/catch)
+# set(EIGEN_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/Eigen)
+# set(TROMPELOEIL_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/trompeloeil)
+# set(BOOST_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/boost)
 
 # Add external headers to include path
 include_directories(${EIGEN_INCLUDE_DIR})
@@ -49,6 +49,8 @@ include_directories(${CONAN_INCLUDE_DIRS_CLARA})
 include_directories(${CONAN_INCLUDE_DIRS_JSONFORMODERNCPP})
 include_directories(${CONAN_INCLUDE_DIRS_CATCH2})
 include_directories(${CONAN_INCLUDE_DIRS_BOOST})
+
+message("THIS IS THE JSON LIB:\n" ${CONAN_INCLUDE_DIRS_JSONFORMODERNCPP})
 
 # Include directories
 include_directories(BEFORE

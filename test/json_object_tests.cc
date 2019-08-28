@@ -1,7 +1,7 @@
 #include <string>
 #include <vector>
-#include <catch/catch.hpp>
-#include <nlohmann_json/json.hpp>
+#include <catch2/catch.hpp>
+#include <nlohmann/json.hpp>
 #include "json_object.h"
 
 TEST_CASE("Test JSON object wrapper", "[Helpers][Json]") { 
