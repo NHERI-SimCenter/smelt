@@ -12,7 +12,7 @@ class smeltConan(ConanFile):
     options = {"shared": [True, False]}
     default_options = {"shared": False}    
     generators = "cmake"
-    # build_policy = "missing"    
+    build_policy = "missing"
     requires = "mkl-include/2019.4@simcenter/stable", \
                "mkl-shared/2019.4@simcenter/stable", \
                "mkl-static/2019.4@simcenter/stable", \
