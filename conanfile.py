@@ -19,7 +19,12 @@ class smeltConan(ConanFile):
                "ipp-include/2019.4@simcenter/stable", \
                "ipp-shared/2019.4@simcenter/stable", \
                "ipp-static/2019.4@simcenter/stable", \
-               "intel-openmp/2019.4@simcenter/stable"
+               "intel-openmp/2019.4@simcenter/stable", \
+               "eigen/3.3.7@conan/stable", \
+               "clara/1.1.5@bincrafters/stable", \
+               "jsonformoderncpp/3.7.0@vthiery/stable", \
+               "Catch2/2.9.2@catchorg/stable", \
+               "boost/1.71.0@conan/stable"
 
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = "source_subfolder"

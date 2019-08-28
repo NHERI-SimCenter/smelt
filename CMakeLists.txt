@@ -44,11 +44,15 @@ include_directories(${BOOST_INCLUDE_DIR})
 include_directories(${JSON_INCLUDE_DIR})
 include_directories(${CONAN_INCLUDE_DIRS_MKL-INCLUDE})
 include_directories(${CONAN_INCLUDE_DIRS_IPP-INCLUDE})
+include_directories(${CONAN_INCLUDE_DIRS_EIGEN})
+include_directories(${CONAN_INCLUDE_DIRS_CLARA})
+include_directories(${CONAN_INCLUDE_DIRS_JSONFORMODERNCPP})
+include_directories(${CONAN_INCLUDE_DIRS_CATCH2})
+include_directories(${CONAN_INCLUDE_DIRS_BOOST})
 
 # Include directories
 include_directories(BEFORE
 	${PROJECT_SOURCE_DIR}/include/
-	${PROJECT_SOURCE_DIR}/external/
 	)
 
 # Set sources
