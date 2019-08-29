@@ -14,12 +14,7 @@ class smeltConan(ConanFile):
     generators = "cmake"
     build_policy = "missing"
     requires = "mkl-include/2019.4@simcenter/stable", \
-               "mkl-shared/2019.4@simcenter/stable", \
-               "mkl-static/2019.4@simcenter/stable", \
                "ipp-include/2019.4@simcenter/stable", \
-               "ipp-shared/2019.4@simcenter/stable", \
-               "ipp-static/2019.4@simcenter/stable", \
-               "intel-openmp/2019.4@simcenter/stable", \
                "eigen/3.3.7@conan/stable", \
                "clara/1.1.5@bincrafters/stable", \
                "jsonformoderncpp/3.7.0@vthiery/stable", \
@@ -35,11 +30,17 @@ class smeltConan(ConanFile):
        git.clone("https://github.com/shellshocked2003/smelt.git", "stable/1.1.0")        
 
     def configure(self):
-        self.options["boost"].header_only = True
+        self.options["boost"].header_only = True            
 
     def build_requirements(self):
-        self.build_requires("boost/1.71.0@conan/stable")        
-       
+        if self.setting.shared:
+            self.build_requires("mkl-shared/2019.4@simcenter/stable")
+            self.build_requires("ipp-shared/2019.4@simcenter/stable")
+            self.build_requires("intel-openmp/2019.4@simcenter/stable")
+        else:
+            self.build_requires("mkl-static/2019.4@simcenter/stable")
+            self.build_requires("ipp-static/2019.4@simcenter/stable")
+            
     def configure_cmake(self):
         cmake = CMake(self)
         
@@ -76,6 +77,7 @@ class smeltConan(ConanFile):
     def package(self):
         self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
         self.copy("*.h", dst="include", src="smelt/include")
+        self.copy("*.tcc", dst="include", src="smelt/include")
         if self.settings.build_type == "Release":
             if self.options.shared == "True":
                 self.copy("*.dll", dst="bin", keep_path=False)
