@@ -75,9 +75,7 @@ class smeltConan(ConanFile):
 
     def package(self):
         self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
-        
-        include_folder = os.path.join(self._source_subfolder, "include")       
-        self.copy("*.h", dst="include", src=include_folder)        
+        self.copy("*.h", dst="include", src="smelt/include")
         if self.settings.build_type == "Release":
             if self.options.shared == "True":
                 self.copy("*.dll", dst="bin", keep_path=False)
