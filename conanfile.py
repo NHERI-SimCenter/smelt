@@ -33,7 +33,7 @@ class smeltConan(ConanFile):
         self.options["boost"].header_only = True            
 
     def build_requirements(self):
-        if self.setting.shared:
+        if self.options.shared:
             self.build_requires("mkl-shared/2019.4@simcenter/stable")
             self.build_requires("ipp-shared/2019.4@simcenter/stable")
             self.build_requires("intel-openmp/2019.4@simcenter/stable")
