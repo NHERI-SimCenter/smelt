@@ -33,7 +33,13 @@ class smeltConan(ConanFile):
     def source(self):
        git = tools.Git(folder="smelt")
        git.clone("https://github.com/shellshocked2003/smelt.git", "stable/1.1.0")        
-    
+
+    def configure(self):
+        self.options["boost"].header_only = True
+
+    def build_requirements(self):
+        self.build_requires("boost/1.71.0@conan/stable")        
+       
     def configure_cmake(self):
         cmake = CMake(self)
         
