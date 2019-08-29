@@ -100,6 +100,7 @@ class smeltConan(ConanFile):
 
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
+        self.cpp_info.includedirs = ['include']
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
         # Add to path so shared objects can be found        
         if self.options.shared:
