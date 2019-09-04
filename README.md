@@ -1,11 +1,11 @@
 # smelt
 **S**tochastic, **M**odular, and **E**xtensible **L**ibrary for **T**ime histories
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2697657.svg)](https://doi.org/10.5281/zenodo.2697657)
-[![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://raw.githubusercontent.com/NHERI-SimCenter/smelt/master/LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-doxygen-blue.svg)](https://nheri-simcenter.github.io/smelt/)
-[![Build Status](https://travis-ci.org/NHERI-SimCenter/smelt.svg?branch=master)](https://travis-ci.org/NHERI-SimCenter/smelt)
-[![Build Status](https://dev.azure.com/shellshocked2003/shellshocked2003/_apis/build/status/NHERI-SimCenter.smelt?branchName=master)](https://dev.azure.com/shellshocked2003/shellshocked2003/_build/latest?definitionId=2&branchName=master)
+## Package Status
+
+| Documentation | License | DOI | Bintray | Windows | Linux & macOS |
+|:--------:|:---------:|:-----------------:|
+|[![Documentation](https://img.shields.io/badge/docs-doxygen-blue.svg)](https://nheri-simcenter.github.io/smelt/)|[![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://raw.githubusercontent.com/NHERI-SimCenter/smelt/master/LICENSE)|[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.2697657.svg)](https://doi.org/10.5281/zenodo.2697657)|[ ![Download](https://api.bintray.com/packages/nheri-simcenter/simcenter/smelt%3Asimcenter/images/download.svg) ](https://bintray.com/nheri-simcenter/simcenter/smelt%3Asimcenter/_latestVersion)|[![Build status](https://ci.appveyor.com/api/projects/status/rcal46kf9i84b83k?svg=true)](https://ci.appveyor.com/project/shellshocked2003/smelt)|[![Build Status](https://travis-ci.org/shellshocked2003/smelt.svg?branch=master)](https://travis-ci.org/shellshocked2003/smelt)|
 
 ## What is `smelt`?
 

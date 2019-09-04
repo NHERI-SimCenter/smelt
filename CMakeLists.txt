@@ -31,13 +31,6 @@ conan_basic_setup(TARGETS)
 find_package(MKL)
 find_package(IPP)
 
-# Set path for external dependencies
-# set(JSON_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/nlohmann_json)
-# set(CATCH_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/external/catch)
-# set(EIGEN_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/Eigen)
-# set(TROMPELOEIL_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/trompeloeil)
-# set(BOOST_INCLUDE_DIR, ${PROJECT_SOURCE_DIR}/external/boost)
-
 # Add external headers to include path
 include_directories(${EIGEN_INCLUDE_DIR})
 include_directories(${BOOST_INCLUDE_DIR})
@@ -97,10 +90,7 @@ if (WIN32)
 endif()
 
 # Unit testing
-if (BUILD_TESTING)
-  include_directories(${CATCH_INCLUDE_DIR})
-  include_directories(${TROMPELOEIL_INCLUDE_DIR})
-  
+if (BUILD_TESTING) 
   set(TEST_SOURCES
     ${PROJECT_SOURCE_DIR}/test/test_main.cc
     ${PROJECT_SOURCE_DIR}/test/multi_var_tests.cc
