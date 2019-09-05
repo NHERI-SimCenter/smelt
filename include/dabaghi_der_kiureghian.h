@@ -151,16 +151,20 @@ class DabaghiDerKiureghian : public StochasticModel {
    * number of simulations and probability of those motions containing a pulse
    * following pulse probability model developed by Shahi & Baker (2014)
    * @param[in] num_sims Total number of simulations that should be generated
+   * @return Total number of pulse-like motions
    */
   unsigned int simulate_pulse_type(unsigned num_sims) const;
 
- private:
-  DabaghiDerKiureghian(FaultType faulting, SimulationType simulation_type,
-                       double moment_magnitude, double depth_to_rupt,
-                       double rupture_distance, double vs30, double s_or_d,
-                       double theta_or_phi, unsigned int num_sims,
-                       unsigned int num_params, bool truncate, int seed_value);
+  /**
+   * Simulate model parameters for ground motions based on either pulse-like
+   * or non-pulse-like behavior
+   * @param[in] pulse_like Boolean indicating whether ground motions are
+   *                       pulse-like
+   * @return Model parameters for ground motions
+   */
+  Eigen::MatrixXd simulate_model_parameters(bool pulse_like) const;
 
+ private:
   FaultType faulting_; /**< Enum for type of faulting for scenario */
   SimulationType sim_type_; /**< Enum for pulse-like nature of ground motion */
   double moment_magnitude_; /**< Moment magnitude for scenario */
@@ -178,29 +182,10 @@ class DabaghiDerKiureghian : public StochasticModel {
   unsigned int num_params_; /**< Number of realizations of model parameters */
   int seed_value_; /**< Integer to seed random distributions with */
   double time_step_; /**< Temporal discretization. Set to 0.005 seconds */
-  
-  
-  /* double orientation_; /\**< Counter-clockwise angle away from global x-axis *\/ */
-  /* double time_step_; /\**< Temporal discretization. Set to 0.01 seconds *\/ */
-  /* double freq_step_; /\**< Frequency discretization. Set to 0.2 Hz *\/ */
-  /* double cutoff_freq_; /\**< Cutoff frequency *\/ */
-  /* unsigned int num_spectra_; /\**< Number of evolutionary power spectra that */
-  /*                               should be generated *\/ */
-  /* unsigned int num_sims_; /\**< Number of simulated ground motion time histories */
-  /*                            that should be generated per evolutionary power */
-  /*                            spectrum *\/ */
-  /* int seed_value_; /\**< Integer to seed random distributions with *\/ */
-  /* Eigen::VectorXd means_; /\**< Mean values of model parameters *\/ */
-  /* Eigen::MatrixXd covariance_; /\**< Covariance matrix for model parameters *\/ */
-  /* std::vector<std::shared_ptr<stochastic::Distribution>> */
-  /*     model_parameters_; /\**< Distrubutions for 18-parameter model *\/ */
-  /* Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> */
-  /*     parameter_realizations_; /\**< Random realizations of normal model parameters *\/ */
-  /* Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> */
-  /*     physical_parameters_; /\**< Normal parameters transformed to */
-  /*                              physical space *\/ */
-  /* std::shared_ptr<numeric_utils::RandomGenerator> */
-  /*     sample_generator_; /\**< Multivariate normal random number generator *\/ */
+  Eigen::VectorXd std_dev_pulse_; /**< Pulse-like parameter standard deviation */
+  Eigen::VectorXd std_dev_nopulse_; /**< No-pulse-like parameter standard deviation */
+  Eigen::MatrixXd corr_matrix_pulse_; /**< Pulse-like parameter correlation matrix */
+  Eigen::MatrixXd corr_matrix_nopulse_; /**< No-pulse-like parameter correlation matrix */
 };
 }  // namespace stochastic
 
