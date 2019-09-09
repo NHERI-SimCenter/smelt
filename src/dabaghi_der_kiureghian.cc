@@ -14,10 +14,12 @@
 // Eigen dense matrices
 #include <Eigen/Dense>
 
+#include "dabaghi_der_kiureghian.h"
 #include "factory.h"
 #include "function_dispatcher.h"
 #include "json_object.h"
-#include "dabaghi_der_kiureghian.h"
+#include "normal_multivar.h"
+#include "numeric_utils.h"
 
 stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
     stochastic::FaultType faulting, stochastic::SimulationType simulation_type,
@@ -40,13 +42,20 @@ stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
 {
   model_name_ = "DabaghiDerKiureghian";
   num_sims_pulse_ = simulate_pulse_type(num_sims);
-  num_sims_no_pulse_ = num_sims - num_sims_pulse_;
+  num_sims_nopulse_ = num_sims - num_sims_pulse_;
 
+  // Initialize multivariate normal generator without seed
+  sample_generator_ =
+      Factory<numeric_utils::RandomGenerator>::instance()->create(
+          "MultivariateNormal");
+  
   // Set regression constants
   std_dev_pulse_.resize(19);
   std_dev_nopulse_.resize(14);
   corr_matrix_pulse_.resize(19, 19);
   corr_matrix_nopulse_.resize(14, 14);
+  beta_distribution_pulse_.resize(19, 8);
+  beta_distribution_nopulse_.resize(14, 8);
 
   // clang-format off
   std_dev_pulse_ <<
@@ -100,6 +109,53 @@ stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
       0.0917721771113965, -0.0596971902001111, -0.189167012249831, -0.151488045845577, 0.897082085156820, -0.0874961774514421, -0.0879585887923949, 0.104731056969540, -0.0895932216480470, -0.177521125226899, -0.168356869639510, 1, -0.183773515755380, 0.00693211686662153,
       0.103741261286614, -0.0160895956989375, -0.0219422025252862, -0.0637984858287899, -0.0778400029130002, 0.647468312996265, -0.105931812299965, 0.137507782979518, -0.0501878780366773, 0.00868592321024064, -0.0773913106180435, -0.183773515755380, 1, -0.110874872058067,
       -0.121195511065596, 0.113905908782625, -0.0931560965857281, -0.0498615936932623, -0.00420375269007833, -0.157070775414507, 0.761324011431321, -0.107158677162180, 0.0967842822751738, -0.0671981184080449, -0.0274804568206274, 0.00693211686662153, -0.110874872058067, 1;
+
+  beta_distribution_pulse_ <<
+    1.69862554416145, 0.608190177030033, -0.608190177030033, -0.576217471720854, 0, 0.183071013159864, -0.0939319189357984, 0.00657091132855174,
+    -2.47924338395758, 0.670395625327187, 0, 0, 0, -0.263957799575519, -0.232548659903406, 0.00791988432530859,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    -4.24873260256537, 0.852185710838635, 0, 0.389602053633798, 0, -0.380323064996537, -0.0880126751081291, 0,
+    -2.11599237942931, 1.47405211856417, -1.37810504103118, -1.07311968166742, 0, 0.336513504829882, 0, 0,
+    -0.381092000896248, 0.732824259094057, 0, 0.216502277780155, 0, -0.162653108888503, -0.426573570884097, 0,
+    -5.56310544580757, 0.905239391642438, 0, 0.385150957140062, 0, -0.282428134685156, 0, 0,
+    -4.77682417817789, 0.879981585446539, 0, 0.310609998745732, 0, -0.339225914155431, 0, 0,
+    0.966712608298821, -0.110938996751065, 0, 0, 0, 0, 0.183289269601829, 0,
+    -2.16587686889173, 0.321501356495567, 0, 0, 0, 0, 0, 0,
+    -1.70734873800232, 0.433032709755610, 0, -0.412648447269525, 0, 0, 0, 0,
+    -0.263198077701693, 1.13060571952101, -1.16957372638359, -1.65164476300789, 0.104746885300915, 0.404058507352901, 0, 0,
+    -0.515969600508314, 0.754135122993588, 0, 0.191575083960373, 0, -0.121665118341219, -0.423844926774291, 0,
+    -5.77208004012831, 0.923144661954273, 0, 0.402940883581593, 0, -0.238200773846646, 0, 0,
+    -5.01588271867143, 0.905027154000921, 0, 0.326841161038211, 0, -0.328283913521590, 0, 0,
+    0.434339606308037, -0.125225415996048, 0, 0, 0, 0, 0.301631247865572, 0,
+    -2.87544520181323, 0.415682222485807, 0, 0, 0, 0, 0, 0,
+    -1.86755738290362, 0.457448335779201, 0, -0.501103981295545, 0, 0, 0, 0;
+
+  beta_distribution_nopulse_ <<
+    8.09695881287823, 1.00609515629221, -1.39347614723327, -4.85869770683701, 0.472644100309933, 0.434550762616159, -0.862562872197509, 0,
+    -1.03473761679032, 0.769091178587874, 0, 0.412237308297152, 0, -0.377739650769220, -0.424234099315427, 0,
+    -4.72728279119446, 0.709717476708319, 0, 0.470974168011549, 0, -0.123518047425648, 0, 0,
+    -4.44400222195478, 0.798093247074753, 0, 0.345405210060350, 0, -0.230823340141895, 0, 0,
+    0.247133528936450, -0.149209862203390, 0, 0, 0, 0, 0.377202902904920, 0,
+    -1.44302935447839, 0.223053706671624, 0, 0, 0, 0, 0, 0,
+    -0.380413278316438, 0.159342468070527, 0, -0.298208438215333, 0, 0, 0, 0,
+    7.30682757526241, 0.999256668956432, -1.33082594407524, -4.95306361630276, 0.490554994733579, 0.442502068793772, -0.835310070621911, 0,
+    -0.403711730133755, 0.672375321924977, 0, 0.335372498461681, 0, -0.330322239630250, -0.366700025738387, 0,
+    -4.79820204505010, 0.709160958437296, 0, 0.472560804537015, 0, -0.0755764830052928, 0, 0,
+    -4.35041760661412, 0.785290791385159, 0, 0.325462132630085, 0, -0.221525656800750, 0, 0,
+    0.424849811725595, -0.181204207590470, 0, 0, 0, 0, 0.401549107903204, 0,
+    -2.97911606394595, 0.420016455603546, 0, 0, 0, 0, 0, 0,
+    -0.703694160589291, 0.160571013696218, 0, -0.145792047865653, 0, 0, 0, 0;
+
+  params_lower_bound_ << 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, -3.5, -4.7, 0, 0, 0, 0, 0, -3.5, -4.7;
+  
+  params_upper_bound_ << 0, 0, 3.2, 2, 0, 0, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 0, 0, 1.5, 0;
+  
+  params_fitted1_ << 0, 0, 1.30326178289206, 0, 0, 0, 0, 0, 0, 0, 14.2935537214223, 5.33551936215137, 0, 0, 0, 0, 0, 14.2935537214223, 5.33551936215137;
+  
+  params_fitted2_ << 0, 0, 3.96858083951547, 0, 0, 0, 0, 0, 0, 0, 6.40242376475815, 3.82954843573707, 0, 0, 0, 0, 0, 6.40242376475815, 3.82954843573707;
+
+  params_fitted3_ << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4.42179588354923, 0, 0, 0, 0, 0, 0, 4.42179588354923, 0;
   // clang-format on  
 }
 
@@ -124,8 +180,13 @@ stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
 {
   model_name_ = "DabaghiDerKiureghian";
   num_sims_pulse_ = simulate_pulse_type(num_sims);
-  num_sims_no_pulse_ = num_sims - num_sims_pulse_;
+  num_sims_nopulse_ = num_sims - num_sims_pulse_;
 
+  // Initialize multivariate normal generator without seed
+  sample_generator_ =
+      Factory<numeric_utils::RandomGenerator, int>::instance()->create(
+          "MultivariateNormal", std::move(seed_value_));
+  
   // Set regression constants
   std_dev_pulse_.resize(19);
   std_dev_nopulse_.resize(14);
@@ -184,10 +245,58 @@ stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
       0.0917721771113965, -0.0596971902001111, -0.189167012249831, -0.151488045845577, 0.897082085156820, -0.0874961774514421, -0.0879585887923949, 0.104731056969540, -0.0895932216480470, -0.177521125226899, -0.168356869639510, 1, -0.183773515755380, 0.00693211686662153,
       0.103741261286614, -0.0160895956989375, -0.0219422025252862, -0.0637984858287899, -0.0778400029130002, 0.647468312996265, -0.105931812299965, 0.137507782979518, -0.0501878780366773, 0.00868592321024064, -0.0773913106180435, -0.183773515755380, 1, -0.110874872058067,
       -0.121195511065596, 0.113905908782625, -0.0931560965857281, -0.0498615936932623, -0.00420375269007833, -0.157070775414507, 0.761324011431321, -0.107158677162180, 0.0967842822751738, -0.0671981184080449, -0.0274804568206274, 0.00693211686662153, -0.110874872058067, 1;
-  // clang-format on    
+
+  beta_distribution_pulse_ <<
+    1.69862554416145, 0.608190177030033, -0.608190177030033, -0.576217471720854, 0, 0.183071013159864, -0.0939319189357984, 0.00657091132855174,
+    -2.47924338395758, 0.670395625327187, 0, 0, 0, -0.263957799575519, -0.232548659903406, 0.00791988432530859,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0,
+    -4.24873260256537, 0.852185710838635, 0, 0.389602053633798, 0, -0.380323064996537, -0.0880126751081291, 0,
+    -2.11599237942931, 1.47405211856417, -1.37810504103118, -1.07311968166742, 0, 0.336513504829882, 0, 0,
+    -0.381092000896248, 0.732824259094057, 0, 0.216502277780155, 0, -0.162653108888503, -0.426573570884097, 0,
+    -5.56310544580757, 0.905239391642438, 0, 0.385150957140062, 0, -0.282428134685156, 0, 0,
+    -4.77682417817789, 0.879981585446539, 0, 0.310609998745732, 0, -0.339225914155431, 0, 0,
+    0.966712608298821, -0.110938996751065, 0, 0, 0, 0, 0.183289269601829, 0,
+    -2.16587686889173, 0.321501356495567, 0, 0, 0, 0, 0, 0,
+    -1.70734873800232, 0.433032709755610, 0, -0.412648447269525, 0, 0, 0, 0,
+    -0.263198077701693, 1.13060571952101, -1.16957372638359, -1.65164476300789, 0.104746885300915, 0.404058507352901, 0, 0,
+    -0.515969600508314, 0.754135122993588, 0, 0.191575083960373, 0, -0.121665118341219, -0.423844926774291, 0,
+    -5.77208004012831, 0.923144661954273, 0, 0.402940883581593, 0, -0.238200773846646, 0, 0,
+    -5.01588271867143, 0.905027154000921, 0, 0.326841161038211, 0, -0.328283913521590, 0, 0,
+    0.434339606308037, -0.125225415996048, 0, 0, 0, 0, 0.301631247865572, 0,
+    -2.87544520181323, 0.415682222485807, 0, 0, 0, 0, 0, 0,
+    -1.86755738290362, 0.457448335779201, 0, -0.501103981295545, 0, 0, 0, 0;
+
+  beta_distribution_nopulse_ <<
+    8.09695881287823, 1.00609515629221, -1.39347614723327, -4.85869770683701, 0.472644100309933, 0.434550762616159, -0.862562872197509, 0,
+    -1.03473761679032, 0.769091178587874, 0, 0.412237308297152, 0, -0.377739650769220, -0.424234099315427, 0,
+    -4.72728279119446, 0.709717476708319, 0, 0.470974168011549, 0, -0.123518047425648, 0, 0,
+    -4.44400222195478, 0.798093247074753, 0, 0.345405210060350, 0, -0.230823340141895, 0, 0,
+    0.247133528936450, -0.149209862203390, 0, 0, 0, 0, 0.377202902904920, 0,
+    -1.44302935447839, 0.223053706671624, 0, 0, 0, 0, 0, 0,
+    -0.380413278316438, 0.159342468070527, 0, -0.298208438215333, 0, 0, 0, 0,
+    7.30682757526241, 0.999256668956432, -1.33082594407524, -4.95306361630276, 0.490554994733579, 0.442502068793772, -0.835310070621911, 0,
+    -0.403711730133755, 0.672375321924977, 0, 0.335372498461681, 0, -0.330322239630250, -0.366700025738387, 0,
+    -4.79820204505010, 0.709160958437296, 0, 0.472560804537015, 0, -0.0755764830052928, 0, 0,
+    -4.35041760661412, 0.785290791385159, 0, 0.325462132630085, 0, -0.221525656800750, 0, 0,
+    0.424849811725595, -0.181204207590470, 0, 0, 0, 0, 0.401549107903204, 0,
+    -2.97911606394595, 0.420016455603546, 0, 0, 0, 0, 0, 0,
+    -0.703694160589291, 0.160571013696218, 0, -0.145792047865653, 0, 0, 0, 0;
+
+  params_lower_bound_ << 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, -3.5, -4.7, 0, 0, 0, 0, 0, -3.5, -4.7;
+  
+  params_upper_bound_ << 0, 0, 3.2, 2, 0, 0, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 0, 0, 1.5, 0;
+  
+  params_fitted1_ << 0, 0, 1.30326178289206, 0, 0, 0, 0, 0, 0, 0, 14.2935537214223, 5.33551936215137, 0, 0, 0, 0, 0, 14.2935537214223, 5.33551936215137;
+  
+  params_fitted2_ << 0, 0, 3.96858083951547, 0, 0, 0, 0, 0, 0, 0, 6.40242376475815, 3.82954843573707, 0, 0, 0, 0, 0, 6.40242376475815, 3.82954843573707;
+
+  params_fitted3_ << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4.42179588354923, 0, 0, 0, 0, 0, 0, 4.42179588354923, 0;
+  // clang-format on
 }
 
-unsigned int stochastic::DabaghiDerKiureghian::simulate_pulse_type(unsigned int num_sims) const {
+unsigned int stochastic::DabaghiDerKiureghian::simulate_pulse_type(
+    unsigned int num_sims) const {
   double pulse_probability = 0.0;
 
   // Calculate pulse probability for any type of pulse
@@ -203,18 +312,19 @@ unsigned int stochastic::DabaghiDerKiureghian::simulate_pulse_type(unsigned int 
 
   // Create random generator for uniform distribution between 0.0 and 1.0
   auto generator =
-    seed_value_ != std::numeric_limits<int>::infinity()
-    ? boost::random::mt19937(static_cast<unsigned int>(seed_value_))
-    : boost::random::mt19937(static_cast<unsigned int>(std::time(nullptr)));
-  
+      seed_value_ != std::numeric_limits<int>::infinity()
+          ? boost::random::mt19937(static_cast<unsigned int>(seed_value_))
+          : boost::random::mt19937(
+                static_cast<unsigned int>(std::time(nullptr)));
+
   boost::random::uniform_real_distribution<> distribution(0.0, 1.0);
   boost::random::variate_generator<boost::random::mt19937&,
                                    boost::random::uniform_real_distribution<>>
       pulse_gen(generator, distribution);
 
   unsigned int number_of_pulses = 0;
-  
-  for (unsigned int i = 0; i < num_sims_pulse_ + num_sims_no_pulse_; ++i) {
+
+  for (unsigned int i = 0; i < num_sims_pulse_ + num_sims_nopulse_; ++i) {
     if (pulse_gen() < pulse_probability) {
       number_of_pulses++;
     }
@@ -223,6 +333,79 @@ unsigned int stochastic::DabaghiDerKiureghian::simulate_pulse_type(unsigned int 
   return number_of_pulses;
 }
 
-Eigen::MatrixXd stochastic::DabaghiDerKiureghian::simulate_model_parameters(bool pulse_like) const {
+Eigen::MatrixXd stochastic::DabaghiDerKiureghian::simulate_model_parameters(
+    bool pulse_like, unsigned int num_sims) const {
+  // Calculate covariance matrix
+  Eigen::MatrixXd error_cov =
+      pulse_like
+          ? numeric_utils::corr_to_cov(corr_matrix_pulse_, std_dev_pulse_)
+          : numeric_utils::corr_to_cov(corr_matrix_nopulse_, std_dev_nopulse_);
+
+  Eigen::MatrixXd simulated_params =
+      pulse_like ? Eigen::Zero(num_sims, 19)
+                 : Eigen::Zero(num_sims, 14);
+
+  Eigen::VectorXd error_mean = pulse_like ? Eigen::Zero(19) : Eigen::Zero(14);
+
+  // Compute conditional mean values of transformed model parameters using
+  // regression coefficients
+  Eigen::VectorXd predicted_model_params =
+      compute_transformed_model_parameters(pulse_like);
+
+  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> parameter_realizations;
+  Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> epsilon;
+  // Create simulated model parameters for specified number of motions
+  int test;
+  for (unsigned int i = 0; i < num_sims; ++i) {
+    test = -1;
+    while (test < 0) {
+      sample_generator_->generate(parameter_realizations, error_mean, error_cov,
+                                  1);
+      epsilon = pulse_like
+                    ? parameter_realizations.cwiseQuotient(std_dev_pulse_)
+                    : parameter_realizations.cwiseQuotient(std_dev_nopulse_);
+      double max_epsilon = epsilon.cwiseAbs().maxCoeff();
+
+      while (max_epsilon > 2.0) {
+        sample_generator_->generate(parameter_realizations, error_mean,
+                                    error_cov, 1);
+        epsilon = pulse_like
+                      ? parameter_realizations.cwiseQuotient(std_dev_pulse_)
+                      : parameter_realizations.cwiseQuotient(std_dev_nopulse_);
+        max_epsilon = epsilon.cwiseAbs().maxCoeff();
+      }
+
+      // Random realization of model parameters in normal space
+      Eigen::VectorXd normal_params = predicted_model_params + parameter_realizations;
+      // CONTINUE HERE AFTER ADDING FUNCTION FOR TRANSFORMATION
+    }
+  }
+}
+
+Eigen::VectorXd
+    stochastic::DabaghiDerKiureghian::compute_transformed_model_parameters(
+        bool pulse_like) const {
+  // Calculate parameters and create parameter vector
+  double depth_parameter = depth_to_rupt_ < 1.0 ? depth_to_rupt_ : 1.0;
+  double site_parameter = vs30_ <= 1100.0 ? std::log(vs30_) : std::log(1100.0);
+  double fault_parameter =
+      faulting_ == stochastic::FaultType::StrikeSlip ? 0.0 : 1.0;
+
+  Eigen::VectorXd params_vector(7);
+  params_vector << 1.0, moment_magnitude_,
+      moment_magnitude_ - magnitude_baseline_,
+      std::log(std::sqrt(rupture_dist_ * rupture_dist_ + c6_ * c6_)),
+      fault_parameter * depth_parameter, site_parameter, s_or_d_;
+
+  // Calculate the mean predicted model parameters in normal space
+  if (pulse_like) {
+    return params_vector * beta_distribution_pulse_.transpose();
+  } else {
+    return params_vector * beta_distribution_nopulse_.transpose();
+  }
+}
+
+void stochastic::DabaghiDerKiureghian::transform_parameters_from_normal_space(
+    bool pulse_like, Eigen::VectorXd& parameters) const {
   
 }

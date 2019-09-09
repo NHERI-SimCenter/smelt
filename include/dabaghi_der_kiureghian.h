@@ -160,9 +160,30 @@ class DabaghiDerKiureghian : public StochasticModel {
    * or non-pulse-like behavior
    * @param[in] pulse_like Boolean indicating whether ground motions are
    *                       pulse-like
+   * @param[in] num_sims Number of simulations to simulate model parameters for
    * @return Model parameters for ground motions
    */
-  Eigen::MatrixXd simulate_model_parameters(bool pulse_like) const;
+  Eigen::MatrixXd simulate_model_parameters(bool pulse_like,
+                                            unsigned int num_sims) const;
+
+  /**
+   * Compute the conditional mean values of the transformed model parameters
+   * using regressiong coefficients and Equation 12 from Dabaghi & Der
+   * Kiureghian (2017)
+   * @param[in] pulse_like Boolean indicating whether ground motions are
+   *                       pulse-like
+   * @return Vector containing predicted model parameters
+   */
+  Eigen::VectorXd compute_transformed_model_parameters(bool pulse_like) const;
+
+  /**
+   * Transforms model parameters from normal space back to original space
+   * @param[in] pulse_like Boolean indicating whether ground motions are
+   *                       pulse-like
+   * @param[in, out] parameters Vector of parameters in normal space. Transformed variables will be
+   *                            stored in this vector.
+   */
+  void transform_parameters_from_normal_space(bool pulse_like, Eigen::VectorXd& parameters) const;
 
  private:
   FaultType faulting_; /**< Enum for type of faulting for scenario */
@@ -177,7 +198,7 @@ class DabaghiDerKiureghian : public StochasticModel {
   bool truncate_; /**< Indicates whether to truncate and baseline correct motion */
   unsigned int num_sims_pulse_; /**< Number of pulse-like simulated ground
                              motion time histories that should be generated */
-  unsigned int num_sims_no_pulse_; /**< Number of no-pulse-like simulated ground
+  unsigned int num_sims_nopulse_; /**< Number of no-pulse-like simulated ground
                              motion time histories that should be generated */
   unsigned int num_params_; /**< Number of realizations of model parameters */
   int seed_value_; /**< Integer to seed random distributions with */
@@ -186,6 +207,19 @@ class DabaghiDerKiureghian : public StochasticModel {
   Eigen::VectorXd std_dev_nopulse_; /**< No-pulse-like parameter standard deviation */
   Eigen::MatrixXd corr_matrix_pulse_; /**< Pulse-like parameter correlation matrix */
   Eigen::MatrixXd corr_matrix_nopulse_; /**< No-pulse-like parameter correlation matrix */
+  Eigen::MatrixXd beta_distribution_pulse_; /**< Beta distrubution parameters for pulse-like motion */
+  Eigen::MatrixXd beta_distribution_nopulse_; /**< Beta distrubution parameters for no-pulse-like motion */
+  Eigen::VectorXd params_lower_bound_;        /**< Lower bound for marginal distributions fitted to params
+						 (Table 5 in Dabaghi & Der Kiureghian, 2017) */
+  Eigen::VectorXd params_upper_bound_;        /**< Upper bound for marginal distributions fitted to params
+						 (Table 5 in Dabaghi & Der Kiureghian, 2017) */
+  Eigen::VectorXd params_fitted1_; /** Fitted distribution parameters from Table 5 (Dabaghi & Der Kiureghian, 2017) */
+  Eigen::VectorXd params_fitted2_; /** Fitted distribution parameters from Table 5 (Dabaghi & Der Kiureghian, 2017) */
+  Eigen::VectorXd params_fitted3_; /** Fitted distribution parameters from Table 5 (Dabaghi & Der Kiureghian, 2017) */  
+  const double magnitude_baseline_ = 6.5; /**< Baseline regression factor for magnitude */ 
+  const double c6_ = 6.0 ; /**< This factor is set to avoid non-linearity in regression */
+  std::shared_ptr<numeric_utils::RandomGenerator>
+      sample_generator_; /**< Multivariate normal random number generator */
 };
 }  // namespace stochastic
 
