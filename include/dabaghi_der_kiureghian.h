@@ -177,13 +177,24 @@ class DabaghiDerKiureghian : public StochasticModel {
   Eigen::VectorXd compute_transformed_model_parameters(bool pulse_like) const;
 
   /**
-   * Transforms model parameters from normal space back to original space
+   * Transforms model parameters from normal space back to real space
    * @param[in] pulse_like Boolean indicating whether ground motions are
    *                       pulse-like
    * @param[in, out] parameters Vector of parameters in normal space. Transformed variables will be
    *                            stored in this vector.
    */
   void transform_parameters_from_normal_space(bool pulse_like, Eigen::VectorXd& parameters) const;
+
+  /**
+   * Calculate the inverse of double-exponential distribution
+   * @param[in] probability Probability at which to evaluate inverse CDF
+   * @param[in] param_a Distribution parameter
+   * @param[in] param_b Distribution parameter
+   * @param[in] param_c Distribution parameter
+   * @param[in] lower_bound Lower bound for location
+   */
+  double inv_double_exp(double probability, double param_a, double param_b,
+                        double param_b, double lower_bound) const;
 
  private:
   FaultType faulting_; /**< Enum for type of faulting for scenario */

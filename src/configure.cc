@@ -10,6 +10,7 @@
 #include "normal_dist.h"
 #include "normal_multivar.h"
 #include "students_t_dist.h"
+#include "uniform_dist.h"
 #include "vlachos_et_al.h"
 #include "wind_profile.h"
 #include "window.h"
@@ -45,6 +46,10 @@ void config::initialize() {
   static Register<stochastic::Distribution, stochastic::StudentstDistribution,
                   double, double, double>
       student_t_dist("StudentstDist");
+  // Register uniform distribution
+  static Register<stochastic::Distribution, stochastic::UniformDistribution,
+                  double, double>
+      uniform_dist("UniformDist");
 
   // STOCHASTIC MODELS
   // Earthquake

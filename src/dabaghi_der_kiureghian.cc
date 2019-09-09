@@ -14,10 +14,12 @@
 // Eigen dense matrices
 #include <Eigen/Dense>
 
+#include "beta_dist.h"
 #include "dabaghi_der_kiureghian.h"
 #include "factory.h"
 #include "function_dispatcher.h"
 #include "json_object.h"
+#include "normal_dist.h"
 #include "normal_multivar.h"
 #include "numeric_utils.h"
 
@@ -354,11 +356,17 @@ Eigen::MatrixXd stochastic::DabaghiDerKiureghian::simulate_model_parameters(
 
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> parameter_realizations;
   Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> epsilon;
+
   // Create simulated model parameters for specified number of motions
-  int test;
+  double test;
+  Eigen::VectorXd model_params(error_mean.size());
+
+  // Loop over number of simulations requested, generating parameter realizations
   for (unsigned int i = 0; i < num_sims; ++i) {
-    test = -1;
-    while (test < 0) {
+    test = -1.0;
+
+    // Continue looping in event parameters for pulse-like motion are unsatisfactory
+    while (test < 0.0) {
       sample_generator_->generate(parameter_realizations, error_mean, error_cov,
                                   1);
       epsilon = pulse_like
@@ -376,10 +384,23 @@ Eigen::MatrixXd stochastic::DabaghiDerKiureghian::simulate_model_parameters(
       }
 
       // Random realization of model parameters in normal space
-      Eigen::VectorXd normal_params = predicted_model_params + parameter_realizations;
-      // CONTINUE HERE AFTER ADDING FUNCTION FOR TRANSFORMATION
+      model_params = predicted_model_params + parameter_realizations;
+      // Transform random realization to real space
+      transform_parameters_from_normal_space(pulse_like, model_params);
+
+      // Additional check on pulse-like parameters
+      if (pulse_like) {
+	test = model_params(4) - 0.5 * model_params(1) * model_params(2);
+      } else {
+	test = 1.0;
+      }
     }
+
+    // Set current row of parameter realizations to generated model parameters
+    simulated_params.row(i) = model_params;
   }
+  
+  return simulated_params;
 }
 
 Eigen::VectorXd
@@ -407,5 +428,153 @@ Eigen::VectorXd
 
 void stochastic::DabaghiDerKiureghian::transform_parameters_from_normal_space(
     bool pulse_like, Eigen::VectorXd& parameters) const {
-  
+  Eigen::VectorXd transformed_params(parameters.size());
+  auto standard_normal =
+      Factory<stochastic::Distribution, double, double>::instance()->create(
+          "NormalDist", std::move(0.0), std::move(1.0));
+
+  if (pulse_like) {
+    std::vector<unsigned int> indices = {0, 1, 4, 5, 6, 7, 8, 9, 12, 13, 14, 15, 16};
+    for (auto const& index : indices) {
+      transformed_params(index) = std::exp(parameters(index));
+    }
+
+    // Calculate gamma
+    auto beta_dist =
+        Factory<stochastic::Distribution, double, double>::instance()->create(
+            "BetaDist", std::move(params_fitted1_(2)),
+            std::move(params_fitted2_(2)));
+
+    transformed_params(2) =
+        ((beta_dist->inv_cumulative_dist_func(
+              standard_normal->cumulative_dist_func(
+                  std::vector<double>{parameters(2)})))
+             .at(0)) *
+            (params_upper_bound_(2) - params_lower_bound_(2)) +
+        params_lower_bound_(2);
+
+    // Calculate nu
+    auto uniform_dist =
+        Factory<stochastic::Distribution, double, double>::instance()->create(
+            "UniformDist", std::move(params_lower_bound_(3)),
+            std::move(params_upper_bound_(3)));
+
+    transformed_params(3) = (uniform_dist->inv_cumulative_dist_func(
+                                 standard_normal->cumulative_dist_func(
+                                     std::vector<double>{parameters{3}})))
+                                .at(0);
+
+    // Calculate f' residual
+    transformed_params(10) =
+        inv_double_exp(standard_normal->cumulative_dist_func(
+                           std::vector<double>{parameters(10)}),
+                       params_fitted1_(10), params_fitted2_(10),
+                       params_fitted3_(10), params_lower_bound_(10));
+
+    // Calculate depth_to_rupt residual
+    beta_dist =
+        Factory<stochastic::Distribution, double, double>::instance()->create(
+            "BetaDist", std::move(params_fitted1_(11)),
+            std::move(params_fitted2_(11)));
+
+    transformed_params(11) =
+        std::exp(((beta_dist->inv_cumulative_dist_func(
+                       standard_normal->cumulative_dist_func(
+                           std::vector<double>{parameters(11)})))
+                      .at(0)) *
+                     (params_upper_bound_(11) - params_lower_bound_(11)) +
+                 params_lower_bound_(11));
+
+    // Calculate f' pulse-only
+    transformed_params(17) =
+        inv_double_exp(standard_normal->cumulative_dist_func(
+                           std::vector<double>{parameters(17)}),
+                       params_fitted1_(17), params_fitted2_(17),
+                       params_fitted3_(17), params_lower_bound_(17));    
+
+    // Calculate depth_to_rupt pulse-only
+    beta_dist =
+        Factory<stochastic::Distribution, double, double>::instance()->create(
+            "BetaDist", std::move(params_fitted1_(18)),
+            std::move(params_fitted2_(18)));
+
+    transformed_params(18) =
+        std::exp(((beta_dist->inv_cumulative_dist_func(
+                       standard_normal->cumulative_dist_func(
+                           std::vector<double>{parameters(18)})))
+                      .at(0)) *
+                     (params_upper_bound_(18) - params_lower_bound_(18)) +
+                 params_lower_bound_(18));
+  } else {
+    std::vector<unsigned int> indices = {0, 1, 2, 3, 4, 7, 8, 9, 10, 11};
+    for (auto const& index : indices) {
+      transformed_params(index) = std::exp(parameters(index));
+    }
+
+    // Calculate f' component 1
+    transformed_params(5) =
+        inv_double_exp(standard_normal->cumulative_dist_func(
+                           std::vector<double>{parameters(5)}),
+                       params_fitted1_(10), params_fitted2_(10), params_fitted3_(10), params_lower_bound_(10));
+
+    // Calculate depth_to_rupture component 1
+    auto beta_dist =
+        Factory<stochastic::Distribution, double, double>::instance()->create(
+            "BetaDist", std::move(params_fitted1_(11)),
+            std::move(params_fitted2_(11)));
+
+    transformed_params(6) =
+        std::exp(((beta_dist->inv_cumulative_dist_func(
+                       standard_normal->cumulative_dist_func(
+                           std::vector<double>{parameters(6)})))
+                      .at(0)) *
+                     (params_upper_bound_(11) - params_lower_bound_(11)) +
+                 params_lower_bound_(11));
+
+    // Calculate f' component 2
+    transformed_params(12) =
+        inv_double_exp(standard_normal->cumulative_dist_func(
+                           std::vector<double>{parameters(12)}),
+                       params_fitted1_(17), params_fitted2_(17), params_fitted3_(17), params_lower_bound_(17));
+
+    // Calculate depth_to_rupture compenent 2
+    beta_dist =
+        Factory<stochastic::Distribution, double, double>::instance()->create(
+            "BetaDist", std::move(params_fitted1_(18)),
+            std::move(params_fitted2_(18)));
+
+    transformed_params(13) =
+        std::exp(((beta_dist->inv_cumulative_dist_func(
+                       standard_normal->cumulative_dist_func(
+                           std::vector<double>{parameters(13)})))
+                      .at(0)) *
+                     (params_upper_bound_(18) - params_lower_bound_(18)) +
+                 params_lower_bound_(18));
+  }
+
+  // Set input vector of parameters to transformed parameters
+  parameters = transformed_params;
+}
+
+double stochastic::DabaghiDerKiureghian::inv_double_exp(
+    double probability, double param_a, double param_b, double param_b,
+    double lower_bound) const {
+  if (probability < 0.0 || probability > 1.0) {
+    throw std::runtime_error(
+        "\nERROR: in stochastic::DabaghiDerKiureghian::inv_double_exp: "
+        "Probability argument less than 0.0 or greater than 1.0\n");
+  }
+
+  double location_inv =
+      (1.0 / param_b) * std::log((param_b / param_c) * probability +
+                                 std::exp(param_b * lower_bound));
+
+  if (location_inv < lower_bound || location_inv > 0.0) {
+    location_inv =
+        -(1.0 / param_a) *
+        std::log((param_a / param_b) * (1.0 - std::exp(param_b * lower_bound)) -
+                 (param_a / param_c) * probability + 1.0);
+  }
+
+  return location_inv;
 }
