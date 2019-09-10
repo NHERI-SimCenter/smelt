@@ -196,6 +196,33 @@ class DabaghiDerKiureghian : public StochasticModel {
   double inv_double_exp(double probability, double param_a, double param_b,
                         double param_b, double lower_bound) const;
 
+  /**
+   * Simulate near-fault ground motion given model parameters and whether motion
+   * is pulse-like or not. 
+   * @param[in] pulse_like Boolean indicating whether ground motions are
+   *                       pulse-like
+   * @param[in] parameters Vector of model parameters to use for ground motion simulation
+   * @param[in,out] accel_comp_1 Simulated near-fault ground motion component 1. Outputs are
+   *                             written here.
+   * @param[in,out] accel_comp_2 Simulated near-fault ground motion component 2. Outputs are
+   *                             written here.
+   * @param[in] num_gms Number of ground motions that should be generated. Defaults to 1.
+   */
+  void simulate_near_fault_ground_motion(bool pulse_like,
+                                         const Eigen::VectorXd& parameters,
+                                         std::vector<double>& accel_comp_1,
+                                         std::vector<double>& accel_comp_2,
+                                         unsigned int num_gms = 1) const;
+
+  /**
+   * Backcalculate modulating parameters given Arias Intesity and duration parameters
+   * @param[in] q_params Vector containing Ia, D595, D05, and D030
+   * @param[in] t0 Initial time. Defaults to 0.0.
+   * @return Vector containing parameters alpha, beta, c and tmaxq
+   */
+  Eigen::VectorXd backcalculate_modulating_params(
+      const Eigen::VectorXd& q_params, double t0 = 0.0) const;
+
  private:
   FaultType faulting_; /**< Enum for type of faulting for scenario */
   SimulationType sim_type_; /**< Enum for pulse-like nature of ground motion */

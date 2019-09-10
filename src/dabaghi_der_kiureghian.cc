@@ -578,3 +578,24 @@ double stochastic::DabaghiDerKiureghian::inv_double_exp(
 
   return location_inv;
 }
+
+void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
+    bool pulse_like, const Eigen::VectorXd& parameters,
+    std::vector<double>& accel_comp_1, std::vector<double>& accel_comp_2,
+    unsigned int num_gms = 1) const {
+  
+  // Extract parameters for two components of ground motion
+  Eigen::VectorXd alpha_1 =
+      pulse_like ? parameters.segment(5, 7) : parameters.segment(0, 7);
+  Eigen::VectorXd alpha_2 =
+      pulse_like ? parameters.segment(12, 7) : parameters.segment(7, 7);
+
+  // Set modulating and filter parameters
+  // CONTINUE HERE AFTER WRITING FUNCTION FOR BACKCALCULATING PARAMS
+}
+
+Eigen::VectorXd
+    stochastic::DabaghiDerKiureghian::backcalculate_modulating_params(
+        const Eigen::VectorXd& q_params, double t0 = 0.0) const {
+  // CONTINUE HERE AFTER ADDING NELDER-MEAD
+}
