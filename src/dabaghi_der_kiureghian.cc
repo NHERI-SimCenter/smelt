@@ -597,5 +597,117 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
 Eigen::VectorXd
     stochastic::DabaghiDerKiureghian::backcalculate_modulating_params(
         const Eigen::VectorXd& q_params, double t0 = 0.0) const {
-  // CONTINUE HERE AFTER ADDING NELDER-MEAD
+  double arias_intensity = q_params(0) / 981,  // Convert from cm/s to g-s
+    d595 = q_params(1), d05 = q_params(2),
+    d030 = q_params(3), d095 = d05 + d595,
+    t30 = t0 + d030;
+
+  // Search for local minimum by trying several starting points
+  auto minimizer = NelderMead(1e-14);
+  std::vector<double> diffs(6);
+  std::function<double(const std::vector<double>&)> error_function =
+      calc_parameter_error(d05, d030, d095, t0);
+
+  // Iterate over starting points
+  std::vector<std::vector<double>> starting_points = {
+      {1.0, 0.2, t30}, {2.0, 0.2, t30}, {5.0, 0.2, t30},
+      {1.0, 1.0, t30}, {2.0, 1.0, t30}, {5.0, 1.0, t30}};
+  std::vector<double> deltas(starting_points.size());
+
+  unsigned int point_counter = 0;
+  for (auto& point : starting_points) {
+    for (unsigned int i = 0; i < deltas.size(); ++i) {
+      deltas[i] = std::abs(point[i]) < 1.0e-6 ? 0.00025 : 0.05 * point[i];
+    }
+
+    point = minimizer.minimize<double, const std::vector<double>&>(
+        point, deltas, error_function);
+    diffs[point_counter] = error_function(point);
+    ++point_counter;
+  }
+
+  // To avoid negative values of alpha, multiply cost value by 10000 if so
+  for (unsigned int i = 0; i < starting_points.size(); ++i) {
+    if (starting_points[i][0] < 0.0) {
+      diffs[i] *= 10000.0;
+    }
+  }
+
+  // Find solution that matches targe values best
+  auto min_index = std::distance(
+      std::begin(diffs), std::min_element(std::begin(diffs), std::end(diffs)));
+
+  Eigen::VectorXd parameters(4);
+  parameters << starting_points[min_index][0], starting_points[min_index][1],
+      starting_points[min_index][2], starting_points[min_index][3];
+
+  return parameters;
+}
+
+std::function<double(const std::vector<double>&)>
+    stochastic::DabaghiDerKiureghian::calc_parameter_error(double d05_target,
+                                                           double d030_target,
+                                                           double d095_target,
+                                                           double t0) const {
+  return [d05_target, d030_target, d095_target, t0]
+    (const std::vector<double>& alpha_q_sub) -> double {
+    // Modulating function parameters
+    double alpha = alpha_q_sub[0], beta = alpha_q_sub[1],
+           t_max_q = alpha_q_sub[2];
+
+    // Arias intensity times corresponding to the selected modulating function
+    // and parameters
+    double t5_fit =
+        t0 + std::pow((5.0 / 100.0) * std::pow(t_max_q - t0, 2.0 * alpha) *
+                          ((t_max_q - t0) + (2.0 * alpha + 1.0) / (2.0 * beta)),
+                      1.0 / (2.0 * alpha + 1.0));
+
+    double t30_fit =
+        t0 + std::pow((30.0 / 100.0) * std::pow(t_max_q - t0, 2.0 * alpha) *
+                          ((t_max_q - t0) + (2.0 * alpha + 1.0) / (2.0 * beta)),
+                      1.0 / (2.0 * alpha + 1.0));
+
+    double t95_fit =
+        t0 + std::pow((95.0 / 100.0) * std::pow(t_max_q - t0, 2.0 * alpha) *
+                          ((t_max_q - t0) + (2.0 * alpha + 1.0) / (2.0 * beta)),
+                      1.0 / (2.0 * alpha + 1.0));
+
+    if (t5_fit > t_max_q) {
+      t5_fit =
+          t_max_q -
+          (1.0 / (2.0 * beta)) *
+              std::log(
+                  ((100.0 - 5.0) / 100.0) *
+                  ((t_max_q - t0) * (2.0 * beta) / (2.0 * alpha + 1.0) + 1.0));
+    }
+
+    if (t30_fit > t_max_q) {
+      t30_fit =
+          t_max_q -
+          (1.0 / (2.0 * beta)) *
+              std::log(
+                  ((100.0 - 30.0) / 100.0) *
+                  ((t_max_q - t0) * (2.0 * beta) / (2.0 * alpha + 1.0) + 1.0));
+    }
+
+    if (t95_fit > t_max_q) {
+      t95_fit =
+          t_max_q -
+          (1.0 / (2.0 * beta)) *
+              std::log(
+                  ((100.0 - 95.0) / 100.0) *
+                  ((t_max_q - t0) * (2.0 * beta) / (2.0 * alpha + 1.0) + 1.0));
+    }
+
+    // Duration parameters of corresponding modulating function
+    double d05_fit = t5_fit - t0;
+    double d030_fit = t30_fit - t0;
+    double d095_fit = t95_fit - t0;
+
+    // Error measure
+    // NOTE: It doesn't matter whether the terms are normalized or not
+    return std::pow(d05_target - d05_fit, 2) +
+           std::pow(d030_target - d030_fit, 2) +
+           std::pow(d095_target - d095_fit, 2);
+  };
 }

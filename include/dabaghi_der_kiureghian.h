@@ -1,6 +1,7 @@
 #ifndef _DABAGHI_DER_KIUREGHIAN_H_
 #define _DABAGHI_DER_KIUREGHIAN_H_
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -224,6 +225,25 @@ class DabaghiDerKiureghian : public StochasticModel {
       const Eigen::VectorXd& q_params, double t0 = 0.0) const;
 
  private:
+  /**
+   * This function defines an error measure based on matching times of the 5%,
+   * 30%, and 95% Arias intensity of the target ground motion and corresponding
+   * modulating function q(t) with parameters  alpha_q_sub as defined in Eq. 4
+   * of Reference 2. This is used to back-calculate the modulating function
+   * parameters by minimizing the corresponding error measure. Input to returned
+   * function is a vector containing alpha, beta, and t_max_q.
+   * @param[in] d05_target Time from t0 to time of 5% Arias intensity of target
+   *                       motion
+   * @param[in] d030_target Time from t0 to time of 30% Arias intensity of
+   *                        target motion
+   * @param[in] d095_target Time from t0 to time of 95% Arias intensity of
+   *                        target motion
+   * @param[in] t0 Start time of modulating function and of target ground motion
+   */
+  std::function<double(const std::vector<double>&)> calc_parameter_error(
+      double d05_target, double d030_target, double d095_target,
+      double t0) const;
+
   FaultType faulting_; /**< Enum for type of faulting for scenario */
   SimulationType sim_type_; /**< Enum for pulse-like nature of ground motion */
   double moment_magnitude_; /**< Moment magnitude for scenario */

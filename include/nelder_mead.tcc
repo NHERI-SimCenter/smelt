@@ -51,7 +51,7 @@ std::vector<double> optimization::NelderMead::minimize(
   simplex_ = initial_simplex;
   std::vector<double> evaluation_point(num_dimensions_);
   std::vector<double> simplex_mins(num_dimensions_);
-  std::vector<double> simplex_sums(num_dimensions_);
+  std::vector<double> centroids(num_dimensions_);
 
   // Evaluate objective function at all points in simplex
   for (unsigned int i = 0; i < num_points_; ++i) {
@@ -62,7 +62,7 @@ std::vector<double> optimization::NelderMead::minimize(
   }
 
   num_evals_ = 0;
-  simplex_sums = dimension_sums(simplex_);
+  centroids = calc_centroids(simplex_);
 
   // Iterate until specified tolerance is achieved or maximum number of
   // iterations is exceeded
@@ -112,19 +112,19 @@ std::vector<double> optimization::NelderMead::minimize(
 
     // Start iteration by first extrapolating by a factor -1 through the face of
     // the simplex across from the high point--reflect simplex from high point
-    double reflection = reflect(simplex_, func_vals_, simplex_sums, index_high,
+    double reflection = reflect(simplex_, func_vals_, centroids, index_high,
                                 -1.0, objective_function);
 
     // Reflection gives better result than best point, so extrapolate again with
     // factor 2.0
     if (reflection <= func_vals_[index_low]) {
-      reflection = reflect(simplex_, func_vals_, simplex_sums, index_high, 2.0,
+      reflection = reflect(simplex_, func_vals_, centroids, index_high, 2.0,
                            objective_function);
       // Reflection is worse than next-highest, so do 1-D contraction to find
       // intermediate lower point
     } else if (reflection >= func_vals_[index_next_high]) {
       double func_next_high = func_vals_[index_next_high];
-      reflection = reflect(simplex_, func_vals_, simplex_sums, index_high, 0.5,
+      reflection = reflect(simplex_, func_vals_, centroids, index_high, 0.5,
                            objective_function);
 
       // Worst point is not going away, so contract around best point
@@ -132,14 +132,14 @@ std::vector<double> optimization::NelderMead::minimize(
 	for (unsigned int i = 0; i < num_points_; ++i) {
 	  if (i != index_low) {
 	    for (unsigned int j = 0; j < num_dimensions_; ++j) {
-	      simplex_sums[j] = 0.5 * (simplex_[i][j] + simplex_[index_low][j]);
-	      simplex_[i][j] = simplex_sums[j];
+	      centroids[j] = 0.5 * (simplex_[i][j] + simplex_[index_low][j]);
+	      simplex_[i][j] = centroids[j];
 	    }
-	    func_vals_[i] = objective_function(simplex_sums);
+	    func_vals_[i] = objective_function(centroids);
 	  }
 	}
 	num_evals_ += num_dimensions_;
-	simplex_sums = dimension_sums(simplex_);
+	centroids = calc_centroids(simplex_);
       }
     } else {
       --num_evals_;
@@ -150,7 +150,7 @@ std::vector<double> optimization::NelderMead::minimize(
 template <typename Tfunc_returntype, typename... Tfunc_args>
 double optimization::NelderMead::reflect(
     std::vector<std::vector<double>>& simplex,
-    std::vector<double>& objective_vals, std::vector<double>& dimension_sums,
+    std::vector<double>& objective_vals, std::vector<double>& centroids,
     unsigned int index_worst, double factor,
     std::function<Tfunc_returntype(Tfunc_args)>& objective_function) {
 
@@ -160,7 +160,7 @@ double optimization::NelderMead::reflect(
   double factor2 = factor1 - factor;
 
   for (unsigned int j = 0; j < num_dimensions_; ++j) {
-    evaluations[j] = dimension_sums[j] * factor1 - simplex[index_worst][j] * factor2;
+    evaluations[j] = centroids[j] * factor1 - simplex[index_worst][j] * factor2;
   }
 
   double objective_value = objective_function(evaluations);
@@ -169,7 +169,7 @@ double optimization::NelderMead::reflect(
     objective_vals[index_worst] = objective_value;
 
     for (unsigned int j = 0; j < num_dimensions_; ++j) {
-      dimension_sums[j] += evaluations[j] - simplex[index_worst][j];
+      centroids[j] += evaluations[j] - simplex[index_worst][j];
       simplex[index_worst][j] = evaluations[j];
     }
   }

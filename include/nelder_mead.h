@@ -26,7 +26,9 @@ class NelderMead {
    * @param[in] function_tolerance Tolerance in consecutive function evaluations
    *                               for convergence
    */
-  NelderMead(double function_tolerance) : function_tol_{function_tolerance} {};
+  NelderMead(double function_tolerance)
+      : function_tol_{function_tolerance},
+        func_min_{std::numeric_limits<double>::infinity()} {};
 
   /**
    * @destructor Virtual destructor
@@ -70,6 +72,12 @@ class NelderMead {
       std::function<Tfunc_returntype(Tfunc_args)>& objective_function);
 
   /**
+   * Get the minimum value of the objective function
+   * @return Minimum value of objective function
+   */
+  double get_minimum() const {return func_min_};
+
+  /**
    * Minimize the input objective function given initial simplex
    * @tparam Tfunc_returntype Return type of objective function
    * @tparam Tfunc_args Objective function arguments
@@ -84,12 +92,12 @@ class NelderMead {
 
  private:
   /**
-   * Sum along dimension and return dimension sums as a vector
+   * Calculates the centroid of all points and returns them as a vector
    * @param[in] simplex Matrix describing simplex
-   * @return Vector containing row sums
+   * @return Vector containing centroids
    */
-  inline std::vector<double> dimension_sums(const std::vector<std::vector<double>>& simplex) const {
-    std::vector<double> dim_sums(num_dimensions_);
+  inline std::vector<double> calc_centroid(const std::vector<std::vector<double>>& simplex) const {
+    std::vector<double> centroids(num_dimensions_);
     
     for (unsigned int j = 0; j <= num_dimensions_; ++j) {
       double sum = 0.0;
@@ -98,10 +106,10 @@ class NelderMead {
 	sum += simplex_[i][j];
       }
 
-      dim_sums[j] = sum;
+      centroids[j] = sum;
     }
 
-    return dim_sums;
+    return centroids;
   };
 
   /**
@@ -111,7 +119,7 @@ class NelderMead {
    * @tparam Tfunc_args Objective function arguments
    * @param[in] simplex Matrix describing simplex
    * @param[in] objective_vals Vector of objective values based on simplex
-   * @param[in] dimension_sums Vector containing dimension sums
+   * @param[in] centroids Vector containing centroids
    * @param[in] index_worst Index of worst value
    * @param[in] factor Factor by which to extrapolate
    * @param[in] objective_function Objective function to minimize
@@ -120,7 +128,7 @@ class NelderMead {
   template <typename Tfunc_returntype, typename... Tfunc_args>
   double reflect(
       std::vector<std::vector<double>>& simplex,
-      std::vector<double>& objective_vals, std::vector<double>& dimension_sums,
+      std::vector<double>& objective_vals, std::vector<double>& centroids,
       unsigned int index_worst, double factor,
       std::function<Tfunc_returntype(Tfunc_args)>& objective_function);
 

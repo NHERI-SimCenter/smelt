@@ -8,7 +8,7 @@ namespace signal_processing {
 
 std::function<std::vector<std::vector<double>>(int, double)> hp_butterworth() {
   return [](int filter_order,
-                   double cutoff_freq) -> std::vector<std::vector<double>> {
+            double cutoff_freq) -> std::vector<std::vector<double>> {
     // Allocated memory for coefficients
     std::vector<Ipp64f> taps(2 * (filter_order + 1));
     IppStatus status = ippStsNoErr;
