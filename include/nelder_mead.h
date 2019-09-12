@@ -1,8 +1,8 @@
 #ifndef _NELDER_MEAD_H_
 #define _NELDER_MEAD_H_
 
+#include <functional>
 #include <vector>
-#include <Eigen/Dense>
 
 /**
  * Optimization utilities
@@ -11,7 +11,8 @@ namespace optimization {
 
 /**
  * Class that implements Nelder-Mead algorithm for multidimensional
- * unconstrained optimization
+ * unconstrained optimization. Based on implementation presented in
+ * Press et al. (2007) - "Numerical Recipes"
  */
 class NelderMead {
  public:
@@ -22,14 +23,15 @@ class NelderMead {
 
   /**
    * @constructor Construct with input function tolerance
-   * @param[in] function_tolerance
+   * @param[in] function_tolerance Tolerance in consecutive function evaluations
+   *                               for convergence
    */
-  NelderMead(double function_tolerance);  
+  NelderMead(double function_tolerance) : function_tol_{function_tolerance} {};
 
   /**
    * @destructor Virtual destructor
    */
-  virtual ~NelderMead() {};
+  virtual ~NelderMead(){};
 
   /**
    * Delete copy constructor
@@ -40,15 +42,100 @@ class NelderMead {
    * Delete assignment operator
    */
   NelderMead& operator=(const NelderMead&) = delete;
-  
+
+  /**
+   * Minimize the input objective function given initial point and step size
+   * @tparam Tfunc_returntype Return type of objective function
+   * @tparam Tfunc_args Objective function arguments
+   * @param[in] initial_point Initial values to use for each dimension
+   * @param[in] delta Single step size to use for each dimension
+   * @param[in] objective_function Function to minimize
+   * @return Location of minimum
+   */
+  template <typename Tfunc_returntype, typename... Tfunc_args>
+  std::vector<double> minimize(
+      const std::vector<double>& initial_point, double delta,
+      std::function<Tfunc_returntype(Tfunc_args)>& objective_function);
+
+  /**
+   * Minimize the input objective function given initial point and step sizes
+   * @param[in] initial_point Initial values to use for each dimension
+   * @param[in] deltas Vector of step sizes to use for dimensions
+   * @param[in] objective_function Function to minimize
+   * @return Location of minimum
+   */
+  template <typename Tfunc_returntype, typename... Tfunc_args>
+  std::vector<double> minimize(
+      const std::vector<double>& initial_point, const std::vector<double>& deltas,
+      std::function<Tfunc_returntype(Tfunc_args)>& objective_function);
+
+  /**
+   * Minimize the input objective function given initial simplex
+   * @tparam Tfunc_returntype Return type of objective function
+   * @tparam Tfunc_args Objective function arguments
+   * @param[in] initial_simplex Initial simplex to start optimization
+   * @param[in] objective_function Function to minimize
+   * @return Location of minimum
+   */
+  template <typename Tfunc_returntype, typename... Tfunc_args>
+  std::vector<double> minimize(
+      const std::vector<std::vector<double>>& initial_simplex,
+      std::function<Tfunc_returntype(Tfunc_args)>& objective_function);
+
  private:
-  double function_tol_; /**< Function tolerance for convergence */
-  unsigned int num_evals_; /**< Number of function evaluations */
-  unsigned int num_dimensions_; /**< Number of dimensions */
-  double func_min_; /**< Objective function minimum */
-  Eigen::VectorXd func_vals_; /**< Function values at vertices */
-  Eigen::MatrixXd simplex_; /**< Current simplex */
+  /**
+   * Sum along dimension and return dimension sums as a vector
+   * @param[in] simplex Matrix describing simplex
+   * @return Vector containing row sums
+   */
+  inline std::vector<double> dimension_sums(const std::vector<std::vector<double>>& simplex) const {
+    std::vector<double> dim_sums(num_dimensions_);
+    
+    for (unsigned int j = 0; j <= num_dimensions_; ++j) {
+      double sum = 0.0;
+
+      for (unsigned int i = 0; i < num_points_; ++i) {
+	sum += simplex_[i][j];
+      }
+
+      dim_sums[j] = sum;
+    }
+
+    return dim_sums;
+  };
+
+  /**
+   * Exptrapolate by input factor through the face of the simplex across from
+   * the high point. Replaces high point if the new point is better.
+   * @tparam Tfunc_returntype Return type of objective function
+   * @tparam Tfunc_args Objective function arguments
+   * @param[in] simplex Matrix describing simplex
+   * @param[in] objective_vals Vector of objective values based on simplex
+   * @param[in] dimension_sums Vector containing dimension sums
+   * @param[in] index_worst Index of worst value
+   * @param[in] factor Factor by which to extrapolate
+   * @param[in] objective_function Objective function to minimize
+   * @return Objective value
+   */
+  template <typename Tfunc_returntype, typename... Tfunc_args>
+  double reflect(
+      std::vector<std::vector<double>>& simplex,
+      std::vector<double>& objective_vals, std::vector<double>& dimension_sums,
+      unsigned int index_worst, double factor,
+      std::function<Tfunc_returntype(Tfunc_args)>& objective_function);
+
+  double function_tol_;           /**< Function tolerance for convergence */
+  unsigned int num_evals_;        /**< Number of function evaluations */
+  unsigned int num_points_;       /**< Number of points */
+  unsigned int num_dimensions_;   /**< Number of dimensions */
+  double func_min_;               /**< Objective function minimum */
+  std::vector<double> func_vals_; /**< Function values at vertices */
+  std::vector<std::vector<double>> simplex_; /**< Current simplex */
+  const double EPSILON_ = 1.0e-10;           /**< Tolerance */
+  const unsigned int MAX_ITERS_ = 5000; /**< Maximum number of iterations */
 };
-}  // namespace numeric_utils
+}  // namespace optimization
+
+#include "nelder_mead.tcc"
 
 #endif  // _NELDER_MEAD_H_
