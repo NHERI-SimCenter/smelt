@@ -224,6 +224,32 @@ class DabaghiDerKiureghian : public StochasticModel {
   Eigen::VectorXd backcalculate_modulating_params(
       const Eigen::VectorXd& q_params, double t0 = 0.0) const;
 
+  /**
+   * Simulate modulated filtered white noise process
+   * @param[in] modulating_params Modulating parameters
+   * @param[in] filter_params Filtering parameters
+   * @param[in] num_steps Total number of time steps to be taken
+   * @param[in] num_gms Number of ground motions that should be generated.
+   *                    Defaults to 1.
+   * @return Vector of vectors containing time history of simulated modulate
+   *         filtered white noise
+   */
+  std::vector<std::vector<double>> simulate_white_noise(
+      const Eigen::VectorXd& modulating_params,
+      const Eigen::VectorXd& filter_params, unsigned int, num_steps,
+      unsigned int num_gms = 1) const;
+
+  /**
+   * Calculate values of modulating function given function parameters
+   * @param[in] num_steps Total number of time steps to be taken
+   * @param[in] t0 Initial time
+   * @param[in] parameters Modulating function parameters
+   * @return Vector containing time series of modulating function values
+   */
+  std::vector<double> calc_modulating_func(
+      unsigned int num_steps, double t0,
+      const Eigen::VectorXd& parameters) const;
+
  private:
   /**
    * This function defines an error measure based on matching times of the 5%,
@@ -261,6 +287,7 @@ class DabaghiDerKiureghian : public StochasticModel {
   unsigned int num_params_; /**< Number of realizations of model parameters */
   int seed_value_; /**< Integer to seed random distributions with */
   double time_step_; /**< Temporal discretization. Set to 0.005 seconds */
+  double start_time_ = 0.0; /**< Start time of ground motion */
   Eigen::VectorXd std_dev_pulse_; /**< Pulse-like parameter standard deviation */
   Eigen::VectorXd std_dev_nopulse_; /**< No-pulse-like parameter standard deviation */
   Eigen::MatrixXd corr_matrix_pulse_; /**< Pulse-like parameter correlation matrix */

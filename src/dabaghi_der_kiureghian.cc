@@ -591,7 +591,32 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
       pulse_like ? parameters.segment(12, 7) : parameters.segment(7, 7);
 
   // Set modulating and filter parameters
-  // CONTINUE HERE AFTER WRITING FUNCTION FOR BACKCALCULATING PARAMS
+  Eigen::VectorXd modulating_params_1 =
+      backcalculate_modulating_params(alpha_1.segment(0, 4), start_time_);
+  Eigen::VectorXd modulating_params_2 =
+      backcalculate_modulating_params(alpha_2.segment(0, 4), start_time_);
+
+  Eigen::VectorXd filter_params_1 = alpha_1.segment(4, 3);
+  Eigen::VectorXd filter_params_2 = alpha_2.segment(4, 3);
+
+  // Determine length of time for simulation
+  double t95 = start_time_ + alpha_1[1] + alpha_1[2] >
+                       start_time_ + alpha_2[1] + alpha_2[2]
+                   ? start_time_ + alpha_1[1] + alpha_1[2]
+                   : start_time_ + alpha_2[1] + alpha_2[2];
+
+  unsigned int num_steps =
+      static_cast<unsigned int>(std::ceil(2.5 * t95 / time_step_));
+
+  num_steps = num_steps % 2 == 1 ? num_steps + 1 : num_steps;
+
+  // std::vector<double> times(num_steps);
+
+  // for (unsigned int i = 0; i < num_steps; ++i) {
+  //   times[i] = i * time_step_;
+  // }
+
+  // CONTINUE HERE AFTER FINISHING MODULATING WHITE NOISE
 }
 
 Eigen::VectorXd
@@ -639,7 +664,12 @@ Eigen::VectorXd
 
   Eigen::VectorXd parameters(4);
   parameters << starting_points[min_index][0], starting_points[min_index][1],
-      starting_points[min_index][2], starting_points[min_index][3];
+      starting_points[min_index][2], std::numeric_limits<double>::infinity();
+
+  parameters[3] =
+      arias_intensity /
+      ((M_PI / 2.0) * ((parameters[2] - t0) / (2.0 * parameters[0] + 1.0) +
+                       1.0 / (2.0 * parameters[1])));
 
   return parameters;
 }
@@ -710,4 +740,94 @@ std::function<double(const std::vector<double>&)>
            std::pow(d030_target - d030_fit, 2) +
            std::pow(d095_target - d095_fit, 2);
   };
+}
+
+std::vector<std::vector<double>>
+    stochastic::DabaghiDerKiureghian::simulate_white_noise(
+        const Eigen::VectorXd& modulating_params,
+        const Eigen::VectorXd& filter_params, unsigned int, num_steps,
+        unsigned int num_gms) const {
+  // Calculate modulating function
+  auto modulating_func =
+      calc_modulating_func(num_steps, start_time_, modulating_params);
+
+  // Calculate frequency function
+  // Lower bound before t01
+  // Calculate cumulative energy in acceleration time series, which is
+  // proportional to Arias intensity
+  auto t01_sum = std::partial_sum(
+      modulating_func.begin(), modulating_func.end(), modulating_func.begin(),
+      [](double value) -> double { return value * value; });
+
+  // Calculate normalized cumulative Arias intensity in percent
+  t01_sum = std::transform(t01_sum.begin(), t01_sum.end(), t01_sum.begin(),
+                           [&t01_sum](double value) -> double {
+                             return value / t01_sum[t01_sum.size() - 1] * 100.0;
+                           });
+
+  double t01 = time_step_ * static_cast<double>(*std::find_if(
+                                t01_sum.begin(), t01_sum.end(),
+                                [](double value) { return value >= 1.0; }));
+
+  // Middle set to t30
+  // Calculate cumulative energy in acceleration time series, which is
+  // proportional to Arias intensity
+  auto tmid_sum = std::partial_sum(
+      modulating_func.begin(), modulating_func.end(), modulating_func.begin(),
+      [](double value) -> double { return value * value; });
+
+  // Calculate normalized cumulative Arias intensity in percent
+  tmid_sum =
+      std::transform(tmid_sum.begin(), tmid_sum.end(), tmid_sum.begin(),
+                     [&tmid_sum](double value) -> double {
+                       return value / tmid_sum[tmid_sum.size() - 1] * 100.0;
+                     });
+
+  double tmid = time_step_ * static_cast<double>(*std::find_if(
+                                 tmid_sum.begin(), tmid_sum.end(),
+                                 [](double value) { return value >= 30.0; }));
+
+  // Upper bound after t99
+  // Calculate cumulative energy in acceleration time series, which is
+  // proportional to Arias intensity
+  auto t99_sum = std::partial_sum(
+      modulating_func.begin(), modulating_func.end(), modulating_func.begin(),
+      [](double value) -> double { return value * value; });
+
+  // Calculate normalized cumulative Arias intensity in percent
+  t99_sum = std::transform(t99_sum.begin(), t99_sum.end(), t99_sum.begin(),
+                           [&t99_sum](double value) -> double {
+                             return value / t99_sum[t99_sum.size() - 1] * 100.0;
+                           });
+
+  double t99 = time_step_ * static_cast<double>(*std::find_if(
+                                t99_sum.begin(), t99_sum.end(),
+                                [](double value) { return value >= 99.0; }));
+
+  
+  // FINISH THIS FIRST!!!
+}
+
+std::vector<double> stochastic::DabaghiDerKiureghian::calc_modulating_func(
+    unsigned int num_steps, double t0,
+    const Eigen::VectorXd& parameters) const {
+
+  std::vector<double> mod_func_vals(num_steps);
+
+  for (unsigned int i = 0; i < num_steps; ++i) {
+    double time = static_cast<double>(i) * time_step_;
+
+    if (time < t0) {
+      mod_func_vals[i] = 0.0;
+    } else if (time < parameters(2)) {
+      mod_func_vals[i] =
+          parameters(3) *
+          std::pow((time - t0) / (parameters(2) - t0), parameters[0]);
+    } else {
+      mod_func_vals[i] =
+          parameters(3) * std::exp(-parameters(1) * (time - parameters[2]));
+    }
+  }
+
+  return mod_func_vals;
 }
