@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 // Boost random generator
+#include <boost/random/normal_distribution.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
@@ -747,65 +748,52 @@ std::vector<std::vector<double>>
         const Eigen::VectorXd& modulating_params,
         const Eigen::VectorXd& filter_params, unsigned int, num_steps,
         unsigned int num_gms) const {
-  // Calculate modulating function
+  // Calculate modulating function:
   auto modulating_func =
       calc_modulating_func(num_steps, start_time_, modulating_params);
 
-  // Calculate frequency function
+  // Calculate frequency function:
+  // For any general modulating function, get the discretized times of interest
   // Lower bound before t01
-  // Calculate cumulative energy in acceleration time series, which is
-  // proportional to Arias intensity
-  auto t01_sum = std::partial_sum(
-      modulating_func.begin(), modulating_func.end(), modulating_func.begin(),
-      [](double value) -> double { return value * value; });
-
-  // Calculate normalized cumulative Arias intensity in percent
-  t01_sum = std::transform(t01_sum.begin(), t01_sum.end(), t01_sum.begin(),
-                           [&t01_sum](double value) -> double {
-                             return value / t01_sum[t01_sum.size() - 1] * 100.0;
-                           });
-
-  double t01 = time_step_ * static_cast<double>(*std::find_if(
-                                t01_sum.begin(), t01_sum.end(),
-                                [](double value) { return value >= 1.0; }));
-
+  double t01 = calc_time_to_intensity(modulating_func, 1.0);
   // Middle set to t30
-  // Calculate cumulative energy in acceleration time series, which is
-  // proportional to Arias intensity
-  auto tmid_sum = std::partial_sum(
-      modulating_func.begin(), modulating_func.end(), modulating_func.begin(),
-      [](double value) -> double { return value * value; });
-
-  // Calculate normalized cumulative Arias intensity in percent
-  tmid_sum =
-      std::transform(tmid_sum.begin(), tmid_sum.end(), tmid_sum.begin(),
-                     [&tmid_sum](double value) -> double {
-                       return value / tmid_sum[tmid_sum.size() - 1] * 100.0;
-                     });
-
-  double tmid = time_step_ * static_cast<double>(*std::find_if(
-                                 tmid_sum.begin(), tmid_sum.end(),
-                                 [](double value) { return value >= 30.0; }));
-
+  double tmid = calc_time_to_intensity(modulating_func, 30.0.);
   // Upper bound after t99
-  // Calculate cumulative energy in acceleration time series, which is
-  // proportional to Arias intensity
-  auto t99_sum = std::partial_sum(
-      modulating_func.begin(), modulating_func.end(), modulating_func.begin(),
-      [](double value) -> double { return value * value; });
+  double t99 = calc_time_to_intensity(modulating_func, 99.0);
 
-  // Calculate normalized cumulative Arias intensity in percent
-  t99_sum = std::transform(t99_sum.begin(), t99_sum.end(), t99_sum.begin(),
-                           [&t99_sum](double value) -> double {
-                             return value / t99_sum[t99_sum.size() - 1] * 100.0;
-                           });
+  // Define the filter frequency and bandwidth:
+  auto frequency_filter =
+      calc_linear_filter(num_steps, filter_params, t01, tmid, t99);
 
-  double t99 = time_step_ * static_cast<double>(*std::find_if(
-                                t99_sum.begin(), t99_sum.end(),
-                                [](double value) { return value >= 99.0; }));
+  // Generate white noise
+  boost::random::normal_distribution<> distribution(0.0, 1.0);
+  boost::random::variate_generator<boost::random::mt19937&,
+                                   boost::random::normal_distribution<>>
+      noise_gen(generator, distribution);
 
-  
-  // FINISH THIS FIRST!!!
+  Eigen::MatrixXd white_noise(num_gms, num_steps);
+  for (unsigned int i = 0; i < num_gms; ++i) {
+    for (unsigned int j = 0; j < num_steps; ++j) {
+      white_noise(i, j) = noise_gen();
+    }
+  }
+
+  // Calculate impulse response
+  Eigen::MatrixXd impulse_response = calc_impulse_response_filter(
+      num_steps, frequency_filter, filter_params(2));
+
+  auto freq_func = white_noise * impulse_response;
+
+  std::vector<std::vector<double>> filtered_white_noise(
+      num_gms, std::vector<double>(num_steps));
+
+  for (unsigned int i = 0; i < num_gms; ++i) {
+    for (unsigned int j = 0; i < num_steps; ++j) {
+      filtered_white_noise[i][j] = freq_func(i, j) * modulating_func[j];
+    }
+  }
+
+  return filtered_white_noise;
 }
 
 std::vector<double> stochastic::DabaghiDerKiureghian::calc_modulating_func(
@@ -830,4 +818,86 @@ std::vector<double> stochastic::DabaghiDerKiureghian::calc_modulating_func(
   }
 
   return mod_func_vals;
+}
+
+double stochastic::DabaghiDerKiureghian::calc_time_to_intensity(
+    const std::vector<double>& acceleration, double percentage) const {
+  // Calculate cumulative energy in acceleration time series, which is
+  // proportional to Arias intensity
+  auto t01_sum = std::partial_sum(
+      acceleration.begin(), acceleration.end(), acceleration.begin(),
+      [](double value) -> double { return value * value; });
+
+  // Calculate normalized cumulative Arias intensity in percent
+  t01_sum = std::transform(t01_sum.begin(), t01_sum.end(), t01_sum.begin(),
+                           [&t01_sum](double value) -> double {
+                             return value / t01_sum[t01_sum.size() - 1] * 100.0;
+                           });
+
+  return time_step_ * static_cast<double>(*std::find_if(
+                          t01_sum.begin(), t01_sum.end(),
+                          [](double value) { return value >= 1.0; }));
+}
+
+std::vector<double> stochastic::DabaghiDerKiureghian::calc_linear_filter(
+    unsigned int num_steps, const Eigen::VectorXd& filter_params, double t01,
+    double t30, double t99) const {
+  // Mininum frequency in Hz
+  double min_freq = 0.3;
+  std::vector<double> filter_func(num_steps);
+  // Frequency at tmid, in Hz  
+  double mid_freq = filter_params(0);
+  // Slope of frequency assumed constant
+  double freq_slope = filter_params(1);
+
+  for (unsigned int i = 0; i < num_steps; ++i) {
+    double current_time = i * time_step_;
+    if (current_time < t01) {
+      filter_func[i] =
+          fmin > mid_freq + freq_slope * (t01 - tmid)
+              ? fmin * 2.0 * M_PI
+              : (mid_freq + freq_slope * (t01 - tmid)) * 2.0 * M_PI;
+    } else if (current_time <= t99) {
+      filter_func[i] =
+          fmin > mid_freq + freq_slope * (current_time - tmid)
+              ? fmin * 2.0 * M_PI
+              : (mid_freq + freq_slope * (current_time - tmid)) * 2.0 * M_PI;
+    } else {
+      filter_func[i] =
+          fmin > mid_freq + freq_slope * (t99 - tmid)
+              ? fmin * 2.0 * M_PI
+              : (mid_freq + freq_slope * (t99 - tmid)) * 2.0 * M_PI;
+    }
+  }
+
+  return filter_func;
+}
+
+Eigen::MatrixXd stochastic::DabaghiDerKiureghian::calc_impulse_response_filter(
+    unsigned int num_steps, const std::vector<double>& input_filter,
+    double zeta) const {
+  Eigen::MatrixXd impulse_response = Eigen::MatrixXdZero(num_steps, num_steps);
+
+  for (unsigned int i = 0; i < num_steps; ++i) {
+    double omega = input_filter(i);
+    Eigen::VectorXd times(num_steps - 1);
+    
+    for (unsigned int j = 0; j < times.size(); ++j) {
+      times(j) = static_cast<double>(j - i) * time_step_;
+    }
+
+    impulse_response.block(i, i, 1, times.size()) =
+        (omega / std::sqrt(1.0 - zeta * zeta)) * (-zeta * omega * times).exp() *
+        (omega * std::sqrt(1.0 - zeta * zeta) * times).sin();
+  }
+
+  Eigen::VectorXd denominator = (impulse_response.pow(2.0).colwise().sum()).sqrt();
+  denominator(0) = 0.1;
+
+  for (unsigned int i = 0; i < impulse_response.rows(); ++i) {
+    impulse_response.row(i) =
+        impulse_response.row(i).cwiseQuotient(denominator);
+  }
+
+  return impulse_response;
 }

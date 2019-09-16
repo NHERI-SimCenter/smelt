@@ -239,17 +239,6 @@ class DabaghiDerKiureghian : public StochasticModel {
       const Eigen::VectorXd& filter_params, unsigned int, num_steps,
       unsigned int num_gms = 1) const;
 
-  /**
-   * Calculate values of modulating function given function parameters
-   * @param[in] num_steps Total number of time steps to be taken
-   * @param[in] t0 Initial time
-   * @param[in] parameters Modulating function parameters
-   * @return Vector containing time series of modulating function values
-   */
-  std::vector<double> calc_modulating_func(
-      unsigned int num_steps, double t0,
-      const Eigen::VectorXd& parameters) const;
-
  private:
   /**
    * This function defines an error measure based on matching times of the 5%,
@@ -269,6 +258,59 @@ class DabaghiDerKiureghian : public StochasticModel {
   std::function<double(const std::vector<double>&)> calc_parameter_error(
       double d05_target, double d030_target, double d095_target,
       double t0) const;
+
+  /**
+   * Calculate values of modulating function given function parameters
+   * @param[in] num_steps Total number of time steps to be taken
+   * @param[in] t0 Initial time
+   * @param[in] parameters Modulating function parameters
+   * @return Vector containing time series of modulating function values
+   */
+  std::vector<double> calc_modulating_func(
+      unsigned int num_steps, double t0,
+      const Eigen::VectorXd& parameters) const;
+
+  /**
+   * Calculate the time at which the input percentage of the Arias intensity
+   * is reached
+   * @param[in] acceleration Acceleration time history
+   * @param[in] percentage Percentage of Arias intensity to be reached
+   * @return Time at which input percentage of Arias intensity is reached
+   */
+  double calc_time_to_intensity(const std::vector<double>& acceleration,
+                                double percentage) const;
+
+  /**
+   * Calculate the linearly varying filter function (in rad/sec) given the
+   * filter function parameters (in Hz) and the times of 1%, 30%(mid) and 99%
+   * Arias Intensity (AI)
+   * @param[in] num_steps Number of time steps in time history
+   * @param[in] filter_params Filter function parameters [fmid, f_slope] (in
+   *                          Hz), tmid is defined as the time of 30% AI
+   * @param[in] t01 Time of 1% of AI of the modulating function (and in an
+   *                average sense of the simulated GM)
+   * @param[in] tmid Time of 30% of AI of the modulating function (and in an
+   *                average sense of the simulated GM)
+   * @param[in] t99 Time of 99% of AI of the modulating function (and in an
+   *                average sense of the simulated GM)
+   */
+  std::vector<double> calc_linear_filter(unsigned int num_steps,
+                                         const Eigen::VectorXd& filter_params,
+                                         double t01, double t30,
+                                         double t99) const;
+
+  /**
+   * Calculate impulse response filter based on time series, input filter,
+   * and filter parameter zeta
+   * @param[in] num_steps Number of time steps in time history
+   * @param[in] input_filter Input filter coefficients to use in impulse
+   *                         response
+   * @param[in] zeta Filter parameter
+   * @return Impulse response filter
+   */
+  Eigen::MatrixXd calc_impulse_response_filter(
+      unsigned int num_steps, const std::vector<double>& input_filter,
+      double zeta) const;
 
   FaultType faulting_; /**< Enum for type of faulting for scenario */
   SimulationType sim_type_; /**< Enum for pulse-like nature of ground motion */
