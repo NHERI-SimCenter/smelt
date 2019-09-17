@@ -326,6 +326,17 @@ class DabaghiDerKiureghian : public StochasticModel {
                                           double freq_corner,
                                           unsigned int filter_order) const;
 
+  /**
+   * Calculate the pulse acceleration based on the modified Mavroeidis and
+   * Papageorgiou model
+   * @param[in] num_steps Number of time steps in time history
+   * @param[in] parameters Vector of model parameters to use for ground motion
+   *                       simulation
+   * @return Time history of pulse acceleration
+   */
+  std::vector<double> calc_pulse_acceleration(
+      unsigned int num_steps, const Eigen::VectorXd& parameters) const;
+
   FaultType faulting_;      /**< Enum for type of faulting for scenario */
   SimulationType sim_type_; /**< Enum for pulse-like nature of ground motion */
   double moment_magnitude_; /**< Moment magnitude for scenario */

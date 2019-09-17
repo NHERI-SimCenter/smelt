@@ -627,22 +627,22 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
 
   // Add zero-padding
   Eigen::MatrixXd accel_padded_1 =
-      Eigen::MatrixXd::Zero(n_sim, npads + num_steps + pads);
+      Eigen::MatrixXd::Zero(n_sim, num_pads + num_steps + pads);
   Eigen::MatrixXd accel_padded_2 =
-      Eigen::MatrixXd::Zero(n_sim, npads + num_steps + pads);
+      Eigen::MatrixXd::Zero(n_sim, num_pads + num_steps + pads);
 
   for (unsigned int i = 0; i < num_gms; ++i) {
     // Pad component 1
-    accel_padded_1.block(i, 0, i, npads) = Eigen::VectorXd(npads);
-    accel_padded_1.block(i, npads - 1, i, num_steps) = white_noise_1.row(i);
-    accel_padded_1.block(i, npads + num_steps - 1, i, npads) =
-        Eigen::VectorXd(npads);
+    accel_padded_1.block(i, 0, i, num_pads) = Eigen::VectorXd(num_pads);
+    accel_padded_1.block(i, num_pads - 1, i, num_steps) = white_noise_1.row(i);
+    accel_padded_1.block(i, num_pads + num_steps - 1, i, num_pads) =
+        Eigen::VectorXd(num_pads);
 
     // Pad component 2
-    accel_padded_2.block(i, 0, i, npads) = Eigen::VectorXd(npads);
-    accel_padded_2.block(i, npads - 1, i, num_steps) = white_noise_2.row(i);
-    accel_padded_2.block(i, npads + num_steps - 1, i, npads) =
-        Eigen::VectorXd(npads);
+    accel_padded_2.block(i, 0, i, num_pads) = Eigen::VectorXd(num_pads);
+    accel_padded_2.block(i, num_pads - 1, i, num_steps) = white_noise_2.row(i);
+    accel_padded_2.block(i, num_pads + num_steps - 1, i, num_pads) =
+        Eigen::VectorXd(num_pads);
   }
 
   // Apply filter to padded acceleration time histories
@@ -659,9 +659,9 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
   double target_ai_2 = alpha_2(0) / 981;
 
   std::vector<std::vector<double>> arias_intensity_1(
-      num_gms, std::vector<double>(num_steps));
+      num_gms, std::vector<double>(accel_comp_1[0].size()));
   std::vector<std::vector<double>> arias_intensity_2(
-      num_gms, std::vector<double>(num_steps));
+      num_gms, std::vector<double>(accel_comp_2[0].size()));
 
   // Calculate Arias intensity
   for (unsigned int i = 0; i < num_gms; ++i) {
@@ -696,9 +696,23 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
         });
   }
 
+  // If pulse-like, add pulse acceleration to component 1 direction
   if (pulse_like) {
-    
-    // CONTINUE HERE
+    // Calculate pulse acceleration
+    auto pulse_accel = calc_pulse_acceleration(num_steps, parameters);
+    std::vector<double> padded_pulse(accel_comp_1[0].size(), 0.0);
+
+    // Pad pulse motion
+    for (unsigned int i = num_pads - 1; i < num_steps + num_pads; ++i) {
+      padded_pulse[i] = pulse_accel[i - num_pads + 1];
+    }
+
+    // Add pulse motion to component 1
+    for (unsigned int i = 0; i < num_gms; ++i) {
+      for (unsigned int j = 0; j < padded_pulse.size(); ++j) {
+	accel_comp_1[i][j] = accel_comp_1[i][j] + padded_pulse[j]; 	
+      }
+    }
   }
 }
 
@@ -1010,4 +1024,53 @@ std::vector<double> stochastic::DabaghiDerKiureghian::filter_acceleration(
   numeric_utils::inverse_fft(accel_fft, filtered_acc);
 
   return filtered_acc;
+}
+
+std::vector<double> stochastic::DabaghiDerKiureghian::calc_velocity_pulse(
+    unsigned int num_steps, const Eigen::VectorXd& parameters) const {
+  double pulse_velocity = parameters(0);  
+  double pulse_frequency = 1.0 / parameters(1);
+  double oscillation_param = parameters(2);  
+  double phase_angle = parameters(3) * M_PI;
+  double peak_time = start_time_ + parameters(4);
+
+  double resp_disp = pulse_velocity / (4.0 * M_PI * pulse_frequency) *
+                         std::sin(phase_angle + oscillation_param * M_PI) /
+                         (1 - oscillation_param * oscillation_param) -
+                     pulse_velocity / (4.0 * M_PI * pulse_frequency) *
+                         std::sin(phase_angle - oscillation_param * M_PI) /
+                         (1.0 - oscillation_param * oscillation_param);
+
+  // Calculate pulse velocity time history
+  std::vector<double> velocity_history(num_steps);
+
+  for (unsigned int i = 0; i < num_steps; ++i) {
+    double time = static_cast<double>(i) * time_step_;
+    if (time > (peak_time - 0.5 * oscillation_param / pulse_frequency) &&
+        time <= (peak_time + 0.5 * oscillation_param / pulse_frequency)) {
+      velocity_history[i] =
+          (0.5 * pulse_velocity *
+               std::cos(2.0 * M_PI * pulse_frequency * (time - peak_time) +
+                        phase_angle) -
+           resp_disp * pulse_frequency / oscillation_param) *
+          (1.0 + std::cos(2.0 * M_PI * pulse_frequency * (time - peak_time) /
+                          oscillation_param));
+    }
+    else {
+      velocity_history[i] = 0.0;
+    }
+  }
+
+  // Calculate pulse acceleration time history
+  double previous_velocity = 0.0;
+  double current_velocity = velocity_history[0];
+  velocity_history[0] = (current_velocity - previous_velocity) / (981 * time_step_);
+
+  for (unsigned int i = 1; i < velocity_history.size(); ++i) {
+    previous_velocity = current_velocity;
+    current_velocity = velocity_history[i];
+    velocity_history[i] = (current_velocity - previous_velocity) / (981 * time_step_);
+  }
+
+  return velocity_history;
 }
