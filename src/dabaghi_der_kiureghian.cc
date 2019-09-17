@@ -582,9 +582,10 @@ double stochastic::DabaghiDerKiureghian::inv_double_exp(
 
 void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
     bool pulse_like, const Eigen::VectorXd& parameters,
-    std::vector<double>& accel_comp_1, std::vector<double>& accel_comp_2,
+    std::vector<std::vector<double>>& accel_comp_1,
+    std::vector<std::vector<double>>& accel_comp_2,
     unsigned int num_gms = 1) const {
-  
+
   // Extract parameters for two components of ground motion
   Eigen::VectorXd alpha_1 =
       pulse_like ? parameters.segment(5, 7) : parameters.segment(0, 7);
@@ -611,13 +612,94 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
 
   num_steps = num_steps % 2 == 1 ? num_steps + 1 : num_steps;
 
-  // std::vector<double> times(num_steps);
+  // Generated modulated filtered white noise
+  auto white_noise_1 = simulate_white_noise(
+      modulating_params_1, filter_params_1, num_steps, num_gms);
+  auto white_noise_2 = simulate_white_noise(
+      modulating_params_2, filter_params_2, num_steps, num_gms);
 
-  // for (unsigned int i = 0; i < num_steps; ++i) {
-  //   times[i] = i * time_step_;
-  // }
+  // Calculate high-pass filter and padding
+  double freq_corner = std::pow(10.0, 1.4071 - 0.3452 * moment_magnitude_);
+  unsigned int filter_order = 4;
+  double padding_duration = 0.5 * 1.5 * filter_order / freq_corner;
+  unsigned int num_pads =
+      static_cast<unsigned int>(std::ceil(padding_duration / time_step_));
 
-  // CONTINUE HERE AFTER FINISHING MODULATING WHITE NOISE
+  // Add zero-padding
+  Eigen::MatrixXd accel_padded_1 =
+      Eigen::MatrixXd::Zero(n_sim, npads + num_steps + pads);
+  Eigen::MatrixXd accel_padded_2 =
+      Eigen::MatrixXd::Zero(n_sim, npads + num_steps + pads);
+
+  for (unsigned int i = 0; i < num_gms; ++i) {
+    // Pad component 1
+    accel_padded_1.block(i, 0, i, npads) = Eigen::VectorXd(npads);
+    accel_padded_1.block(i, npads - 1, i, num_steps) = white_noise_1.row(i);
+    accel_padded_1.block(i, npads + num_steps - 1, i, npads) =
+        Eigen::VectorXd(npads);
+
+    // Pad component 2
+    accel_padded_2.block(i, 0, i, npads) = Eigen::VectorXd(npads);
+    accel_padded_2.block(i, npads - 1, i, num_steps) = white_noise_2.row(i);
+    accel_padded_2.block(i, npads + num_steps - 1, i, npads) =
+        Eigen::VectorXd(npads);
+  }
+
+  // Apply filter to padded acceleration time histories
+  accel_comp_1.resize(num_gms);
+  accel_comp_2.resize(num_gms);
+  for (unsigned int i = 0; i < num_gms; ++i) {
+    accel_comp_1[i] = filter_acceleration(accel_padded_1.row(i), freq_corner, filter_order);
+    accel_comp_2[i] = filter_acceleration(accel_padded_2.row(i), freq_corner, filter_order);    
+  }
+
+  // Rescale time histories for energy consistency:
+  // Target Arias intensity for rescaling after high-pass filter in g-sec
+  double target_ai_1 = alpha_1(0) / 981;
+  double target_ai_2 = alpha_2(0) / 981;
+
+  std::vector<std::vector<double>> arias_intensity_1(
+      num_gms, std::vector<double>(num_steps));
+  std::vector<std::vector<double>> arias_intensity_2(
+      num_gms, std::vector<double>(num_steps));
+
+  // Calculate Arias intensity
+  for (unsigned int i = 0; i < num_gms; ++i) {
+    arias_intensity_1[i] =
+        std::partial_sum(accel_comp_1[i].begin(), accel_comp_1[i].end(),
+                         accel_comp_1[i].begin(), [](double value) -> double {
+                           return value * value * time_step_ * M_PI / 2.0;
+                         });
+
+    arias_intensity_2[i] =
+        std::partial_sum(accel_comp_2[i].begin(), accel_comp_2[i].end(),
+                         accel_comp_2[i].begin(), [](double value) -> double {
+                           return value * value * time_step_ * M_PI / 2.0;
+                         });    
+  }
+
+  // Calculate scaling factors and scale accelerations to match Arias intensity
+  for (unsigned int i = 0; i < num_gms; ++i) {
+    double ai_sim_1 = arias_intensity_1[i][arias_intensity_1[i].size() - 1];
+    double ai_sim_2 = arias_intensity_2[i][arias_intensity_2[i].size() - 1];
+
+    accel_comp_1[i] = std::transform(
+        accel_comp_1[i].begin(), accel_comp_1[i].end(), accel_comp_1[i].begin(),
+        [&ai_sim_1, &target_ai_1](double value) -> double {
+          return value * std::sqrt(target_ai_1 / ai_sim_1);
+        });
+
+    accel_comp_2[i] = std::transform(
+        accel_comp_2[i].begin(), accel_comp_2[i].end(), accel_comp_2[i].begin(),
+        [&ai_sim_2, &target_ai_2](double value) -> double {
+          return value * std::sqrt(target_ai_2 / ai_sim_2);
+        });
+  }
+
+  if (pulse_like) {
+    
+    // CONTINUE HERE
+  }
 }
 
 Eigen::VectorXd
@@ -743,16 +825,15 @@ std::function<double(const std::vector<double>&)>
   };
 }
 
-std::vector<std::vector<double>>
-    stochastic::DabaghiDerKiureghian::simulate_white_noise(
-        const Eigen::VectorXd& modulating_params,
-        const Eigen::VectorXd& filter_params, unsigned int, num_steps,
-        unsigned int num_gms) const {
-  // Calculate modulating function:
+Eigen::MatrixXd stochastic::DabaghiDerKiureghian::simulate_white_noise(
+    const Eigen::VectorXd& modulating_params,
+    const Eigen::VectorXd& filter_params, unsigned int, num_steps,
+    unsigned int num_gms) const {
+  // CALCULATE MODULATING FUNCTION:
   auto modulating_func =
       calc_modulating_func(num_steps, start_time_, modulating_params);
 
-  // Calculate frequency function:
+  // CALCULATE FREQUENCY FUNCTION:
   // For any general modulating function, get the discretized times of interest
   // Lower bound before t01
   double t01 = calc_time_to_intensity(modulating_func, 1.0);
@@ -761,7 +842,7 @@ std::vector<std::vector<double>>
   // Upper bound after t99
   double t99 = calc_time_to_intensity(modulating_func, 99.0);
 
-  // Define the filter frequency and bandwidth:
+  // Define the filter frequency and bandwidth
   auto frequency_filter =
       calc_linear_filter(num_steps, filter_params, t01, tmid, t99);
 
@@ -784,12 +865,11 @@ std::vector<std::vector<double>>
 
   auto freq_func = white_noise * impulse_response;
 
-  std::vector<std::vector<double>> filtered_white_noise(
-      num_gms, std::vector<double>(num_steps));
+  Eigen::MatrixXd filtered_white_noise(num_gms, num_steps);
 
   for (unsigned int i = 0; i < num_gms; ++i) {
     for (unsigned int j = 0; i < num_steps; ++j) {
-      filtered_white_noise[i][j] = freq_func(i, j) * modulating_func[j];
+      filtered_white_noise(i, j) = freq_func(i, j) * modulating_func[j];
     }
   }
 
@@ -900,4 +980,34 @@ Eigen::MatrixXd stochastic::DabaghiDerKiureghian::calc_impulse_response_filter(
   }
 
   return impulse_response;
+}
+
+std::vector<double> stochastic::DabaghiDerKiureghian::filter_acceleration(
+    const Eigen::VectorXd& accel_history, double freq_corner,
+    unsigned int filter_order) const {
+
+  // Calculate normalized cutoff frequency
+  double freq_cutoff_norm = 1.0 / (2.0 * time_step_);
+  std::vector<std::complex<double>> accel_fft(accel_history.size());
+
+  // Compute FFT of acceleration history
+  numeric_utils::fft(accel_history, accel_fft);
+  unsigned int freq_steps = static_cast<unsigned int>(accel_fft.size() / 2) + 1;
+
+  // Get filter coefficients
+  auto filter =
+    Dispatcher<std::vector<double>, double, unsigned int, unsigned int>::instance()
+          ->dispatch("AcausalHighpassButterworth", freq_cutoff_norm,
+                     filter_order, accel_fft.size());
+
+  // Filter acceleration in frequency domain
+  for (unsigned int i = 0; i < accel_fft.size(); ++i) {
+    accel_fft[i] = accel_fft[i] * filter[i];
+  }
+
+  // Compute inverse FFT of filtered transformed acceleration
+  std::vector<double> filtered_acc(accel_fft.size());
+  numeric_utils::inverse_fft(accel_fft, filtered_acc);
+
+  return filtered_acc;
 }

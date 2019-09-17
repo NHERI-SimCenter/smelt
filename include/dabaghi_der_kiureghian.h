@@ -199,21 +199,23 @@ class DabaghiDerKiureghian : public StochasticModel {
 
   /**
    * Simulate near-fault ground motion given model parameters and whether motion
-   * is pulse-like or not. 
+   * is pulse-like or not.
    * @param[in] pulse_like Boolean indicating whether ground motions are
    *                       pulse-like
-   * @param[in] parameters Vector of model parameters to use for ground motion simulation
-   * @param[in,out] accel_comp_1 Simulated near-fault ground motion component 1. Outputs are
-   *                             written here.
-   * @param[in,out] accel_comp_2 Simulated near-fault ground motion component 2. Outputs are
-   *                             written here.
-   * @param[in] num_gms Number of ground motions that should be generated. Defaults to 1.
+   * @param[in] parameters Vector of model parameters to use for ground motion
+   *                       simulation
+   * @param[in,out] accel_comp_1 Simulated near-fault ground motion components
+   *                             in direction 1. Outputs are written here.
+   * @param[in,out] accel_comp_2 Simulated near-fault ground motion components
+   *                             in direction 2. Outputs are written here.
+   * @param[in] num_gms Number of ground motions that should be generated.
+   *                    Defaults to 1.
    */
-  void simulate_near_fault_ground_motion(bool pulse_like,
-                                         const Eigen::VectorXd& parameters,
-                                         std::vector<double>& accel_comp_1,
-                                         std::vector<double>& accel_comp_2,
-                                         unsigned int num_gms = 1) const;
+  void simulate_near_fault_ground_motion(
+      bool pulse_like, const Eigen::VectorXd& parameters,
+      std::vector<std::vector<double>>& accel_comp_1,
+      std::vector<std::vector<double>>& accel_comp_2,
+      unsigned int num_gms = 1) const;
 
   /**
    * Backcalculate modulating parameters given Arias Intesity and duration parameters
@@ -234,10 +236,10 @@ class DabaghiDerKiureghian : public StochasticModel {
    * @return Vector of vectors containing time history of simulated modulate
    *         filtered white noise
    */
-  std::vector<std::vector<double>> simulate_white_noise(
-      const Eigen::VectorXd& modulating_params,
-      const Eigen::VectorXd& filter_params, unsigned int, num_steps,
-      unsigned int num_gms = 1) const;
+  Eigen::MatrixXd simulate_white_noise(const Eigen::VectorXd& modulating_params,
+                                       const Eigen::VectorXd& filter_params,
+                                       unsigned int, num_steps,
+                                       unsigned int num_gms = 1) const;
 
  private:
   /**
@@ -312,7 +314,19 @@ class DabaghiDerKiureghian : public StochasticModel {
       unsigned int num_steps, const std::vector<double>& input_filter,
       double zeta) const;
 
-  FaultType faulting_; /**< Enum for type of faulting for scenario */
+  /**
+   * Filters input acceleration time history in frequency domain using
+   * acausal high-pass Butterworth filter
+   * @param[in] accel_history Acceleration time history to filter
+   * @param[in] freq_corner Corner frequency
+   * @param[in] filter_order Order of filter
+   * @return Filtered time history
+   */
+  std::vector<double> filter_acceleration(const Eigen::VectorXd& accel_history,
+                                          double freq_corner,
+                                          unsigned int filter_order) const;
+
+  FaultType faulting_;      /**< Enum for type of faulting for scenario */
   SimulationType sim_type_; /**< Enum for pulse-like nature of ground motion */
   double moment_magnitude_; /**< Moment magnitude for scenario */
   double depth_to_rupt_; /**< Depth to the top of the rupture plane (km) */

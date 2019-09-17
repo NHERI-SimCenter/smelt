@@ -31,6 +31,17 @@ std::function<std::vector<std::vector<double>>(int, double)> hp_butterworth();
 std::function<std::vector<double>(std::vector<double>, std::vector<double>, int,
                                   int)>
     impulse_response();
+
+/**
+ * Function that calculates the acausal Butterworth filter for the requested
+ * number of samples at input normalized cutoff frequency
+ * @param[in] freq_cutoff_norm Normalized cutoff frequency
+ * @param[in] order Order of the filter
+ * @param[in] num_samples Number of samples desired
+ * @return Vector containing filter coefficients for requested number of samples
+ */
+std::function<std::vector<double>(double, unsigned int, unsigned int)>
+    acausal_highpass_filter();
 }  // namespace signal_processing
 
 #endif  // _FILTER_H_

@@ -94,6 +94,12 @@ void config::initialize() {
       filter_impulse_response("ImpulseResponse",
                               signal_processing::impulse_response());
 
+  // Register acausal highpass Butterwork filter
+  static DispatchRegister<std::vector<double>, double, unsigned int,
+                          unsigned int>
+      acausal_highpass_filter("AcausalHighpassButterworth",
+                              signal_processing::acausal_highpass_filter());
+
   // WIND VELOCITY PROFILES
   // Exposure category-based velocity profile using power law
   static DispatchRegister<double, const std::string&,

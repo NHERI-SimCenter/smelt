@@ -166,6 +166,96 @@ bool inverse_fft(const Eigen::VectorXcd& input_vector,
   return true;  
 }
 
+bool fft(std::vector<double> input_vector,
+         std::vector<std::complex<double>>& output_vector) {
+  output_vector.resize(input_vector.size());
+
+  // Create task descriptor and MKL status
+  DFTI_DESCRIPTOR_HANDLE fft_descriptor;
+  MKL_LONG fft_status;
+
+  // Allocate the descriptor data structure and initializes it with default
+  // configuration values
+  fft_status = DftiCreateDescriptor(&fft_descriptor, DFTI_DOUBLE, DFTI_COMPLEX,
+                                    1, input_vector.size());
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::fft: Error in descriptor creation\n");
+    return false;
+  }
+  
+  // Set configuration value to not do inplace transformation
+  fft_status = DftiSetValue(fft_descriptor, DFTI_PLACEMENT, DFTI_NOT_INPLACE);
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::fft: Error in setting configuration\n");
+    return false;
+  }
+
+  // Perform all initialization for the actual FFT computation
+  fft_status = DftiCommitDescriptor(fft_descriptor);
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::fft: Error in committing descriptor\n");
+    return false;
+  }
+  
+  // Compute the backward FFT
+  fft_status = DftiComputeForward(fft_descriptor, input_vector.data(),
+                                  output_vector.data());
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::fft: Error in computing FFT\n");
+    return false;
+  }
+  
+  // Free the memory allocated for descriptor
+  fft_status = DftiFreeDescriptor(&fft_descriptor);
+  if (fft_status != DFTI_NO_ERROR) {
+    throw std::runtime_error(
+        "\nERROR: in numeric_utils::fft: Error in freeing FFT descriptor\n");
+    return false;
+  }  
+
+  return true;
+}
+
+bool fft(const Eigen::VectorXd& input_vector, Eigen::VectorXcd& output_vector) {
+  // Convert input Eigen vector to std vector
+  std::vector<<double> input_vals(input_vector.size());
+  std::vector<std::complex<double>> outputs(input_vals.size());
+  Eigen::VectorXd::Map(&input_vals[0], input_vector.size()) = input_vector;
+ 
+  try {
+    fft(input_vals, outputs);
+  } catch (const std::exception& e) {
+    std::cerr << "\nERROR: In numeric_utils::fft (With Eigen Vectors):"
+              << e.what() << std::endl;
+  }
+
+  // Convert output from std vector to Eigen vector
+  output_vector = Eigen::Map<Eigen::VectorXcd>(outputs.data(), outputs.size());
+
+  return true;
+}
+
+bool inverse_fft(const Eigen::VectorXd& input_vector,
+                 std::vector<std::complex<double>>& output_vector) {
+  // Convert input Eigen vector to std vector
+  std::vector<double> input_vals(input_vector.size());
+  Eigen::VectorXd::Map(&input_vals[0], input_vector.size()) = input_vector;
+  output_vector.resize(input_vector.size());  
+ 
+  try {
+    fft(input_vals, output_vector);
+  } catch (const std::exception& e) {
+    std::cerr << "\nERROR: In numeric_utils::fft (With Eigen Vector and STL vector):"
+              << e.what() << std::endl;
+  }
+
+  return true;  
+}  
+  
 double trapazoid_rule(const std::vector<double>& input_vector, double spacing) {
   double result = (input_vector[0] + input_vector[input_vector.size() - 1]) / 2.0;
 
