@@ -147,6 +147,7 @@ class DabaghiDerKiureghian : public StochasticModel {
                 const std::string& output_location,
                 bool units = false) override;
 
+ private:
   /**
    * Generates proportion of motions that should be pulse-like based on total
    * number of simulations and probability of those motions containing a pulse
@@ -240,8 +241,7 @@ class DabaghiDerKiureghian : public StochasticModel {
                                        const Eigen::VectorXd& filter_params,
                                        unsigned int, num_steps,
                                        unsigned int num_gms = 1) const;
-
- private:
+  
   /**
    * This function defines an error measure based on matching times of the 5%,
    * 30%, and 95% Arias intensity of the target ground motion and corresponding
@@ -336,6 +336,25 @@ class DabaghiDerKiureghian : public StochasticModel {
    */
   std::vector<double> calc_pulse_acceleration(
       unsigned int num_steps, const Eigen::VectorXd& parameters) const;
+
+  /**
+   * Truncate acceleration time histories at the beginning and/or end where
+   * displacement amplitudes are almost zero effectively zero
+   * @param[in, out] accel_comp_1 Component 1 of acceleration time history to
+   *                              truncate
+   * @param[in, out] accel_comp_2 Component 2 of acceleration time history to
+   *                              truncate
+   * @param[in] gfactor Factor to convert acceleration to cm/s^2
+   * @param[in] amplitude_lim Displacement amplitude limit in cm below which to
+   *                          apply truncation. Defaults to 0.2cm
+   * @param[in] pgd_lim Ratio of peak ground displacement below which to
+   *                    truncate. Defaults to 0.01.
+   *
+   */
+  void truncate_time_histories(std::vector<std::vector<double>>& accel_comp_1,
+                               std::vector<std::vector<double>>& accel_comp_2,
+                               double gfactor, double amplitude_lim,
+                               double pgd_lim);
 
   FaultType faulting_;      /**< Enum for type of faulting for scenario */
   SimulationType sim_type_; /**< Enum for pulse-like nature of ground motion */

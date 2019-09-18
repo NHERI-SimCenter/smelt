@@ -680,19 +680,21 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
 
   // Calculate scaling factors and scale accelerations to match Arias intensity
   for (unsigned int i = 0; i < num_gms; ++i) {
-    double ai_sim_1 = arias_intensity_1[i][arias_intensity_1[i].size() - 1];
-    double ai_sim_2 = arias_intensity_2[i][arias_intensity_2[i].size() - 1];
+    double scale_factor_1 = std::sqrt(
+        target_ai_1 / arias_intensity_1[i][arias_intensity_1[i].size() - 1]);
+    double scale_factor_2 = std::sqrt(
+        target_ai_2 / arias_intensity_2[i][arias_intensity_2[i].size() - 1]);
 
     accel_comp_1[i] = std::transform(
         accel_comp_1[i].begin(), accel_comp_1[i].end(), accel_comp_1[i].begin(),
-        [&ai_sim_1, &target_ai_1](double value) -> double {
-          return value * std::sqrt(target_ai_1 / ai_sim_1);
+        [&scale_factor_1](double value) -> double {
+          return value * scale_factor_1;
         });
 
     accel_comp_2[i] = std::transform(
         accel_comp_2[i].begin(), accel_comp_2[i].end(), accel_comp_2[i].begin(),
-        [&ai_sim_2, &target_ai_2](double value) -> double {
-          return value * std::sqrt(target_ai_2 / ai_sim_2);
+        [&scale_factor_2](double value) -> double {
+          return value * scale_factor_2;
         });
   }
 
@@ -1073,4 +1075,107 @@ std::vector<double> stochastic::DabaghiDerKiureghian::calc_velocity_pulse(
   }
 
   return velocity_history;
+}
+
+void stochastic::DabaghiDerKiureghian::truncate_time_histories(
+    std::vector<std::vector<double>>& accel_comp_1,
+    std::vector<std::vector<double>>& accel_comp_2, double gfactor,
+    double amplitude_lim, double pgd_lim) const {
+
+  // Iterate over time histories
+  for (unsigned int i = 0; i < accel_comp_1.size(); ++i) {
+    // Calculate peak ground displacement (PGD):
+    // Component 1
+    auto vel_comp_1 = std::partial_sum(
+        accel_comp_1[i].begin(), accel_comp_1[i].end(), accel_comp_1[i].begin(),
+        [&gfactor](double value) -> double {
+          return value * gfactor * time_step_;
+        });
+    
+    auto disp_comp_1 = std::partial_sum(
+        vel_comp_1[i].begin(), vel_comp_1[i].end(), vel_comp_1[i].begin(),
+        [&gfactor](double value) -> double {
+          return value * time_step_;
+        });
+
+    double pgd_1 = *std::max_element(disp_comp_1.begin(), disp_comp_1.end());
+
+    double disp_limit_1 =
+        amplitude_lim < pgd_1 * pgd_lim ? amplitude_lim : pgd_1 * pgd_lim;
+
+    // Component 2
+    auto vel_comp_2 = std::partial_sum(
+        accel_comp_2[i].begin(), accel_comp_2[i].end(), accel_comp_2[i].begin(),
+        [&gfactor](double value) -> double {
+          return value * gfactor * time_step_;
+        });
+    
+    auto disp_comp_2 = std::partial_sum(
+        vel_comp_2[i].begin(), vel_comp_2[i].end(), vel_comp_2[i].begin(),
+        [&gfactor](double value) -> double {
+          return value * time_step_;
+        });
+
+    double pgd_2 = *std::max_element(disp_comp_2.begin(), disp_comp_2.end());
+
+    double disp_limit_2 =
+        amplitude_lim < pgd_2 * pgd_lim ? amplitude_lim : pgd_2 * pgd_lim;
+
+    // Calculate displacement limit indices:
+    // Component 1
+    unsigned int initial_index_1 =
+        static_cast<unsigned int>(
+            std::distance(disp_comp_1.begin(),
+                          std::find_if(disp_comp_1.begin(), disp_comp_1.end(),
+                                       [&disp_limit_1](double value) {
+                                         return value > disp_limit_1;
+                                       }))) -
+        1;
+
+    unsigned int final_index_1 =
+        static_cast<unsigned int>(disp_comp_1.size()) -
+        static_cast<unsigned int>(
+            std::distance(disp_comp_1.rbegin(),
+                          std::find_if(disp_comp_1.rbegin(), disp_comp_1.rend(),
+                                       [&disp_limit_1](double value) {
+                                         return value > disp_limit_1;
+                                       })));
+
+    // Component 2
+    unsigned int initial_index_2 =
+        static_cast<unsigned int>(
+            std::distance(disp_comp_2.begin(),
+                          std::find_if(disp_comp_2.begin(), disp_comp_2.end(),
+                                       [&disp_limit_2](double value) {
+                                         return value > disp_limit_2;
+                                       }))) -
+        1;
+
+    unsigned int final_index_2 =
+        static_cast<unsigned int>(disp_comp_2.size()) -
+        static_cast<unsigned int>(
+            std::distance(disp_comp_2.rbegin(),
+                          std::find_if(disp_comp_2.rbegin(), disp_comp_2.rend(),
+                                       [&disp_limit_2](double value) {
+                                         return value > disp_limit_2;
+                                       })));
+
+    // Truncate acceleration
+    unsigned int initial_index =
+        initial_index_1 <= initial_index_2 ? initial_index_1 : initial_index_2;
+    unsigned int final_index =
+        final_index_1 >= final_index_2 ? final_index_1 : final_index_2;
+
+    if (final_index == disp_comp_1.size() - 1) {
+      final_index -= 1;
+    }
+
+    accel_comp_1[i] =
+        std::vector<double>(accel_comp_1[i].begin() + initial_index,
+                            accel_comp_1[i].begin() + final_index);
+    accel_comp_2[i] =
+        std::vector<double>(accel_comp_2[i].begin() + initial_index,
+                            accel_comp_2[i].begin() + final_index);
+    
+  }
 }
