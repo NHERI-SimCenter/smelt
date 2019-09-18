@@ -28,7 +28,7 @@ stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
     stochastic::FaultType faulting, stochastic::SimulationType simulation_type,
     double moment_magnitude, double depth_to_rupt, double rupture_distance,
     double vs30, double s_or_d, double theta_or_phi, unsigned int num_sims,
-    unsigned int num_params, bool truncate)
+    unsigned int num_realizations, bool truncate)
     : StochasticModel(),
       faulting_{faulting},
       sim_type_{simulation_type},
@@ -39,7 +39,7 @@ stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
       s_or_d_{s_or_d},
       theta_or_phi_{theta_or_phi},
       truncate_{truncate},
-      num_params_{num_params},
+      num_realizations_{num_realizations},
       seed_value_{std::numeric_limits<int>::infinity()},
       time_step_{0.005}
 {
@@ -166,7 +166,7 @@ stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
     stochastic::FaultType faulting, stochastic::SimulationType simulation_type,
     double moment_magnitude, double depth_to_rupt, double rupture_distance,
     double vs30, double s_or_d, double theta_or_phi, unsigned int num_sims,
-    unsigned int num_params, bool truncate, int seed_value)
+    unsigned int num_realizations, bool truncate, int seed_value)
     : StochasticModel(),
       faulting_{faulting},
       sim_type_{simulation_type},
@@ -177,7 +177,7 @@ stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
       s_or_d_{s_or_d},
       theta_or_phi_{theta_or_phi},
       truncate_{truncate},
-      num_params_{num_params},
+      num_realizations_{num_realizations},
       seed_value_{seed_value},
       time_step_{0.005}
 {
@@ -296,6 +296,196 @@ stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
 
   params_fitted3_ << 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4.42179588354923, 0, 0, 0, 0, 0, 0, 4.42179588354923, 0;
   // clang-format on
+}
+
+utilities::JsonObject stochastic::DabaghiDerKiureghian::generate(
+    const std::string& event_name, bool units) {
+
+  // Generated simulated acceleration time histories
+  try {
+    // Simulate model parameters
+    Eigen::MatrixXd parameters_pulse =
+        simulate_model_parameters(true, num_sims_pulse_);
+    Eigen::MatrixXd parameters_nopulse =
+        simulate_model_parameters(false, num_sims_nopulse_);
+
+    // Create vectors for pulse-like and non-pulse-like motions
+    std::vector<std::vector<std::vector<double>>> pulse_motions_comp1(
+        num_realizations_, std::vector<std::vector<double>>(
+                               num_sims_pulse_, std::vector<double>()));
+
+    std::vector<std::vector<std::vector<double>>> pulse_motions_comp2(
+        num_realizations_, std::vector<std::vector<double>>(
+                               num_sims_pulse_, std::vector<double>()));
+
+    std::vector<std::vector<std::vector<double>>> nopulse_motions_comp1(
+        num_realizations_, std::vector<std::vector<double>>(
+                               num_sims_nopulse_, std::vector<double>()));
+
+    std::vector<std::vector<std::vector<double>>> nopulse_motions_comp2(
+        num_realizations_, std::vector<std::vector<double>>(
+                               num_sims_nopulse_, std::vector<double>()));
+
+    // Simulate pulse-like motions
+    for (unsigned int i = 0; i < num_realizations_; ++i) {
+      simulate_near_fault_ground_motion(true, parameters_pulse.row(i),
+                                        pulse_motions_comp1[i],
+                                        pulse_motions_comp2[i]);
+    }
+
+    // Simulate non-pulse-like motions
+    for (unsigned int i = 0; i < num_realizations_; ++i) {
+      simulate_near_fault_ground_motion(false, parameters_nopulse.row(i),
+                                        nopulse_motions_comp1[i],
+                                        nopulse_motions_comp2[i]);
+    }
+
+    // If requested, truncate and baseline correct time histories
+    double gfactor = 981;
+    unsigned int fit_order = 5;
+    if (truncate_) {
+      // First truncate motions
+      for (unsigned int i = 0; i < num_realizations_; ++i) {
+        truncate_time_histories(pulse_motions_comp1[i], pulse_motions_comp2[i],
+                                gfactor);
+        truncate_time_histories(nopulse_motions_comp1[i],
+                                nopulse_motions_comp2[i], gfactor);
+      }
+
+      // Baseline correct truncated motions
+      for (unsigned int i = 0; i < num_realizations_; ++i) {
+        // Pulse-like motions
+        for (unsigned int j = 0; j < num_sims_pulse_; ++j) {
+          baseline_correct_time_history(pulse_motions_comp1[i][j], gfactor,
+                                        fit_order);
+          baseline_correct_time_history(pulse_motions_comp2[i][j], gfactor,
+                                        fit_order);
+        }
+
+        // Non-pulse-like motions
+        for (unsigned int j = 0; j < num_sims_nopulse_; ++j) {
+          baseline_correct_time_history(nopulse_motions_comp1[i][j], gfactor,
+                                        fit_order);
+          baseline_correct_time_history(nopulse_motions_comp2[i][j], gfactor,
+                                        fit_order);
+        }
+      }
+    }
+  } catch (const std::exception& e) {
+    std::cerr << e.what();
+    throw;
+  }
+
+  // Create JsonObject for events
+  auto events = utilities::JsonObject();
+  std::vector<utilities::JsonObject> events_array(
+      num_realizations_ * (num_sims_pulse_ + num_sims_nopulse_));
+
+  // Add pattern information for JSON
+  auto pattern_x = utilities::JsonObject();
+  auto pattern_y = utilities::JsonObject();  
+  pattern_x.add_value("type", "UniformAcceleration");
+  pattern_x.add_value("timeSeries", "accel_x");
+  pattern_x.add_value("dof", 1);
+  pattern_y.add_value("type", "UniformAcceleration");
+  pattern_y.add_value("timeSeries", "accel_y");
+  pattern_y.add_value("dof", 2);
+
+  // Create JSON for specific event
+  auto event_data = utilities::JsonObject();
+  // Loop over number of realizations per parameter set realization
+  for (unsigned int i = 0; i < num_realizations_; ++i) {
+    // Loop over different simulations for current parameter set pulse-like
+    // motions
+    for (unsigned int j = 0; j < num_sims_pulse_; ++j) {
+      event_data.add_value("name", event_name + "_Spectra" + std::to_string(i) +
+                                       "_Sim" + std::to_string(j));
+      event_data.add_value("type", "Seismic");
+      event_data.add_value("dT", time_step_);
+      event_data.add_value("numSteps", pulse_motions_comp1[i][j].size());
+      event_data.add_value(
+          "pattern", std::vector<utilities::JsonObject>{pattern_x, pattern_y});
+
+      // Rotate accelerations, if necessary      
+      std::vector<double> x_accels(pulse_motions_comp1[i][j].size());
+      std::vector<double> y_accels(pulse_motions_comp2[i][j].size());
+      convert_time_history_units(pulse_motions_comp1[i][j], units);
+      convert_time_history_units(pulse_motions_comp2[i][j], units);
+
+      // Add time histories for x and y directions to event
+      auto time_history_x = utilities::JsonObject();
+      auto time_history_y = utilities::JsonObject();
+      time_history_x.add_value("name", "accel_x");
+      time_history_x.add_value("type", "Value");
+      time_history_x.add_value("dT", time_step_);
+      time_history_x.add_value("data", pulse_motions_comp1[i][j]);
+      time_history_y.add_value("name", "accel_y");
+      time_history_y.add_value("type", "Value");
+      time_history_y.add_value("dT", time_step_);
+      time_history_y.add_value("data", pulse_motions_comp2[i][j]);
+      event_data.add_value("timeSeries", std::vector<utilities::JsonObject>{
+                                             time_history_x, time_history_y});
+      events_array[i * (num_sims_pulse_ + num_sims_nopulse_) + j] = event_data;
+      event_data.clear();
+    }
+
+    // Loop over different simulations for current parameter set non-pulse-like
+    // motions
+    for (unsigned int j = 0; j < num_sims_nopulse_; ++j) {
+      event_data.add_value("name", event_name + "_Spectra" + std::to_string(i) +
+                                       "_Sim" + std::to_string(j + num_sims_pulse_));
+      event_data.add_value("type", "Seismic");
+      event_data.add_value("dT", time_step_);
+      event_data.add_value("numSteps", nopulse_motions_comp1[i][j].size());
+      event_data.add_value(
+          "pattern", std::vector<utilities::JsonObject>{pattern_x, pattern_y});
+
+      // Rotate accelerations, if necessary
+      std::vector<double> x_accels(nopulse_motions_comp1[i][j].size());
+      std::vector<double> y_accels(nopulse_motions_comp2[i][j].size());
+      convert_time_history_units(nopulse_motions_comp1[i][j], units);
+      convert_time_history_units(nopulse_motions_comp2[i][j], units);
+
+      // Add time histories for x and y directions to event
+      auto time_history_x = utilities::JsonObject();
+      auto time_history_y = utilities::JsonObject();
+      time_history_x.add_value("name", "accel_x");
+      time_history_x.add_value("type", "Value");
+      time_history_x.add_value("dT", time_step_);
+      time_history_x.add_value("data", nopulse_motions_comp1[i][j]);
+      time_history_y.add_value("name", "accel_y");
+      time_history_y.add_value("type", "Value");
+      time_history_y.add_value("dT", time_step_);
+      time_history_y.add_value("data", nopulse_motions_comp2[i][j]);
+      event_data.add_value("timeSeries", std::vector<utilities::JsonObject>{
+                                             time_history_x, time_history_y});
+      events_array[i * (num_sims_pulse_ + num_sims_nopulse_) + j +
+                   num_sims_pulse_] = event_data;
+      event_data.clear();
+    }
+  }
+
+  events.add_value("Events", events_array);
+
+  return events;
+}
+
+bool stochastic::DabaghiDerKiureghian::generate(
+    const std::string& event_name, const std::string& output_location,
+    bool units) {
+  bool status = true;
+  
+  // Generate pool of acceleration time histories
+  try{
+    auto json_output = generate(event_name, units);
+    json_output.write_to_file(output_location);
+  } catch (const std::exception& e) {
+    std::cerr << e.what();
+    status = false;
+    throw;
+  }
+
+  return status;  
 }
 
 unsigned int stochastic::DabaghiDerKiureghian::simulate_pulse_type(
@@ -1218,5 +1408,14 @@ void stochastic::DabaghiDerKiureghian::baseline_correct_time_histories(
   // Correct time series based on acceleration correction
   for (unsigned int i = 0; i < accel_correction.size(); ++i) {
     time_history[i] = time_history[i] - accel_correction(i);
+  }
+}
+
+void stochastic::DabaghiDerKiureghian::convert_time_history_units(
+    std::vector<double>& time_history, bool units) const {
+  double conversion_factor = units ? 981.0 : 100.0;
+
+  for (auto& val : time_history) {
+    val = val / conversion_factor;
   }
 }

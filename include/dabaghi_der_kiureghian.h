@@ -62,7 +62,7 @@ class DabaghiDerKiureghian : public StochasticModel {
    *               (degrees)--input corresponding value to s or d
    * @param[in] num_sims Number of simulated ground motion time histories that
    *               should be generated (number of different model parameter realizations)
-   * @param[in] num_params Number of realizations of non-stationary, modulated, filtered
+   * @param[in] num_realizations Number of realizations of non-stationary, modulated, filtered
    *               white noise per set of model parameters
    * @param[in] truncate Boolean indicating whether to truncate and baseline correct
    *               synthetic motion
@@ -71,7 +71,7 @@ class DabaghiDerKiureghian : public StochasticModel {
                        double moment_magnitude, double depth_to_rupt,
                        double rupture_distance, double vs30, double s_or_d,
                        double theta_or_phi, unsigned int num_sims,
-                       unsigned int num_params, bool truncate);
+                       unsigned int num_realizations, bool truncate);
 
   /**
    * @constructor Construct near-fault ground motion model based on input
@@ -91,7 +91,7 @@ class DabaghiDerKiureghian : public StochasticModel {
    *               (degrees)--input corresponding value to s or d
    * @param[in] num_sims Number of simulated ground motion time histories that
    *               should be generated (number of different model parameter realizations)
-   * @param[in] num_params Number of realizations of non-stationary, modulated, filtered
+   * @param[in] num_realizations Number of realizations of non-stationary, modulated, filtered
    *               white noise per set of model parameters
    * @param[in] truncate Boolean indicating whether to truncate and baseline correct
    *               synthetic motion
@@ -102,7 +102,7 @@ class DabaghiDerKiureghian : public StochasticModel {
                        double moment_magnitude, double depth_to_rupt,
                        double rupture_distance, double vs30, double s_or_d,
                        double theta_or_phi, unsigned int num_sims,
-                       unsigned int num_params, bool truncate, int seed_value);
+                       unsigned int num_realizations, bool truncate, int seed_value);
 
   /**
    * @destructor Virtual destructor
@@ -367,6 +367,14 @@ class DabaghiDerKiureghian : public StochasticModel {
   void baseline_correct_time_history(std::vector<double>& time_history,
                                      double gfactor, unsigned int order) const;
 
+  /**
+   * Convert input time history to units of g or m/s^2
+   * @param[in, out] time_history Time history to convert units for
+   * @param[in] units If true, converts to units of g, otherwise to m/s^2
+   */
+  void convert_time_history_units(std::vector<double>& time_history,
+                                  bool units) const;
+
   FaultType faulting_;      /**< Enum for type of faulting for scenario */
   SimulationType sim_type_; /**< Enum for pulse-like nature of ground motion */
   double moment_magnitude_; /**< Moment magnitude for scenario */
@@ -381,7 +389,7 @@ class DabaghiDerKiureghian : public StochasticModel {
                              motion time histories that should be generated */
   unsigned int num_sims_nopulse_; /**< Number of no-pulse-like simulated ground
                              motion time histories that should be generated */
-  unsigned int num_params_; /**< Number of realizations of model parameters */
+  unsigned int num_realizations_; /**< Number of realizations of model parameters */
   int seed_value_; /**< Integer to seed random distributions with */
   double time_step_; /**< Temporal discretization. Set to 0.005 seconds */
   double start_time_ = 0.0; /**< Start time of ground motion */
