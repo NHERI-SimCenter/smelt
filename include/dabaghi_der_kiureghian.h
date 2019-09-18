@@ -353,8 +353,19 @@ class DabaghiDerKiureghian : public StochasticModel {
    */
   void truncate_time_histories(std::vector<std::vector<double>>& accel_comp_1,
                                std::vector<std::vector<double>>& accel_comp_2,
-                               double gfactor, double amplitude_lim,
-                               double pgd_lim);
+                               double gfactor, double amplitude_lim = 0.2,
+                               double pgd_lim = 0.01) const;
+
+  /**
+   * Baseline correct acceleration time histories by fitting a polynomial
+   * starting from the 2nd degree of the displacement time series
+   * @param[in, out] time_history Acceleration time history to truncate
+   * @param[in] gfactor Factor to convert acceleration to cm/s^2
+   * @param[in] order Order of the polynomial fitted to the displacement time
+   *                  series
+   */
+  void baseline_correct_time_history(std::vector<double>& time_history,
+                                     double gfactor, unsigned int order) const;
 
   FaultType faulting_;      /**< Enum for type of faulting for scenario */
   SimulationType sim_type_; /**< Enum for pulse-like nature of ground motion */

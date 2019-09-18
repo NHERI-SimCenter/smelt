@@ -274,5 +274,74 @@ double trapazoid_rule(const Eigen::VectorXd& input_vector, double spacing) {
   }
 
   return result * spacing;
+}
+
+Eigen::VectorXd polyfit_zero_intercept(const Eigen::VectorXd& points,
+                                       const Eigen::VectorXd& data,
+                                       unsigned int degree) {
+
+  Eigen::MatrixXd coefficients =
+      Eigen::MatrixXd::Zero(points.size(), degree - 1);
+
+  for (unsigned int i = 0; i < degree - 1) {
+    coefficients.col(i) = points.pow(degree - i + 2);
+  }
+
+  // Solve system
+  Eigen::VectorXd solution = coefficients.colPivHouseholderQr().solve(data);
+
+  // Set y-intercept to zero
+  Eigen::Map<Eigen::VectorXd> poly_fit(solution.data(), solution.size() + 2);
+  poly_fit(poly_fit.size() - 1) = 0.0;
+  poly_fit(poly_fit.size() - 2) = 0.0;
+
+  return poly_fit;
+}
+
+Eigen::VectorXd polynomial_derivative(const Eigen::VectorXd& coefficients) {
+  Eigen::VectorXd derivative(coefficients.size() - 1);
+
+  for (unsigned int i = 0; i < derivative.size(); ++i) {
+    derivative(i) = coefficients(i) * (coefficients.size() - 1 - i);
+  }
+
+  return derivative;
+}
+
+Eigen::VectorXd evaluate_polynomial(const Eigen::VectorXd& coefficients,
+                                    const Eigen::VectorXd& points) {
+  Eigen::VectorXd evaluations = Eigen::VectorXd::Zero(points.size());
+
+  for (unsigned int i = 0; i < evaluations.size(); ++i) {
+    for (unsigned int j = 0; j < coefficients.size(); ++j) {
+      evaluations(i) +=
+          coefficients(j) * std::pow(points(i), coefficients.size() - 1 - i);
+    }
+  }
+}
+
+Eigen::VectorXd evaluate_polynomial(const Eigen::VectorXd& coefficients,
+                                    const std::vector<double>& points) {
+  Eigen::VectorXd evaluations = Eigen::VectorXd::Zero(points.size());
+
+  for (unsigned int i = 0; i < evaluations.size(); ++i) {
+    for (unsigned int j = 0; j < coefficients.size(); ++j) {
+      evaluations(i) +=
+          coefficients(j) * std::pow(points[i], coefficients.size() - 1 - i);
+    }
+  }
+}
+
+std::vector<double> evaluate_polynomial(const std
+                                        : vector<double>& coefficients,
+                                          const std::vector<double>& points) {
+  std::vector<double> evaluations(points.size(), 0.0);
+
+  for (unsigned int i = 0; i < evaluations.size(); ++i) {
+    for (unsigned int j = 0; j < coefficients.size(); ++j) {
+      evaluations[i] +=
+          coefficients[j] * std::pow(points[i], coefficients.size() - 1 - i);
+    }
+  }
 }  
 }  // namespace numeric_utils

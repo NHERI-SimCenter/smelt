@@ -110,6 +110,54 @@ double trapazoid_rule(const std::vector<double>& input_vector, double spacing);
 double trapazoid_rule(const Eigen::VectorXd& input_vector, double spacing);
 
 /**
+ * Fit polynomial to data, forcing y-intercept to zero
+ * @param[in] points Vector of evaluation points
+ * @param[in] data Vector of data for evaluation points
+ * @param[in] degree Degree of of polynomial fit
+ */
+Eigen::VectorXd polyfit_zero_intercept(const Eigen::VectorXd& points,
+                                       const Eigen::VectorXd& data,
+                                       unsigned int degree);
+
+/**
+ * Take the derivative of a polynomial described by its coefficients
+ * @param[in] coefficients Coefficients of polynomial terms ordered in
+ *                         descending power
+ * @return Vector of coefficients for input polynomial derivative
+ */
+Eigen::VectorXd polynomial_derivative(const Eigen::VectorXd& coefficients);
+
+/**
+ * Evaluate polynomial described by input coefficients at input points
+ * @param[in] coefficients Coefficients of polynomial terms ordered in
+ *                         descending power
+ * @param[in] points Vector of points at which to evaluate polynomial
+ * @return Vector of polynomial values evaluated at input points
+ */
+Eigen::VectorXd evaluate_polynomial(const Eigen::VectorXd& coefficients,
+                                    const Eigen::VectorXd& points);
+
+/**
+ * Evaluate polynomial described by input coefficients at input points
+ * @param[in] coefficients Coefficients of polynomial terms ordered in
+ *                         descending power
+ * @param[in] points Vector of points at which to evaluate polynomial
+ * @return Vector of polynomial values evaluated at input points
+ */
+Eigen::VectorXd evaluate_polynomial(const Eigen::VectorXd& coefficients,
+                                    const std::vector<double>& points);
+
+/**
+ * Evaluate polynomial described by input coefficients at input points
+ * @param[in] coefficients Coefficients of polynomial terms ordered in
+ *                         descending power
+ * @param[in] points Vector of points at which to evaluate polynomial
+ * @return Vector of polynomial values evaluated at input points
+ */
+std::vector<double> evaluate_polynomial(const std::vector<double>& coefficients,
+                                        const std::vector<double>& points);
+
+/**
  * Abstract base class for random number generators
  */
 class RandomGenerator {

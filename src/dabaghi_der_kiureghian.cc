@@ -1094,7 +1094,7 @@ void stochastic::DabaghiDerKiureghian::truncate_time_histories(
     
     auto disp_comp_1 = std::partial_sum(
         vel_comp_1[i].begin(), vel_comp_1[i].end(), vel_comp_1[i].begin(),
-        [&gfactor](double value) -> double {
+        [](double value) -> double {
           return value * time_step_;
         });
 
@@ -1112,7 +1112,7 @@ void stochastic::DabaghiDerKiureghian::truncate_time_histories(
     
     auto disp_comp_2 = std::partial_sum(
         vel_comp_2[i].begin(), vel_comp_2[i].end(), vel_comp_2[i].begin(),
-        [&gfactor](double value) -> double {
+        [](double value) -> double {
           return value * time_step_;
         });
 
@@ -1177,5 +1177,46 @@ void stochastic::DabaghiDerKiureghian::truncate_time_histories(
         std::vector<double>(accel_comp_2[i].begin() + initial_index,
                             accel_comp_2[i].begin() + final_index);
     
+  }
+}
+
+void stochastic::DabaghiDerKiureghian::baseline_correct_time_histories(
+    std::vector<double>& time_history, double gfactor,
+    unsigned int order) const {
+
+  // Calculate velocity and displacment time histories
+  auto vel_series = std::partial_sum(time_history.begin(), time_history.end(),
+                                     time_history.begin(),
+                                     [&gfactor](double value) -> double {
+                                       return value * gfactor * time_step_;
+                                     });
+
+  auto disp_series = std::partial_sum(
+      vel_series[i].begin(), vel_series[i].end(), vel_series[i].begin(),
+      [](double value) -> double { return value * time_step_; });
+
+  Eigen::VectorXd times(time_history.size());
+
+  for (unsigned int i = 0; i < times.size(); ++i) {
+    times(i) = i * time_step_;
+  }
+
+  // Convert input time history from std vector to Eigen vector
+  Eigen::VectorXd disp_vector =
+      Eigen::Map<Eigen::VectorXd>(disp_series.data(), disp_series.size());
+
+  // Fit zero-intercept polynomial to displacement time history
+  auto displacement_poly =
+      numeric_utils::polyfit_zero_intercept(times, disp_vector);
+  auto velocity_poly = numeric_utils::polynomial_derivative(displacement_poly);
+  auto accel_poly = numeric_utils::polynomial_derivative(velocity_poly);
+
+  // Calculate acceleration correction based on polynomial
+  auto accel_correction =
+      numeric_utils::evaluate_polynomial(accel_poly, times) / gfactor;
+
+  // Correct time series based on acceleration correction
+  for (unsigned int i = 0; i < accel_correction.size(); ++i) {
+    time_history[i] = time_history[i] - accel_correction(i);
   }
 }
