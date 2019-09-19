@@ -104,6 +104,7 @@ if (BUILD_TESTING)
     ${PROJECT_SOURCE_DIR}/test/json_object_tests.cc
     ${PROJECT_SOURCE_DIR}/test/stochastic_model_tests.cc
     ${PROJECT_SOURCE_DIR}/test/wind_profile_tests.cc
+    ${PROJECT_SOURCE_DIR}/test/optimization_tests.cc    
   )
 
   if (BUILD_STATIC_LIBS)

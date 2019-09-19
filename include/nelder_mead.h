@@ -57,7 +57,7 @@ class NelderMead {
   template <typename Tfunc_returntype, typename... Tfunc_args>
   std::vector<double> minimize(
       const std::vector<double>& initial_point, double delta,
-      std::function<Tfunc_returntype(Tfunc_args)>& objective_function);
+      std::function<Tfunc_returntype(Tfunc_args...)>& objective_function);
 
   /**
    * Minimize the input objective function given initial point and step sizes
@@ -69,13 +69,13 @@ class NelderMead {
   template <typename Tfunc_returntype, typename... Tfunc_args>
   std::vector<double> minimize(
       const std::vector<double>& initial_point, const std::vector<double>& deltas,
-      std::function<Tfunc_returntype(Tfunc_args)>& objective_function);
+      std::function<Tfunc_returntype(Tfunc_args...)>& objective_function);
 
   /**
    * Get the minimum value of the objective function
    * @return Minimum value of objective function
    */
-  double get_minimum() const {return func_min_};
+  double get_minimum() const { return func_min_; };
 
   /**
    * Minimize the input objective function given initial simplex
@@ -88,7 +88,7 @@ class NelderMead {
   template <typename Tfunc_returntype, typename... Tfunc_args>
   std::vector<double> minimize(
       const std::vector<std::vector<double>>& initial_simplex,
-      std::function<Tfunc_returntype(Tfunc_args)>& objective_function);
+      std::function<Tfunc_returntype(Tfunc_args...)>& objective_function);
 
  private:
   /**
@@ -130,7 +130,7 @@ class NelderMead {
       std::vector<std::vector<double>>& simplex,
       std::vector<double>& objective_vals, std::vector<double>& centroids,
       unsigned int index_worst, double factor,
-      std::function<Tfunc_returntype(Tfunc_args)>& objective_function);
+      std::function<Tfunc_returntype(Tfunc_args...)>& objective_function);
 
   double function_tol_;           /**< Function tolerance for convergence */
   unsigned int num_evals_;        /**< Number of function evaluations */
