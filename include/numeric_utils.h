@@ -113,11 +113,13 @@ double trapazoid_rule(const Eigen::VectorXd& input_vector, double spacing);
  * Fit polynomial to data, forcing y-intercept to zero
  * @param[in] points Vector of evaluation points
  * @param[in] data Vector of data for evaluation points
+ * @param[in] intercept Value for y-intercept
  * @param[in] degree Degree of of polynomial fit
  */
-Eigen::VectorXd polyfit_zero_intercept(const Eigen::VectorXd& points,
-                                       const Eigen::VectorXd& data,
-                                       unsigned int degree);
+Eigen::VectorXd polyfit_intercept(const Eigen::VectorXd& points,
+                                  const Eigen::VectorXd& data,
+				  double intercept,
+                                  unsigned int degree);
 
 /**
  * Take the derivative of a polynomial described by its coefficients

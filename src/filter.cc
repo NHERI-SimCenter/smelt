@@ -134,13 +134,14 @@ std::function<std::vector<double>(double, unsigned int, unsigned int)>
     acausal_highpass_filter() {
   return [](double freq_cutoff_norm, unsigned int order,
             unsigned int num_samples) -> std::vector<double> {
-
     // Initialize filter and frequencies
     Eigen::VectorXd filter(num_samples);
-    std::vector<double> freq_steps(static_cast<unsigned int>(num_samples / 2) + 1);
+    std::vector<double> freq_steps(static_cast<unsigned int>(num_samples / 2) +
+                                   1);
     double step_freq = freq_cutoff_norm / static_cast<double>(num_samples / 2);
 
-    // Create vector of frequencies ranging from 0 to normalized cutoff frequency
+    // Create vector of frequencies ranging from 0 to normalized cutoff
+    // frequency
     for (unsigned int i = 0; i < freq_steps.size(); ++i) {
       freq_steps[i] = static_cast<double>(i) * step_freq;
     }
@@ -151,7 +152,7 @@ std::function<std::vector<double>(double, unsigned int, unsigned int)>
           std::sqrt(1.0 / (1.0 + std::pow(freq_cutoff_norm / freq_steps[i],
                                           2.0 * order)));
     }
-    
+
     // Mirror coefficients
     Eigen::VectorXd highpass_filter(2 * filter.size() - 2);
     highpass_filter.head(filter.size()) = filter;
@@ -161,8 +162,9 @@ std::function<std::vector<double>(double, unsigned int, unsigned int)>
     // Place filter coefficients in STL vector
     std::vector<double> filter_vector(highpass_filter.size());
     Eigen::VectorXd::Map(&filter_vector[0], highpass_filter.size()) =
-        highpass_filter;    
+        highpass_filter;
 
     return filter_vector;
   };
+}
 }  // namespace signal_processing

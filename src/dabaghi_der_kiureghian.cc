@@ -1397,7 +1397,7 @@ void stochastic::DabaghiDerKiureghian::baseline_correct_time_histories(
 
   // Fit zero-intercept polynomial to displacement time history
   auto displacement_poly =
-      numeric_utils::polyfit_zero_intercept(times, disp_vector);
+    numeric_utils::polyfit_zero_intercept(times, disp_vector, 0.0, 5);
   auto velocity_poly = numeric_utils::polynomial_derivative(displacement_poly);
   auto accel_poly = numeric_utils::polynomial_derivative(velocity_poly);
 

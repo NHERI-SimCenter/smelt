@@ -168,6 +168,10 @@ bool inverse_fft(const Eigen::VectorXcd& input_vector,
 
 bool fft(std::vector<double> input_vector,
          std::vector<std::complex<double>>& output_vector) {
+  // Convert input vector to complex values
+  std::vector<std::complex<double>> input_complex(input_vector.size());
+  std::copy(input_vector.begin(), input_vector.end(), input_complex.begin());
+  
   output_vector.resize(input_vector.size());
 
   // Create task descriptor and MKL status
@@ -177,7 +181,7 @@ bool fft(std::vector<double> input_vector,
   // Allocate the descriptor data structure and initializes it with default
   // configuration values
   fft_status = DftiCreateDescriptor(&fft_descriptor, DFTI_DOUBLE, DFTI_COMPLEX,
-                                    1, input_vector.size());
+                                    1, input_complex.size());
   if (fft_status != DFTI_NO_ERROR) {
     throw std::runtime_error(
         "\nERROR: in numeric_utils::fft: Error in descriptor creation\n");
@@ -201,7 +205,7 @@ bool fft(std::vector<double> input_vector,
   }
   
   // Compute the backward FFT
-  fft_status = DftiComputeForward(fft_descriptor, input_vector.data(),
+  fft_status = DftiComputeForward(fft_descriptor, input_complex.data(),
                                   output_vector.data());
   if (fft_status != DFTI_NO_ERROR) {
     throw std::runtime_error(
@@ -222,7 +226,7 @@ bool fft(std::vector<double> input_vector,
 
 bool fft(const Eigen::VectorXd& input_vector, Eigen::VectorXcd& output_vector) {
   // Convert input Eigen vector to std vector
-  std::vector<<double> input_vals(input_vector.size());
+  std::vector<double> input_vals(input_vector.size());
   std::vector<std::complex<double>> outputs(input_vals.size());
   Eigen::VectorXd::Map(&input_vals[0], input_vector.size()) = input_vector;
  
@@ -239,7 +243,7 @@ bool fft(const Eigen::VectorXd& input_vector, Eigen::VectorXcd& output_vector) {
   return true;
 }
 
-bool inverse_fft(const Eigen::VectorXd& input_vector,
+bool fft(const Eigen::VectorXd& input_vector,
                  std::vector<std::complex<double>>& output_vector) {
   // Convert input Eigen vector to std vector
   std::vector<double> input_vals(input_vector.size());
@@ -276,23 +280,29 @@ double trapazoid_rule(const Eigen::VectorXd& input_vector, double spacing) {
   return result * spacing;
 }
 
-Eigen::VectorXd polyfit_zero_intercept(const Eigen::VectorXd& points,
+Eigen::VectorXd polyfit_intercept(const Eigen::VectorXd& points,
                                        const Eigen::VectorXd& data,
+				       double intercept,
                                        unsigned int degree) {
 
   Eigen::MatrixXd coefficients =
       Eigen::MatrixXd::Zero(points.size(), degree - 1);
-
-  for (unsigned int i = 0; i < degree - 1) {
-    coefficients.col(i) = points.pow(degree - i + 2);
+  
+  for (unsigned int i = 0; i < degree - 1; ++i) {
+    coefficients.col(i) = points.array().pow(degree - i);
   }
 
   // Solve system
-  Eigen::VectorXd solution = coefficients.colPivHouseholderQr().solve(data);
+  Eigen::VectorXd solution = coefficients.fullPivHouseholderQr().solve(
+      (data.array() - intercept).matrix());
 
   // Set y-intercept to zero
-  Eigen::Map<Eigen::VectorXd> poly_fit(solution.data(), solution.size() + 2);
-  poly_fit(poly_fit.size() - 1) = 0.0;
+  Eigen::VectorXd poly_fit(solution.size() + 2);
+
+  for (unsigned int i = 0; i < solution.size(); ++i) {
+    poly_fit(i) = solution(i);
+  }  
+  poly_fit(poly_fit.size() - 1) = intercept;
   poly_fit(poly_fit.size() - 2) = 0.0;
 
   return poly_fit;
@@ -315,9 +325,11 @@ Eigen::VectorXd evaluate_polynomial(const Eigen::VectorXd& coefficients,
   for (unsigned int i = 0; i < evaluations.size(); ++i) {
     for (unsigned int j = 0; j < coefficients.size(); ++j) {
       evaluations(i) +=
-          coefficients(j) * std::pow(points(i), coefficients.size() - 1 - i);
+          coefficients(j) * std::pow(points(i), coefficients.size() - 1 - j);
     }
   }
+
+  return evaluations;
 }
 
 Eigen::VectorXd evaluate_polynomial(const Eigen::VectorXd& coefficients,
@@ -327,21 +339,24 @@ Eigen::VectorXd evaluate_polynomial(const Eigen::VectorXd& coefficients,
   for (unsigned int i = 0; i < evaluations.size(); ++i) {
     for (unsigned int j = 0; j < coefficients.size(); ++j) {
       evaluations(i) +=
-          coefficients(j) * std::pow(points[i], coefficients.size() - 1 - i);
+          coefficients(j) * std::pow(points[i], coefficients.size() - 1 - j);
     }
   }
+
+  return evaluations;
 }
 
-std::vector<double> evaluate_polynomial(const std
-                                        : vector<double>& coefficients,
-                                          const std::vector<double>& points) {
+std::vector<double> evaluate_polynomial(const std::vector<double>& coefficients,
+                                        const std::vector<double>& points) {
   std::vector<double> evaluations(points.size(), 0.0);
 
   for (unsigned int i = 0; i < evaluations.size(); ++i) {
     for (unsigned int j = 0; j < coefficients.size(); ++j) {
       evaluations[i] +=
-          coefficients[j] * std::pow(points[i], coefficients.size() - 1 - i);
+          coefficients[j] * std::pow(points[i], coefficients.size() - 1 - j);
     }
   }
+
+  return evaluations;
 }  
 }  // namespace numeric_utils
