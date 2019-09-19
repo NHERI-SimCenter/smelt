@@ -91,5 +91,26 @@ TEST_CASE("Test different distribution types", "[Distributions]") {
 
     REQUIRE(probabilities[0]== Approx(0.5).epsilon(0.01));
     REQUIRE(calced_locations[0] == Approx(locations[0]).epsilon(0.01));
-  }  
+  }
+
+  SECTION("Test CDF/ICDF values for uniform distribution") {
+    double lower = 0.0;
+    double upper = 1.0;
+    auto test_distribution =
+        Factory<stochastic::Distribution, double, double>::instance()->create(
+            "UniformDist", std::move(lower), std::move(upper));
+
+    std::vector<double> locations = {0.0, 0.5, 1.0};
+
+    auto probabilities = test_distribution->cumulative_dist_func(locations);
+    auto calced_locations =
+        test_distribution->inv_cumulative_dist_func(probabilities);
+
+    REQUIRE(probabilities[0] + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(calced_locations[0] + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(probabilities[1] == Approx(0.5).epsilon(0.01));
+    REQUIRE(calced_locations[1] == Approx(0.5).epsilon(0.01));
+    REQUIRE(probabilities[2] == Approx(1.0).epsilon(0.01));
+    REQUIRE(calced_locations[2] == Approx(1.0).epsilon(0.01));
+  }
 }
