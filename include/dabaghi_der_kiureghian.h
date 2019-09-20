@@ -166,7 +166,7 @@ class DabaghiDerKiureghian : public StochasticModel {
    * @return Model parameters for ground motions
    */
   Eigen::MatrixXd simulate_model_parameters(bool pulse_like,
-                                            unsigned int num_sims) const;
+                                            unsigned int num_sims);
 
   /**
    * Compute the conditional mean values of the transformed model parameters
@@ -185,7 +185,7 @@ class DabaghiDerKiureghian : public StochasticModel {
    * @param[in, out] parameters Vector of parameters in normal space. Transformed variables will be
    *                            stored in this vector.
    */
-  void transform_parameters_from_normal_space(bool pulse_like, Eigen::VectorXd& parameters) const;
+  void transform_parameters_from_normal_space(bool pulse_like, Eigen::VectorXd& parameters);
 
   /**
    * Calculate the inverse of double-exponential distribution
@@ -196,7 +196,7 @@ class DabaghiDerKiureghian : public StochasticModel {
    * @param[in] lower_bound Lower bound for location
    */
   double inv_double_exp(double probability, double param_a, double param_b,
-                        double param_b, double lower_bound) const;
+                        double param_c, double lower_bound) const;
 
   /**
    * Simulate near-fault ground motion given model parameters and whether motion
@@ -239,9 +239,9 @@ class DabaghiDerKiureghian : public StochasticModel {
    */
   Eigen::MatrixXd simulate_white_noise(const Eigen::VectorXd& modulating_params,
                                        const Eigen::VectorXd& filter_params,
-                                       unsigned int, num_steps,
+                                       unsigned int, unsigned int num_steps,
                                        unsigned int num_gms = 1) const;
-  
+
   /**
    * This function defines an error measure based on matching times of the 5%,
    * 30%, and 95% Arias intensity of the target ground motion and corresponding
@@ -298,7 +298,7 @@ class DabaghiDerKiureghian : public StochasticModel {
    */
   std::vector<double> calc_linear_filter(unsigned int num_steps,
                                          const Eigen::VectorXd& filter_params,
-                                         double t01, double t30,
+                                         double t01, double tmid,
                                          double t99) const;
 
   /**

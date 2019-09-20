@@ -20,6 +20,7 @@
 #include "factory.h"
 #include "function_dispatcher.h"
 #include "json_object.h"
+#include "nelder_mead.h"
 #include "normal_dist.h"
 #include "normal_multivar.h"
 #include "numeric_utils.h"
@@ -301,6 +302,23 @@ stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
 utilities::JsonObject stochastic::DabaghiDerKiureghian::generate(
     const std::string& event_name, bool units) {
 
+  // Create vectors for pulse-like and non-pulse-like motions
+  std::vector<std::vector<std::vector<double>>> pulse_motions_comp1(
+      num_realizations_,
+      std::vector<std::vector<double>>(num_sims_pulse_, std::vector<double>()));
+
+  std::vector<std::vector<std::vector<double>>> pulse_motions_comp2(
+      num_realizations_,
+      std::vector<std::vector<double>>(num_sims_pulse_, std::vector<double>()));
+
+  std::vector<std::vector<std::vector<double>>> nopulse_motions_comp1(
+      num_realizations_, std::vector<std::vector<double>>(
+                             num_sims_nopulse_, std::vector<double>()));
+
+  std::vector<std::vector<std::vector<double>>> nopulse_motions_comp2(
+      num_realizations_, std::vector<std::vector<double>>(
+                             num_sims_nopulse_, std::vector<double>()));
+
   // Generated simulated acceleration time histories
   try {
     // Simulate model parameters
@@ -308,23 +326,6 @@ utilities::JsonObject stochastic::DabaghiDerKiureghian::generate(
         simulate_model_parameters(true, num_sims_pulse_);
     Eigen::MatrixXd parameters_nopulse =
         simulate_model_parameters(false, num_sims_nopulse_);
-
-    // Create vectors for pulse-like and non-pulse-like motions
-    std::vector<std::vector<std::vector<double>>> pulse_motions_comp1(
-        num_realizations_, std::vector<std::vector<double>>(
-                               num_sims_pulse_, std::vector<double>()));
-
-    std::vector<std::vector<std::vector<double>>> pulse_motions_comp2(
-        num_realizations_, std::vector<std::vector<double>>(
-                               num_sims_pulse_, std::vector<double>()));
-
-    std::vector<std::vector<std::vector<double>>> nopulse_motions_comp1(
-        num_realizations_, std::vector<std::vector<double>>(
-                               num_sims_nopulse_, std::vector<double>()));
-
-    std::vector<std::vector<std::vector<double>>> nopulse_motions_comp2(
-        num_realizations_, std::vector<std::vector<double>>(
-                               num_sims_nopulse_, std::vector<double>()));
 
     // Simulate pulse-like motions
     for (unsigned int i = 0; i < num_realizations_; ++i) {
@@ -493,7 +494,7 @@ unsigned int stochastic::DabaghiDerKiureghian::simulate_pulse_type(
   double pulse_probability = 0.0;
 
   // Calculate pulse probability for any type of pulse
-  if (faulting == stochastic::StrikeSlip) {
+  if (faulting_ == stochastic::FaultType::StrikeSlip) {
     pulse_probability = 1.0 / (1.0 + std::exp(0.457 + 0.126 * rupture_dist_ -
                                               0.244 * std::sqrt(s_or_d_) +
                                               0.013 * theta_or_phi_));
@@ -527,18 +528,19 @@ unsigned int stochastic::DabaghiDerKiureghian::simulate_pulse_type(
 }
 
 Eigen::MatrixXd stochastic::DabaghiDerKiureghian::simulate_model_parameters(
-    bool pulse_like, unsigned int num_sims) const {
+    bool pulse_like, unsigned int num_sims) {
   // Calculate covariance matrix
   Eigen::MatrixXd error_cov =
       pulse_like
           ? numeric_utils::corr_to_cov(corr_matrix_pulse_, std_dev_pulse_)
           : numeric_utils::corr_to_cov(corr_matrix_nopulse_, std_dev_nopulse_);
 
-  Eigen::MatrixXd simulated_params =
-      pulse_like ? Eigen::Zero(num_sims, 19)
-                 : Eigen::Zero(num_sims, 14);
+  Eigen::MatrixXd simulated_params = pulse_like
+                                         ? Eigen::MatrixXd::Zero(num_sims, 19)
+                                         : Eigen::MatrixXd::Zero(num_sims, 14);
 
-  Eigen::VectorXd error_mean = pulse_like ? Eigen::Zero(19) : Eigen::Zero(14);
+  Eigen::VectorXd error_mean =
+      pulse_like ? Eigen::VectorXd::Zero(19) : Eigen::VectorXd::Zero(14);
 
   // Compute conditional mean values of transformed model parameters using
   // regression coefficients
@@ -618,7 +620,7 @@ Eigen::VectorXd
 }
 
 void stochastic::DabaghiDerKiureghian::transform_parameters_from_normal_space(
-    bool pulse_like, Eigen::VectorXd& parameters) const {
+    bool pulse_like, Eigen::VectorXd& parameters) {
   Eigen::VectorXd transformed_params(parameters.size());
   auto standard_normal =
       Factory<stochastic::Distribution, double, double>::instance()->create(
@@ -652,13 +654,13 @@ void stochastic::DabaghiDerKiureghian::transform_parameters_from_normal_space(
 
     transformed_params(3) = (uniform_dist->inv_cumulative_dist_func(
                                  standard_normal->cumulative_dist_func(
-                                     std::vector<double>{parameters{3}})))
+                                     std::vector<double>{parameters(3)})))
                                 .at(0);
 
     // Calculate f' residual
     transformed_params(10) =
         inv_double_exp(standard_normal->cumulative_dist_func(
-                           std::vector<double>{parameters(10)}),
+                           std::vector<double>{parameters(10)})[0],
                        params_fitted1_(10), params_fitted2_(10),
                        params_fitted3_(10), params_lower_bound_(10));
 
@@ -679,9 +681,9 @@ void stochastic::DabaghiDerKiureghian::transform_parameters_from_normal_space(
     // Calculate f' pulse-only
     transformed_params(17) =
         inv_double_exp(standard_normal->cumulative_dist_func(
-                           std::vector<double>{parameters(17)}),
+                           std::vector<double>{parameters(17)})[0],
                        params_fitted1_(17), params_fitted2_(17),
-                       params_fitted3_(17), params_lower_bound_(17));    
+                       params_fitted3_(17), params_lower_bound_(17));
 
     // Calculate depth_to_rupt pulse-only
     beta_dist =
@@ -705,8 +707,9 @@ void stochastic::DabaghiDerKiureghian::transform_parameters_from_normal_space(
     // Calculate f' component 1
     transformed_params(5) =
         inv_double_exp(standard_normal->cumulative_dist_func(
-                           std::vector<double>{parameters(5)}),
-                       params_fitted1_(10), params_fitted2_(10), params_fitted3_(10), params_lower_bound_(10));
+                           std::vector<double>{parameters(5)})[0],
+                       params_fitted1_(10), params_fitted2_(10),
+                       params_fitted3_(10), params_lower_bound_(10));
 
     // Calculate depth_to_rupture component 1
     auto beta_dist =
@@ -725,8 +728,9 @@ void stochastic::DabaghiDerKiureghian::transform_parameters_from_normal_space(
     // Calculate f' component 2
     transformed_params(12) =
         inv_double_exp(standard_normal->cumulative_dist_func(
-                           std::vector<double>{parameters(12)}),
-                       params_fitted1_(17), params_fitted2_(17), params_fitted3_(17), params_lower_bound_(17));
+                           std::vector<double>{parameters(12)})[0],
+                       params_fitted1_(17), params_fitted2_(17),
+                       params_fitted3_(17), params_lower_bound_(17));
 
     // Calculate depth_to_rupture compenent 2
     beta_dist =
@@ -748,7 +752,7 @@ void stochastic::DabaghiDerKiureghian::transform_parameters_from_normal_space(
 }
 
 double stochastic::DabaghiDerKiureghian::inv_double_exp(
-    double probability, double param_a, double param_b, double param_b,
+    double probability, double param_a, double param_b, double param_c,
     double lower_bound) const {
   if (probability < 0.0 || probability > 1.0) {
     throw std::runtime_error(
@@ -774,7 +778,7 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
     bool pulse_like, const Eigen::VectorXd& parameters,
     std::vector<std::vector<double>>& accel_comp_1,
     std::vector<std::vector<double>>& accel_comp_2,
-    unsigned int num_gms = 1) const {
+    unsigned int num_gms) const {
 
   // Extract parameters for two components of ground motion
   Eigen::VectorXd alpha_1 =
@@ -817,9 +821,9 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
 
   // Add zero-padding
   Eigen::MatrixXd accel_padded_1 =
-      Eigen::MatrixXd::Zero(n_sim, num_pads + num_steps + pads);
+      Eigen::MatrixXd::Zero(num_gms, num_pads + num_steps + num_pads);
   Eigen::MatrixXd accel_padded_2 =
-      Eigen::MatrixXd::Zero(n_sim, num_pads + num_steps + pads);
+      Eigen::MatrixXd::Zero(num_gms, num_pads + num_steps + num_pads);
 
   for (unsigned int i = 0; i < num_gms; ++i) {
     // Pad component 1
@@ -855,17 +859,17 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
 
   // Calculate Arias intensity
   for (unsigned int i = 0; i < num_gms; ++i) {
-    arias_intensity_1[i] =
-        std::partial_sum(accel_comp_1[i].begin(), accel_comp_1[i].end(),
-                         accel_comp_1[i].begin(), [](double value) -> double {
-                           return value * value * time_step_ * M_PI / 2.0;
-                         });
+    std::partial_sum(accel_comp_1[i].begin(), accel_comp_1[i].end(),
+                     arias_intensity_1[i].begin(),
+                     [this](double value) -> double {
+                       return value * value * time_step_ * M_PI / 2.0;
+                     });
 
-    arias_intensity_2[i] =
-        std::partial_sum(accel_comp_2[i].begin(), accel_comp_2[i].end(),
-                         accel_comp_2[i].begin(), [](double value) -> double {
-                           return value * value * time_step_ * M_PI / 2.0;
-                         });    
+    std::partial_sum(accel_comp_2[i].begin(), accel_comp_2[i].end(),
+                     arias_intensity_2[i].begin(),
+                     [this](double value) -> double {
+                       return value * value * time_step_ * M_PI / 2.0;
+                     });
   }
 
   // Calculate scaling factors and scale accelerations to match Arias intensity
@@ -875,17 +879,17 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
     double scale_factor_2 = std::sqrt(
         target_ai_2 / arias_intensity_2[i][arias_intensity_2[i].size() - 1]);
 
-    accel_comp_1[i] = std::transform(
-        accel_comp_1[i].begin(), accel_comp_1[i].end(), accel_comp_1[i].begin(),
-        [&scale_factor_1](double value) -> double {
-          return value * scale_factor_1;
-        });
+    std::transform(accel_comp_1[i].begin(), accel_comp_1[i].end(),
+                   accel_comp_1[i].begin(),
+                   [&scale_factor_1](double value) -> double {
+                     return value * scale_factor_1;
+                   });
 
-    accel_comp_2[i] = std::transform(
-        accel_comp_2[i].begin(), accel_comp_2[i].end(), accel_comp_2[i].begin(),
-        [&scale_factor_2](double value) -> double {
-          return value * scale_factor_2;
-        });
+    std::transform(accel_comp_2[i].begin(), accel_comp_2[i].end(),
+                   accel_comp_2[i].begin(),
+                   [&scale_factor_2](double value) -> double {
+                     return value * scale_factor_2;
+                   });
   }
 
   // If pulse-like, add pulse acceleration to component 1 direction
@@ -910,14 +914,14 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
 
 Eigen::VectorXd
     stochastic::DabaghiDerKiureghian::backcalculate_modulating_params(
-        const Eigen::VectorXd& q_params, double t0 = 0.0) const {
+        const Eigen::VectorXd& q_params, double t0) const {
   double arias_intensity = q_params(0) / 981,  // Convert from cm/s to g-s
     d595 = q_params(1), d05 = q_params(2),
     d030 = q_params(3), d095 = d05 + d595,
     t30 = t0 + d030;
 
   // Search for local minimum by trying several starting points
-  auto minimizer = NelderMead(1e-14);
+  optimization::NelderMead minimizer(1e-14);
   std::vector<double> diffs(6);
   std::function<double(const std::vector<double>&)> error_function =
       calc_parameter_error(d05, d030, d095, t0);
@@ -1033,7 +1037,7 @@ std::function<double(const std::vector<double>&)>
 
 Eigen::MatrixXd stochastic::DabaghiDerKiureghian::simulate_white_noise(
     const Eigen::VectorXd& modulating_params,
-    const Eigen::VectorXd& filter_params, unsigned int, num_steps,
+    const Eigen::VectorXd& filter_params, unsigned int, unsigned int num_steps,
     unsigned int num_gms) const {
   // CALCULATE MODULATING FUNCTION:
   auto modulating_func =
@@ -1044,7 +1048,7 @@ Eigen::MatrixXd stochastic::DabaghiDerKiureghian::simulate_white_noise(
   // Lower bound before t01
   double t01 = calc_time_to_intensity(modulating_func, 1.0);
   // Middle set to t30
-  double tmid = calc_time_to_intensity(modulating_func, 30.0.);
+  double tmid = calc_time_to_intensity(modulating_func, 30.0);
   // Upper bound after t99
   double t99 = calc_time_to_intensity(modulating_func, 99.0);
 
@@ -1053,6 +1057,12 @@ Eigen::MatrixXd stochastic::DabaghiDerKiureghian::simulate_white_noise(
       calc_linear_filter(num_steps, filter_params, t01, tmid, t99);
 
   // Generate white noise
+  auto generator =
+      seed_value_ != std::numeric_limits<int>::infinity()
+          ? boost::random::mt19937(static_cast<unsigned int>(seed_value_))
+          : boost::random::mt19937(
+                static_cast<unsigned int>(std::time(nullptr)));
+  
   boost::random::normal_distribution<> distribution(0.0, 1.0);
   boost::random::variate_generator<boost::random::mt19937&,
                                    boost::random::normal_distribution<>>
@@ -1110,15 +1120,16 @@ double stochastic::DabaghiDerKiureghian::calc_time_to_intensity(
     const std::vector<double>& acceleration, double percentage) const {
   // Calculate cumulative energy in acceleration time series, which is
   // proportional to Arias intensity
-  auto t01_sum = std::partial_sum(
-      acceleration.begin(), acceleration.end(), acceleration.begin(),
-      [](double value) -> double { return value * value; });
+  std::vector<double> t01_sum(acceleration.size());
+
+  std::partial_sum(acceleration.begin(), acceleration.end(), t01_sum.begin(),
+                   [](double value) -> double { return value * value; });
 
   // Calculate normalized cumulative Arias intensity in percent
-  t01_sum = std::transform(t01_sum.begin(), t01_sum.end(), t01_sum.begin(),
-                           [&t01_sum](double value) -> double {
-                             return value / t01_sum[t01_sum.size() - 1] * 100.0;
-                           });
+  std::transform(t01_sum.begin(), t01_sum.end(), t01_sum.begin(),
+                 [&t01_sum](double value) -> double {
+                   return value / t01_sum[t01_sum.size() - 1] * 100.0;
+                 });
 
   return time_step_ * static_cast<double>(*std::find_if(
                           t01_sum.begin(), t01_sum.end(),
@@ -1127,7 +1138,7 @@ double stochastic::DabaghiDerKiureghian::calc_time_to_intensity(
 
 std::vector<double> stochastic::DabaghiDerKiureghian::calc_linear_filter(
     unsigned int num_steps, const Eigen::VectorXd& filter_params, double t01,
-    double t30, double t99) const {
+    double tmid, double t99) const {
   // Mininum frequency in Hz
   double min_freq = 0.3;
   std::vector<double> filter_func(num_steps);
@@ -1140,18 +1151,18 @@ std::vector<double> stochastic::DabaghiDerKiureghian::calc_linear_filter(
     double current_time = i * time_step_;
     if (current_time < t01) {
       filter_func[i] =
-          fmin > mid_freq + freq_slope * (t01 - tmid)
-              ? fmin * 2.0 * M_PI
+          min_freq > mid_freq + freq_slope * (t01 - tmid)
+              ? min_freq * 2.0 * M_PI
               : (mid_freq + freq_slope * (t01 - tmid)) * 2.0 * M_PI;
     } else if (current_time <= t99) {
       filter_func[i] =
-          fmin > mid_freq + freq_slope * (current_time - tmid)
-              ? fmin * 2.0 * M_PI
+          min_freq > mid_freq + freq_slope * (current_time - tmid)
+              ? min_freq * 2.0 * M_PI
               : (mid_freq + freq_slope * (current_time - tmid)) * 2.0 * M_PI;
     } else {
       filter_func[i] =
-          fmin > mid_freq + freq_slope * (t99 - tmid)
-              ? fmin * 2.0 * M_PI
+          min_freq > mid_freq + freq_slope * (t99 - tmid)
+              ? min_freq * 2.0 * M_PI
               : (mid_freq + freq_slope * (t99 - tmid)) * 2.0 * M_PI;
     }
   }
@@ -1162,10 +1173,11 @@ std::vector<double> stochastic::DabaghiDerKiureghian::calc_linear_filter(
 Eigen::MatrixXd stochastic::DabaghiDerKiureghian::calc_impulse_response_filter(
     unsigned int num_steps, const std::vector<double>& input_filter,
     double zeta) const {
-  Eigen::MatrixXd impulse_response = Eigen::MatrixXdZero(num_steps, num_steps);
+  Eigen::MatrixXd impulse_response =
+      Eigen::MatrixXd::Zero(num_steps, num_steps);
 
   for (unsigned int i = 0; i < num_steps; ++i) {
-    double omega = input_filter(i);
+    double omega = input_filter[i];
     Eigen::VectorXd times(num_steps - 1);
     
     for (unsigned int j = 0; j < times.size(); ++j) {
@@ -1173,11 +1185,15 @@ Eigen::MatrixXd stochastic::DabaghiDerKiureghian::calc_impulse_response_filter(
     }
 
     impulse_response.block(i, i, 1, times.size()) =
-        (omega / std::sqrt(1.0 - zeta * zeta)) * (-zeta * omega * times).exp() *
-        (omega * std::sqrt(1.0 - zeta * zeta) * times).sin();
+        (omega / std::sqrt(1.0 - zeta * zeta)) *
+        ((-zeta * omega * times).array().exp()) *
+        ((omega * std::sqrt(1.0 - zeta * zeta) * times).array().sin());
   }
 
-  Eigen::VectorXd denominator = (impulse_response.pow(2.0).colwise().sum()).sqrt();
+  Eigen::VectorXd denominator =
+      ((impulse_response.array().pow(2.0)).matrix().colwise().sum())
+          .array()
+          .sqrt();
   denominator(0) = 0.1;
 
   for (unsigned int i = 0; i < impulse_response.rows(); ++i) {
@@ -1198,7 +1214,7 @@ std::vector<double> stochastic::DabaghiDerKiureghian::filter_acceleration(
 
   // Compute FFT of acceleration history
   numeric_utils::fft(accel_history, accel_fft);
-  unsigned int freq_steps = static_cast<unsigned int>(accel_fft.size() / 2) + 1;
+  // unsigned int freq_steps = static_cast<unsigned int>(accel_fft.size() / 2) + 1;
 
   // Get filter coefficients
   auto filter =
@@ -1218,7 +1234,7 @@ std::vector<double> stochastic::DabaghiDerKiureghian::filter_acceleration(
   return filtered_acc;
 }
 
-std::vector<double> stochastic::DabaghiDerKiureghian::calc_velocity_pulse(
+std::vector<double> stochastic::DabaghiDerKiureghian::calc_pulse_acceleration(
     unsigned int num_steps, const Eigen::VectorXd& parameters) const {
   double pulse_velocity = parameters(0);  
   double pulse_frequency = 1.0 / parameters(1);
@@ -1276,17 +1292,18 @@ void stochastic::DabaghiDerKiureghian::truncate_time_histories(
   for (unsigned int i = 0; i < accel_comp_1.size(); ++i) {
     // Calculate peak ground displacement (PGD):
     // Component 1
-    auto vel_comp_1 = std::partial_sum(
-        accel_comp_1[i].begin(), accel_comp_1[i].end(), accel_comp_1[i].begin(),
-        [&gfactor](double value) -> double {
-          return value * gfactor * time_step_;
-        });
+    std::vector<double> vel_comp_1(accel_comp_1[i].size());
+    std::vector<double> disp_comp_1(accel_comp_1[i].size());
     
-    auto disp_comp_1 = std::partial_sum(
-        vel_comp_1[i].begin(), vel_comp_1[i].end(), vel_comp_1[i].begin(),
-        [](double value) -> double {
-          return value * time_step_;
-        });
+    std::partial_sum(accel_comp_1[i].begin(), accel_comp_1[i].end(),
+                     vel_comp_1.begin(),
+                     [&gfactor, this](double value) -> double {
+                       return value * gfactor * time_step_;
+                     });
+
+    std::partial_sum(
+        vel_comp_1.begin(), vel_comp_1.end(), disp_comp_1.begin(),
+        [this](double value) -> double { return value * time_step_; });
 
     double pgd_1 = *std::max_element(disp_comp_1.begin(), disp_comp_1.end());
 
@@ -1294,17 +1311,18 @@ void stochastic::DabaghiDerKiureghian::truncate_time_histories(
         amplitude_lim < pgd_1 * pgd_lim ? amplitude_lim : pgd_1 * pgd_lim;
 
     // Component 2
-    auto vel_comp_2 = std::partial_sum(
-        accel_comp_2[i].begin(), accel_comp_2[i].end(), accel_comp_2[i].begin(),
-        [&gfactor](double value) -> double {
-          return value * gfactor * time_step_;
-        });
-    
-    auto disp_comp_2 = std::partial_sum(
-        vel_comp_2[i].begin(), vel_comp_2[i].end(), vel_comp_2[i].begin(),
-        [](double value) -> double {
-          return value * time_step_;
-        });
+    std::vector<double> vel_comp_2(accel_comp_2[i].size());
+    std::vector<double> disp_comp_2(accel_comp_2[i].size());
+
+    std::partial_sum(accel_comp_2[i].begin(), accel_comp_2[i].end(),
+                     vel_comp_2.begin(),
+                     [&gfactor, this](double value) -> double {
+                       return value * gfactor * time_step_;
+                     });
+
+    std::partial_sum(
+        vel_comp_2.begin(), vel_comp_2.end(), disp_comp_2.begin(),
+        [this](double value) -> double { return value * time_step_; });
 
     double pgd_2 = *std::max_element(disp_comp_2.begin(), disp_comp_2.end());
 
@@ -1370,20 +1388,22 @@ void stochastic::DabaghiDerKiureghian::truncate_time_histories(
   }
 }
 
-void stochastic::DabaghiDerKiureghian::baseline_correct_time_histories(
+void stochastic::DabaghiDerKiureghian::baseline_correct_time_history(
     std::vector<double>& time_history, double gfactor,
     unsigned int order) const {
 
   // Calculate velocity and displacment time histories
-  auto vel_series = std::partial_sum(time_history.begin(), time_history.end(),
-                                     time_history.begin(),
-                                     [&gfactor](double value) -> double {
-                                       return value * gfactor * time_step_;
-                                     });
+  std::vector<double> vel_series(time_history.size());
+  std::vector<double> disp_series(time_history.size());
 
-  auto disp_series = std::partial_sum(
-      vel_series[i].begin(), vel_series[i].end(), vel_series[i].begin(),
-      [](double value) -> double { return value * time_step_; });
+  std::partial_sum(time_history.begin(), time_history.end(), vel_series.begin(),
+                   [&gfactor, this](double value) -> double {
+                     return value * gfactor * time_step_;
+                   });
+
+  std::partial_sum(
+      vel_series.begin(), vel_series.end(), disp_series.begin(),
+      [this](double value) -> double { return value * time_step_; });
 
   Eigen::VectorXd times(time_history.size());
 
@@ -1397,7 +1417,7 @@ void stochastic::DabaghiDerKiureghian::baseline_correct_time_histories(
 
   // Fit zero-intercept polynomial to displacement time history
   auto displacement_poly =
-    numeric_utils::polyfit_zero_intercept(times, disp_vector, 0.0, 5);
+    numeric_utils::polyfit_intercept(times, disp_vector, 0.0, 5);
   auto velocity_poly = numeric_utils::polynomial_derivative(displacement_poly);
   auto accel_poly = numeric_utils::polynomial_derivative(velocity_poly);
 
