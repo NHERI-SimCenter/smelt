@@ -859,17 +859,23 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
 
   // Calculate Arias intensity
   for (unsigned int i = 0; i < num_gms; ++i) {
-    std::partial_sum(accel_comp_1[i].begin(), accel_comp_1[i].end(),
-                     arias_intensity_1[i].begin(),
-                     [this](double value) -> double {
-                       return value * value * time_step_ * M_PI / 2.0;
-                     });
+    std::transform(accel_comp_1[i].begin(), accel_comp_1[i].end(),
+                   arias_intensity_1[i].begin(),
+                   [this](double value) -> double {
+                     return value * value * time_step_ * M_PI / 2.0;
+                   });
 
-    std::partial_sum(accel_comp_2[i].begin(), accel_comp_2[i].end(),
-                     arias_intensity_2[i].begin(),
-                     [this](double value) -> double {
-                       return value * value * time_step_ * M_PI / 2.0;
-                     });
+    std::partial_sum(arias_intensity_1[i].begin(), arias_intensity_1[i].end(),
+                     arias_intensity_1[i].begin());
+
+    std::transform(accel_comp_2[i].begin(), accel_comp_2[i].end(),
+                   arias_intensity_2[i].begin(),
+                   [this](double value) -> double {
+                     return value * value * time_step_ * M_PI / 2.0;
+                   });
+
+    std::partial_sum(arias_intensity_2[i].begin(), arias_intensity_2[i].end(),
+                     arias_intensity_2[i].begin());
   }
 
   // Calculate scaling factors and scale accelerations to match Arias intensity
@@ -1122,8 +1128,10 @@ double stochastic::DabaghiDerKiureghian::calc_time_to_intensity(
   // proportional to Arias intensity
   std::vector<double> t01_sum(acceleration.size());
 
-  std::partial_sum(acceleration.begin(), acceleration.end(), t01_sum.begin(),
-                   [](double value) -> double { return value * value; });
+  std::transform(acceleration.begin(), acceleration.end(), t01_sum.begin(),
+                [](double value) -> double { return value * value; });
+
+  std::partial_sum(t01_sum.begin(), t01_sum.end(), t01_sum.begin());
 
   // Calculate normalized cumulative Arias intensity in percent
   std::transform(t01_sum.begin(), t01_sum.end(), t01_sum.begin(),
@@ -1294,16 +1302,22 @@ void stochastic::DabaghiDerKiureghian::truncate_time_histories(
     // Component 1
     std::vector<double> vel_comp_1(accel_comp_1[i].size());
     std::vector<double> disp_comp_1(accel_comp_1[i].size());
-    
-    std::partial_sum(accel_comp_1[i].begin(), accel_comp_1[i].end(),
-                     vel_comp_1.begin(),
-                     [&gfactor, this](double value) -> double {
-                       return value * gfactor * time_step_;
-                     });
 
-    std::partial_sum(
+    std::transform(accel_comp_1[i].begin(), accel_comp_1[i].end(),
+                   vel_comp_1.begin(),
+                   [&gfactor, this](double value) -> double {
+                     return value * gfactor * time_step_;
+                   });
+
+    std::partial_sum(vel_comp_1.begin(), vel_comp_1.end(),
+                     vel_comp_1.begin());
+
+    std::transform(
         vel_comp_1.begin(), vel_comp_1.end(), disp_comp_1.begin(),
         [this](double value) -> double { return value * time_step_; });
+
+    std::partial_sum(disp_comp_1.begin(), disp_comp_1.end(),
+                     disp_comp_1.begin());
 
     double pgd_1 = *std::max_element(disp_comp_1.begin(), disp_comp_1.end());
 
@@ -1314,15 +1328,21 @@ void stochastic::DabaghiDerKiureghian::truncate_time_histories(
     std::vector<double> vel_comp_2(accel_comp_2[i].size());
     std::vector<double> disp_comp_2(accel_comp_2[i].size());
 
-    std::partial_sum(accel_comp_2[i].begin(), accel_comp_2[i].end(),
-                     vel_comp_2.begin(),
-                     [&gfactor, this](double value) -> double {
-                       return value * gfactor * time_step_;
-                     });
+    std::transform(accel_comp_2[i].begin(), accel_comp_2[i].end(),
+                   vel_comp_2.begin(),
+                   [&gfactor, this](double value) -> double {
+                     return value * gfactor * time_step_;
+                   });
 
-    std::partial_sum(
+    std::partial_sum(vel_comp_2.begin(), vel_comp_2.end(),
+                     vel_comp_2.begin());
+
+    std::transform(
         vel_comp_2.begin(), vel_comp_2.end(), disp_comp_2.begin(),
         [this](double value) -> double { return value * time_step_; });
+
+    std::partial_sum(disp_comp_2.begin(), disp_comp_2.end(),
+                     disp_comp_2.begin());
 
     double pgd_2 = *std::max_element(disp_comp_2.begin(), disp_comp_2.end());
 
@@ -1396,14 +1416,17 @@ void stochastic::DabaghiDerKiureghian::baseline_correct_time_history(
   std::vector<double> vel_series(time_history.size());
   std::vector<double> disp_series(time_history.size());
 
-  std::partial_sum(time_history.begin(), time_history.end(), vel_series.begin(),
-                   [&gfactor, this](double value) -> double {
-                     return value * gfactor * time_step_;
-                   });
+  std::transform(time_history.begin(), time_history.end(), vel_series.begin(),
+                 [&gfactor, this](double value) -> double {
+                   return value * gfactor * time_step_;
+                 });
 
-  std::partial_sum(
-      vel_series.begin(), vel_series.end(), disp_series.begin(),
-      [this](double value) -> double { return value * time_step_; });
+  std::partial_sum(vel_series.begin(), vel_series.end(), vel_series.begin());
+
+  std::transform(vel_series.begin(), vel_series.end(), disp_series.begin(),
+                 [this](double value) -> double { return value * time_step_; });
+
+  std::partial_sum(disp_series.begin(), disp_series.end(), disp_series.begin());
 
   Eigen::VectorXd times(time_history.size());
 
