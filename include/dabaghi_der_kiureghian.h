@@ -147,7 +147,6 @@ class DabaghiDerKiureghian : public StochasticModel {
                 const std::string& output_location,
                 bool units = false) override;
 
- private:
   /**
    * Generates proportion of motions that should be pulse-like based on total
    * number of simulations and probability of those motions containing a pulse
@@ -222,7 +221,7 @@ class DabaghiDerKiureghian : public StochasticModel {
    * Backcalculate modulating parameters given Arias Intesity and duration parameters
    * @param[in] q_params Vector containing Ia, D595, D05, and D030
    * @param[in] t0 Initial time. Defaults to 0.0.
-   * @return Vector containing parameters alpha, beta, c and tmaxq
+   * @return Vector containing parameters alpha, beta, tmaxq, and c
    */
   Eigen::VectorXd backcalculate_modulating_params(
       const Eigen::VectorXd& q_params, double t0 = 0.0) const;
@@ -239,16 +238,17 @@ class DabaghiDerKiureghian : public StochasticModel {
    */
   Eigen::MatrixXd simulate_white_noise(const Eigen::VectorXd& modulating_params,
                                        const Eigen::VectorXd& filter_params,
-                                       unsigned int, unsigned int num_steps,
+                                       unsigned int num_steps,
                                        unsigned int num_gms = 1) const;
 
   /**
    * This function defines an error measure based on matching times of the 5%,
    * 30%, and 95% Arias intensity of the target ground motion and corresponding
-   * modulating function q(t) with parameters  alpha_q_sub as defined in Eq. 4
+   * modulating function q(t) with parameters alpha_q_sub as defined in Eq. 4
    * of Reference 2. This is used to back-calculate the modulating function
    * parameters by minimizing the corresponding error measure. Input to returned
    * function is a vector containing alpha, beta, and t_max_q.
+   * @param[in] parameters Modulating function parameters: alpha, beta, and t_max_q
    * @param[in] d05_target Time from t0 to time of 5% Arias intensity of target
    *                       motion
    * @param[in] d030_target Time from t0 to time of 30% Arias intensity of
@@ -256,10 +256,11 @@ class DabaghiDerKiureghian : public StochasticModel {
    * @param[in] d095_target Time from t0 to time of 95% Arias intensity of
    *                        target motion
    * @param[in] t0 Start time of modulating function and of target ground motion
+   * @return ERrro in modulating function
    */
-  std::function<double(const std::vector<double>&)> calc_parameter_error(
-      double d05_target, double d030_target, double d095_target,
-      double t0) const;
+  double calc_parameter_error(const std::vector<double>& parameters,
+                              double d05_target, double d030_target,
+                              double d095_target, double t0) const;
 
   /**
    * Calculate values of modulating function given function parameters
@@ -373,8 +374,9 @@ class DabaghiDerKiureghian : public StochasticModel {
    * @param[in] units If true, converts to units of g, otherwise to m/s^2
    */
   void convert_time_history_units(std::vector<double>& time_history,
-                                  bool units) const;
+                                  bool units) const;  
 
+ private:
   FaultType faulting_;      /**< Enum for type of faulting for scenario */
   SimulationType sim_type_; /**< Enum for pulse-like nature of ground motion */
   double moment_magnitude_; /**< Moment magnitude for scenario */

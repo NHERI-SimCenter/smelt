@@ -1,7 +1,6 @@
-#include <iostream>
-
 #include <cmath>
 #include <functional>
+#include <iostream>
 #include <stdexcept>
 #include <vector>
 #include "nelder_mead.h"
@@ -112,7 +111,7 @@ std::vector<double> optimization::NelderMead::minimize(
       simplex_[0].swap(simplex_[index_low]);
       simplex_mins = simplex_[0];
       func_min_ = func_vals_[0];
-      std::cerr << "\nWarning: Max iterations exceeded, returning current "
+      std::cerr << "\nWARNING: Max iterations exceeded, returning current "
                    "minimum location with function value of "
                 << func_min_ << std::endl;
 

@@ -60,6 +60,11 @@ stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
   corr_matrix_nopulse_.resize(14, 14);
   beta_distribution_pulse_.resize(19, 8);
   beta_distribution_nopulse_.resize(14, 8);
+  params_lower_bound_.resize(19);
+  params_upper_bound_.resize(19);
+  params_fitted1_.resize(19);
+  params_fitted2_.resize(19);
+  params_fitted3_.resize(19);  
 
   // clang-format off
   std_dev_pulse_ <<
@@ -150,9 +155,9 @@ stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
     0.424849811725595, -0.181204207590470, 0, 0, 0, 0, 0.401549107903204, 0,
     -2.97911606394595, 0.420016455603546, 0, 0, 0, 0, 0, 0,
     -0.703694160589291, 0.160571013696218, 0, -0.145792047865653, 0, 0, 0, 0;
-
-  params_lower_bound_ << 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, -3.5, -4.7, 0, 0, 0, 0, 0, -3.5, -4.7;
   
+  params_lower_bound_ << 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, -3.5, -4.7, 0, 0, 0, 0, 0, -3.5, -4.7;
+
   params_upper_bound_ << 0, 0, 3.2, 2, 0, 0, 0, 0, 0, 0, 1.5, 0, 0, 0, 0, 0, 0, 1.5, 0;
   
   params_fitted1_ << 0, 0, 1.30326178289206, 0, 0, 0, 0, 0, 0, 0, 14.2935537214223, 5.33551936215137, 0, 0, 0, 0, 0, 14.2935537214223, 5.33551936215137;
@@ -196,6 +201,13 @@ stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
   std_dev_nopulse_.resize(14);
   corr_matrix_pulse_.resize(19, 19);
   corr_matrix_nopulse_.resize(14, 14);
+  beta_distribution_pulse_.resize(19, 8);
+  beta_distribution_nopulse_.resize(14, 8);
+  params_lower_bound_.resize(19);
+  params_upper_bound_.resize(19);
+  params_fitted1_.resize(19);
+  params_fitted2_.resize(19);
+  params_fitted3_.resize(19);  
 
   // clang-format off
   std_dev_pulse_ <<
@@ -518,7 +530,7 @@ unsigned int stochastic::DabaghiDerKiureghian::simulate_pulse_type(
 
   unsigned int number_of_pulses = 0;
 
-  for (unsigned int i = 0; i < num_sims_pulse_ + num_sims_nopulse_; ++i) {
+  for (unsigned int i = 0; i < num_sims; ++i) {
     if (pulse_gen() < pulse_probability) {
       number_of_pulses++;
     }
@@ -605,17 +617,20 @@ Eigen::VectorXd
   double fault_parameter =
       faulting_ == stochastic::FaultType::StrikeSlip ? 0.0 : 1.0;
 
-  Eigen::VectorXd params_vector(7);
+  Eigen::VectorXd params_vector(8);
   params_vector << 1.0, moment_magnitude_,
-      moment_magnitude_ - magnitude_baseline_,
+      std::pow(moment_magnitude_ - magnitude_baseline_,
+               static_cast<double>(moment_magnitude_ > magnitude_baseline_)),
       std::log(std::sqrt(rupture_dist_ * rupture_dist_ + c6_ * c6_)),
+      moment_magnitude_ *
+          std::log(std::sqrt(rupture_dist_ * rupture_dist_ + c6_ * c6_)),
       fault_parameter * depth_parameter, site_parameter, s_or_d_;
 
   // Calculate the mean predicted model parameters in normal space
   if (pulse_like) {
-    return params_vector * beta_distribution_pulse_.transpose();
+    return beta_distribution_pulse_ * params_vector;
   } else {
-    return params_vector * beta_distribution_nopulse_.transpose();
+    return beta_distribution_nopulse_ * params_vector;
   }
 }
 
@@ -781,10 +796,15 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
     unsigned int num_gms) const {
 
   // Extract parameters for two components of ground motion
-  Eigen::VectorXd alpha_1 =
-      pulse_like ? parameters.segment(5, 7) : parameters.segment(0, 7);
-  Eigen::VectorXd alpha_2 =
-      pulse_like ? parameters.segment(12, 7) : parameters.segment(7, 7);
+  Eigen::VectorXd alpha_1(7);
+  Eigen::VectorXd alpha_2(7);  
+  if (pulse_like) {
+    alpha_1 = parameters.segment(5, 7);
+    alpha_2 = parameters.segment(12, 7);
+  } else {
+    alpha_1 = parameters.segment(0, 7);
+    alpha_2 = parameters.segment(7, 7);
+  }
 
   // Set modulating and filter parameters
   Eigen::VectorXd modulating_params_1 =
@@ -912,7 +932,7 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
     // Add pulse motion to component 1
     for (unsigned int i = 0; i < num_gms; ++i) {
       for (unsigned int j = 0; j < padded_pulse.size(); ++j) {
-	accel_comp_1[i][j] = accel_comp_1[i][j] + padded_pulse[j]; 	
+  	accel_comp_1[i][j] = accel_comp_1[i][j] + padded_pulse[j]; 	
       }
     }
   }
@@ -927,25 +947,25 @@ Eigen::VectorXd
     t30 = t0 + d030;
 
   // Search for local minimum by trying several starting points
-  optimization::NelderMead minimizer(1e-14);
+  optimization::NelderMead minimizer(1e-10);
   std::vector<double> diffs(6);
   std::function<double(const std::vector<double>&)> error_function =
-      calc_parameter_error(d05, d030, d095, t0);
+      std::bind(&stochastic::DabaghiDerKiureghian::calc_parameter_error, this,
+                std::placeholders::_1, d05, d030, d095, t0);
 
   // Iterate over starting points
   std::vector<std::vector<double>> starting_points = {
       {1.0, 0.2, t30}, {2.0, 0.2, t30}, {5.0, 0.2, t30},
       {1.0, 1.0, t30}, {2.0, 1.0, t30}, {5.0, 1.0, t30}};
-  std::vector<double> deltas(starting_points.size());
+  std::vector<double> deltas(starting_points[0].size());
 
   unsigned int point_counter = 0;
   for (auto& point : starting_points) {
     for (unsigned int i = 0; i < deltas.size(); ++i) {
-      deltas[i] = std::abs(point[i]) < 1.0e-6 ? 0.00025 : 0.05 * point[i];
+      deltas[i] = std::abs(point[i]) < 1.0e-6 ? 0.00025 : 0.05 * std::abs(point[i]);
     }
 
-    point = minimizer.minimize<double, const std::vector<double>&>(
-        point, deltas, error_function);
+    point = minimizer.minimize(point, deltas, error_function);
     diffs[point_counter] = error_function(point);
     ++point_counter;
   }
@@ -965,85 +985,78 @@ Eigen::VectorXd
   parameters << starting_points[min_index][0], starting_points[min_index][1],
       starting_points[min_index][2], std::numeric_limits<double>::infinity();
 
-  parameters[3] =
+  parameters[3] = std::sqrt(
       arias_intensity /
       ((M_PI / 2.0) * ((parameters[2] - t0) / (2.0 * parameters[0] + 1.0) +
-                       1.0 / (2.0 * parameters[1])));
+                       1.0 / (2.0 * parameters[1]))));
 
   return parameters;
 }
 
-std::function<double(const std::vector<double>&)>
-    stochastic::DabaghiDerKiureghian::calc_parameter_error(double d05_target,
-                                                           double d030_target,
-                                                           double d095_target,
-                                                           double t0) const {
-  return [d05_target, d030_target, d095_target, t0]
-    (const std::vector<double>& alpha_q_sub) -> double {
-    // Modulating function parameters
-    double alpha = alpha_q_sub[0], beta = alpha_q_sub[1],
-           t_max_q = alpha_q_sub[2];
+double stochastic::DabaghiDerKiureghian::calc_parameter_error(
+    const std::vector<double>& parameters, double d05_target,
+    double d030_target, double d095_target, double t0) const {
+  // Modulating function parameters
+  double alpha = parameters[0], beta = parameters[1], t_max_q = parameters[2];
 
-    // Arias intensity times corresponding to the selected modulating function
-    // and parameters
-    double t5_fit =
-        t0 + std::pow((5.0 / 100.0) * std::pow(t_max_q - t0, 2.0 * alpha) *
-                          ((t_max_q - t0) + (2.0 * alpha + 1.0) / (2.0 * beta)),
-                      1.0 / (2.0 * alpha + 1.0));
+  // Arias intensity times corresponding to the selected modulating function
+  // and parameters
+  double t5_fit =
+      t0 + std::pow((5.0 / 100.0) * std::pow(t_max_q - t0, 2.0 * alpha) *
+                        ((t_max_q - t0) + (2.0 * alpha + 1.0) / (2.0 * beta)),
+                    1.0 / (2.0 * alpha + 1.0));
 
-    double t30_fit =
-        t0 + std::pow((30.0 / 100.0) * std::pow(t_max_q - t0, 2.0 * alpha) *
-                          ((t_max_q - t0) + (2.0 * alpha + 1.0) / (2.0 * beta)),
-                      1.0 / (2.0 * alpha + 1.0));
+  double t30_fit =
+      t0 + std::pow((30.0 / 100.0) * std::pow(t_max_q - t0, 2.0 * alpha) *
+                        ((t_max_q - t0) + (2.0 * alpha + 1.0) / (2.0 * beta)),
+                    1.0 / (2.0 * alpha + 1.0));
 
-    double t95_fit =
-        t0 + std::pow((95.0 / 100.0) * std::pow(t_max_q - t0, 2.0 * alpha) *
-                          ((t_max_q - t0) + (2.0 * alpha + 1.0) / (2.0 * beta)),
-                      1.0 / (2.0 * alpha + 1.0));
+  double t95_fit =
+      t0 + std::pow((95.0 / 100.0) * std::pow(t_max_q - t0, 2.0 * alpha) *
+                        ((t_max_q - t0) + (2.0 * alpha + 1.0) / (2.0 * beta)),
+                    1.0 / (2.0 * alpha + 1.0));
 
-    if (t5_fit > t_max_q) {
-      t5_fit =
-          t_max_q -
-          (1.0 / (2.0 * beta)) *
-              std::log(
-                  ((100.0 - 5.0) / 100.0) *
-                  ((t_max_q - t0) * (2.0 * beta) / (2.0 * alpha + 1.0) + 1.0));
-    }
+  if (t5_fit > t_max_q) {
+    t5_fit = t_max_q -
+             (1.0 / (2.0 * beta)) *
+                 std::log(((100.0 - 5.0) / 100.0) *
+                          ((t_max_q - t0) * (2.0 * beta) / (2.0 * alpha + 1.0) +
+                           1.0));
+  }
 
-    if (t30_fit > t_max_q) {
-      t30_fit =
-          t_max_q -
-          (1.0 / (2.0 * beta)) *
-              std::log(
-                  ((100.0 - 30.0) / 100.0) *
-                  ((t_max_q - t0) * (2.0 * beta) / (2.0 * alpha + 1.0) + 1.0));
-    }
+  if (t30_fit > t_max_q) {
+    t30_fit =
+        t_max_q -
+        (1.0 / (2.0 * beta)) *
+            std::log(
+                ((100.0 - 30.0) / 100.0) *
+                ((t_max_q - t0) * (2.0 * beta) / (2.0 * alpha + 1.0) + 1.0));
+  }
 
-    if (t95_fit > t_max_q) {
-      t95_fit =
-          t_max_q -
-          (1.0 / (2.0 * beta)) *
-              std::log(
-                  ((100.0 - 95.0) / 100.0) *
-                  ((t_max_q - t0) * (2.0 * beta) / (2.0 * alpha + 1.0) + 1.0));
-    }
+  if (t95_fit > t_max_q) {
+    t95_fit =
+        t_max_q -
+        (1.0 / (2.0 * beta)) *
+            std::log(
+                ((100.0 - 95.0) / 100.0) *
+                ((t_max_q - t0) * (2.0 * beta) / (2.0 * alpha + 1.0) + 1.0));
+  }
 
-    // Duration parameters of corresponding modulating function
-    double d05_fit = t5_fit - t0;
-    double d030_fit = t30_fit - t0;
-    double d095_fit = t95_fit - t0;
+  // Duration parameters of corresponding modulating function
+  double d05_fit = t5_fit - t0;
+  double d030_fit = t30_fit - t0;
+  double d095_fit = t95_fit - t0;
 
-    // Error measure
-    // NOTE: It doesn't matter whether the terms are normalized or not
-    return std::pow(d05_target - d05_fit, 2) +
-           std::pow(d030_target - d030_fit, 2) +
-           std::pow(d095_target - d095_fit, 2);
-  };
+  // Error measure
+  // NOTE: It doesn't matter whether the terms are normalized or not
+  return std::pow(d05_target - d05_fit, 2) +
+         std::pow(d030_target - d030_fit, 2) +
+         std::pow(d095_target - d095_fit, 2);
 }
 
 Eigen::MatrixXd stochastic::DabaghiDerKiureghian::simulate_white_noise(
     const Eigen::VectorXd& modulating_params,
-    const Eigen::VectorXd& filter_params, unsigned int, unsigned int num_steps,
+    const Eigen::VectorXd& filter_params, unsigned int num_steps,
     unsigned int num_gms) const {
   // CALCULATE MODULATING FUNCTION:
   auto modulating_func =
@@ -1139,9 +1152,14 @@ double stochastic::DabaghiDerKiureghian::calc_time_to_intensity(
                    return value / t01_sum[t01_sum.size() - 1] * 100.0;
                  });
 
-  return time_step_ * static_cast<double>(*std::find_if(
-                          t01_sum.begin(), t01_sum.end(),
-                          [](double value) { return value >= 1.0; }));
+  return time_step_ *
+         static_cast<double>(
+             std::distance(t01_sum.begin(),
+                           std::find_if(t01_sum.begin(), t01_sum.end(),
+                                        [percentage](double value) {
+                                          return value >= percentage;
+                                        })) +
+             1);
 }
 
 std::vector<double> stochastic::DabaghiDerKiureghian::calc_linear_filter(
@@ -1186,16 +1204,18 @@ Eigen::MatrixXd stochastic::DabaghiDerKiureghian::calc_impulse_response_filter(
 
   for (unsigned int i = 0; i < num_steps; ++i) {
     double omega = input_filter[i];
-    Eigen::VectorXd times(num_steps - 1);
+    Eigen::VectorXd times(num_steps - i);
     
     for (unsigned int j = 0; j < times.size(); ++j) {
-      times(j) = static_cast<double>(j - i) * time_step_;
+      times(j) = static_cast<double>(j) * time_step_;
     }
 
     impulse_response.block(i, i, 1, times.size()) =
-        (omega / std::sqrt(1.0 - zeta * zeta)) *
-        ((-zeta * omega * times).array().exp()) *
-        ((omega * std::sqrt(1.0 - zeta * zeta) * times).array().sin());
+        ((omega / std::sqrt(1.0 - zeta * zeta)) *
+         ((-zeta * omega * times).array().exp()) *
+         ((omega * std::sqrt(1.0 - zeta * zeta) * times).array().sin()))
+            .matrix()
+            .transpose();
   }
 
   Eigen::VectorXd denominator =
@@ -1203,10 +1223,10 @@ Eigen::MatrixXd stochastic::DabaghiDerKiureghian::calc_impulse_response_filter(
           .array()
           .sqrt();
   denominator(0) = 0.1;
-
+  
   for (unsigned int i = 0; i < impulse_response.rows(); ++i) {
     impulse_response.row(i) =
-        impulse_response.row(i).cwiseQuotient(denominator);
+        impulse_response.row(i).cwiseQuotient(denominator.transpose());
   }
 
   return impulse_response;
