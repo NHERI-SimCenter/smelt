@@ -1238,18 +1238,16 @@ std::vector<double> stochastic::DabaghiDerKiureghian::filter_acceleration(
     unsigned int filter_order) const {
 
   // Calculate normalized cutoff frequency
-  double freq_cutoff_norm = 1.0 / (2.0 * time_step_);
   std::vector<std::complex<double>> accel_fft(accel_history.size());
 
   // Compute FFT of acceleration history
   numeric_utils::fft(accel_history, accel_fft);
-  // unsigned int freq_steps = static_cast<unsigned int>(accel_fft.size() / 2) + 1;
 
   // Get filter coefficients
-  auto filter =
-    Dispatcher<std::vector<double>, double, unsigned int, unsigned int>::instance()
-          ->dispatch("AcausalHighpassButterworth", freq_cutoff_norm,
-                     filter_order, accel_fft.size());
+  auto filter = Dispatcher<std::vector<double>, double, double, unsigned int,
+                           unsigned int>::instance()
+                    ->dispatch("AcausalHighpassButterworth", freq_corner,
+                               time_step_, filter_order, accel_fft.size());
 
   // Filter acceleration in frequency domain
   for (unsigned int i = 0; i < accel_fft.size(); ++i) {

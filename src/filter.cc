@@ -130,10 +130,14 @@ std::function<std::vector<double>(std::vector<double>, std::vector<double>, int,
   };
 }
 
-std::function<std::vector<double>(double, unsigned int, unsigned int)>
+std::function<std::vector<double>(double, double, unsigned int, unsigned int)>
     acausal_highpass_filter() {
-  return [](double freq_cutoff_norm, unsigned int order,
+  return [](double freq_corner, double time_step, unsigned int order,
             unsigned int num_samples) -> std::vector<double> {
+    
+    // Calculate normalized frequency
+    double freq_cutoff_norm = 1.0 / (2.0 * time_step);
+    
     // Initialize filter and frequencies
     Eigen::VectorXd filter(num_samples);
     std::vector<double> freq_steps(static_cast<unsigned int>(num_samples / 2) +
@@ -149,7 +153,7 @@ std::function<std::vector<double>(double, unsigned int, unsigned int)>
     // Calculate first half of filter coefficients
     for (unsigned int i = 0; i < freq_steps.size(); ++i) {
       filter(i) =
-          std::sqrt(1.0 / (1.0 + std::pow(freq_cutoff_norm / freq_steps[i],
+          std::sqrt(1.0 / (1.0 + std::pow(freq_corner / freq_steps[i],
                                           2.0 * order)));
     }
 

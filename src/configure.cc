@@ -107,7 +107,7 @@ void config::initialize() {
                               signal_processing::impulse_response());
 
   // Register acausal highpass Butterwork filter
-  static DispatchRegister<std::vector<double>, double, unsigned int,
+  static DispatchRegister<std::vector<double>, double, double, unsigned int,
                           unsigned int>
       acausal_highpass_filter("AcausalHighpassButterworth",
                               signal_processing::acausal_highpass_filter());
