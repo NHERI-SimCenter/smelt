@@ -1101,11 +1101,12 @@ Eigen::MatrixXd stochastic::DabaghiDerKiureghian::simulate_white_noise(
   auto freq_func = white_noise * impulse_response;
 
   Eigen::MatrixXd filtered_white_noise(num_gms, num_steps);
+  // Convert modulating function to Eigen::VectorXd
+  Eigen::VectorXd mod_func_vec = Eigen::Map<Eigen::VectorXd>(
+      modulating_func.data(), modulating_func.size());
 
   for (unsigned int i = 0; i < num_gms; ++i) {
-    for (unsigned int j = 0; i < num_steps; ++j) {
-      filtered_white_noise(i, j) = freq_func(i, j) * modulating_func[j];
-    }
+    filtered_white_noise.row(i) = freq_func.row(i).cwiseProduct(mod_func_vec.transpose());
   }
 
   return filtered_white_noise;
