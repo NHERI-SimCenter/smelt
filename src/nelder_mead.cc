@@ -1,28 +1,29 @@
+#include <iostream>
+
 #include <cmath>
 #include <functional>
 #include <stdexcept>
 #include <vector>
+#include "nelder_mead.h"
 
-template <typename Tfunc_returntype, typename... Tfunc_args>
 std::vector<double> optimization::NelderMead::minimize(
     const std::vector<double>& initial_point, double delta,
-    std::function<Tfunc_returntype(Tfunc_args...)>& objective_function) {
+    std::function<double(const std::vector<double>&)>& objective_function) {
   // Create vector of deltas with length equal to the number of dimensions
   std::vector<double> deltas(initial_point.size(), delta);
   // Call minmize with vector of deltas
-  return minimize<Tfunc_returntype, Tfunc_args...>(initial_point, deltas,
-                                                   objective_function);
-};
+  return minimize(initial_point, deltas, objective_function);
+}
 
-template <typename Tfunc_returntype, typename... Tfunc_args>
 std::vector<double> optimization::NelderMead::minimize(
     const std::vector<double>& initial_point, const std::vector<double>& deltas,
-    std::function<Tfunc_returntype(Tfunc_args...)>& objective_function) {
+    std::function<double(const std::vector<double>&)>& objective_function) {
   // Set the number of dimensions
   num_dimensions_ = initial_point.size();
   // Initialize matrix that expands initial simplex in different directions
   // using input deltas
-  std::vector<std::vector<double>> simplex(num_dimensions_ + 1, std::vector<double>(num_dimensions_));
+  std::vector<std::vector<double>> simplex(
+      num_dimensions_ + 1, std::vector<double>(num_dimensions_));
   for (unsigned int i = 0; i < num_dimensions_ + 1; ++i) {
     for (unsigned int j = 0; j < num_dimensions_; ++j) {
       simplex[i][j] = initial_point[j];
@@ -34,13 +35,12 @@ std::vector<double> optimization::NelderMead::minimize(
   }
 
   // Call minimize with matrix definining initial simplex
-  return minimize<Tfunc_returntype, Tfunc_args...>(simplex, objective_function);
-};
+  return minimize(simplex, objective_function);
+}
 
-template <typename Tfunc_returntype, typename... Tfunc_args>
 std::vector<double> optimization::NelderMead::minimize(
     const std::vector<std::vector<double>>& initial_simplex,
-    std::function<Tfunc_returntype(Tfunc_args...)>& objective_function) {
+    std::function<double(const std::vector<double>&)>& objective_function) {
 
   // Initialize variables
   unsigned int index_high, index_low, index_next_high;
@@ -63,27 +63,31 @@ std::vector<double> optimization::NelderMead::minimize(
 
   num_evals_ = 0;
 
-  centroids = this->calc_centroid(simplex_);  
+  centroids = calc_centroid(simplex_, num_dimensions_, num_points_);
+  
+  // centroids = calc_centroid();
 
   // Iterate until specified tolerance is achieved or maximum number of
   // iterations is exceeded
   while (true) {
     index_low = 0;
     // Order points from best to worst
-    index_high = func_vals_[0] > func_vals_[1] ? (index_next_high = 1, 0) : (index_next_high = 0, 1);
+    index_high = func_vals_[0] > func_vals_[1] ? (index_next_high = 1, 0)
+                                               : (index_next_high = 0, 1);
 
     for (unsigned int i = 0; i < num_points_; ++i) {
       // Check if function value is best than current low
       if (func_vals_[i] <= func_vals_[index_low]) {
-	index_low = i;
+        index_low = i;
       }
       // Check if function value is worse than current worst
       if (func_vals_[i] > func_vals_[index_high]) {
-	index_next_high = index_high;
-	index_high = i;
-      // Check if function value is worse than next-worst, but not worst
-      } else if (func_vals_[i] > func_vals_[index_next_high] && i != index_high) {
-	index_next_high = i;
+        index_next_high = index_high;
+        index_high = i;
+        // Check if function value is worse than next-worst, but not worst
+      } else if (func_vals_[i] > func_vals_[index_next_high] &&
+                 i != index_high) {
+        index_next_high = i;
       }
     }
 
@@ -99,14 +103,20 @@ std::vector<double> optimization::NelderMead::minimize(
       simplex_[0].swap(simplex_[index_low]);
       simplex_mins = simplex_[0];
       func_min_ = func_vals_[0];
-      
+
       return simplex_mins;
     }
 
     if (num_evals_ >= MAX_ITERS_) {
-      throw std::runtime_error(
-          "\nERROR: in optimization::NelderMead::minimize: Maximum allowable "
-          "number of iterations exceeded!\n");
+      std::swap(func_vals_[0], func_vals_[index_low]);
+      simplex_[0].swap(simplex_[index_low]);
+      simplex_mins = simplex_[0];
+      func_min_ = func_vals_[0];
+      std::cerr << "\nWarning: Max iterations exceeded, returning current "
+                   "minimum location with function value of "
+                << func_min_ << std::endl;
+
+      return simplex_mins;      
     }
 
     num_evals_ += 2;
@@ -130,32 +140,31 @@ std::vector<double> optimization::NelderMead::minimize(
 
       // Worst point is not going away, so contract around best point
       if (reflection >= func_next_high) {
-	for (unsigned int i = 0; i < num_points_; ++i) {
-	  if (i != index_low) {
-	    for (unsigned int j = 0; j < num_dimensions_; ++j) {
-	      centroids[j] = 0.5 * (simplex_[i][j] + simplex_[index_low][j]);
-	      simplex_[i][j] = centroids[j];
-	    }
-	    func_vals_[i] = objective_function(centroids);
-	  }
-	}
-	num_evals_ += num_dimensions_;
-	centroids = this->calc_centroid(simplex_);
+        for (unsigned int i = 0; i < num_points_; ++i) {
+          if (i != index_low) {
+            for (unsigned int j = 0; j < num_dimensions_; ++j) {
+              centroids[j] = 0.5 * (simplex_[i][j] + simplex_[index_low][j]);
+              simplex_[i][j] = centroids[j];
+            }
+            func_vals_[i] = objective_function(centroids);
+          }
+        }
+        num_evals_ += num_dimensions_;
+        centroids = calc_centroid(simplex_, num_dimensions_, num_points_);
       }
     } else {
       --num_evals_;
     }
   }
-};
+}
 
-template <typename Tfunc_returntype, typename... Tfunc_args>
 double optimization::NelderMead::reflect(
     std::vector<std::vector<double>>& simplex,
     std::vector<double>& objective_vals, std::vector<double>& centroids,
     unsigned int index_worst, double factor,
-    std::function<Tfunc_returntype(Tfunc_args...)>& objective_function) {
+    std::function<double(const std::vector<double>&)>& objective_function) {
 
-  std::vector<double> evaluations(num_dimensions_);  
+  std::vector<double> evaluations(num_dimensions_);
 
   double factor1 = (1.0 - factor) / static_cast<double>(num_dimensions_);
   double factor2 = factor1 - factor;
@@ -176,4 +185,22 @@ double optimization::NelderMead::reflect(
   }
 
   return objective_value;
-};
+}
+
+std::vector<double> optimization::NelderMead::calc_centroid(
+    const std::vector<std::vector<double>>& simplex,
+    unsigned int num_dimensions, unsigned int num_points) const {
+
+  std::vector<double> centroids(num_dimensions);
+
+  for (unsigned int j = 0; j < num_dimensions; ++j) {
+    double sum = 0.0;
+    for (unsigned int i = 0; i < num_points; ++i) {
+      sum += simplex[i][j];
+    }
+
+    centroids[j] = sum;
+  }
+
+  return centroids;
+}

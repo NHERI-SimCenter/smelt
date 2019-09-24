@@ -1,6 +1,7 @@
 #include <Eigen/Dense>
-#include "configure.h"
 #include "beta_dist.h"
+#include "configure.h"
+#include "dabaghi_der_kiureghian.h"
 #include "factory.h"
 #include "filter.h"
 #include "function_dispatcher.h"
@@ -59,6 +60,17 @@ void config::initialize() {
   static Register<stochastic::StochasticModel, stochastic::VlachosEtAl, double,
                   double, double, double, unsigned int, unsigned int, int>
       vlachos_et_al_seed("VlachosSiteSpecificEQ");
+  static Register<stochastic::StochasticModel, stochastic::DabaghiDerKiureghian,
+                  stochastic::FaultType, stochastic::SimulationType, double,
+                  double, double, double, double, double, unsigned int,
+                  unsigned int, bool>
+      dabaghi_der_kiureghian("DabaghiDerKiureghianNFGM");
+  static Register<stochastic::StochasticModel, stochastic::DabaghiDerKiureghian,
+                  stochastic::FaultType, stochastic::SimulationType, double,
+                  double, double, double, double, double, unsigned int,
+                  unsigned int, bool, int>
+      dabaghi_der_kiureghian_seed("DabaghiDerKiureghianNFGM");
+
   // Wind
   static Register<stochastic::StochasticModel, stochastic::WittigSinha,
                   std::string, double, double, unsigned int, double>

@@ -64,7 +64,8 @@ set(SOURCES
   ${PROJECT_SOURCE_DIR}/src/filter.cc
   ${PROJECT_SOURCE_DIR}/src/wind_profile.cc
   ${PROJECT_SOURCE_DIR}/src/uniform_dist.cc
-  ${PROJECT_SOURCE_DIR}/src/dabaghi_der_kiureghian.cc  
+  ${PROJECT_SOURCE_DIR}/src/dabaghi_der_kiureghian.cc
+  ${PROJECT_SOURCE_DIR}/src/nelder_mead.cc  
   )
 
 # Add library as target and add libraries to link target to

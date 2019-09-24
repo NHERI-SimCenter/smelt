@@ -2,6 +2,7 @@
 #define _NELDER_MEAD_H_
 
 #include <functional>
+#include <limits>
 #include <vector>
 
 /**
@@ -47,17 +48,14 @@ class NelderMead {
 
   /**
    * Minimize the input objective function given initial point and step size
-   * @tparam Tfunc_returntype Return type of objective function
-   * @tparam Tfunc_args Objective function arguments
    * @param[in] initial_point Initial values to use for each dimension
    * @param[in] delta Single step size to use for each dimension
    * @param[in] objective_function Function to minimize
    * @return Location of minimum
    */
-  template <typename Tfunc_returntype, typename... Tfunc_args>
   std::vector<double> minimize(
       const std::vector<double>& initial_point, double delta,
-      std::function<Tfunc_returntype(Tfunc_args...)>& objective_function);
+      std::function<double(const std::vector<double>&)>& objective_function);
 
   /**
    * Minimize the input objective function given initial point and step sizes
@@ -66,10 +64,9 @@ class NelderMead {
    * @param[in] objective_function Function to minimize
    * @return Location of minimum
    */
-  template <typename Tfunc_returntype, typename... Tfunc_args>
   std::vector<double> minimize(
       const std::vector<double>& initial_point, const std::vector<double>& deltas,
-      std::function<Tfunc_returntype(Tfunc_args...)>& objective_function);
+      std::function<double(const std::vector<double>&)>& objective_function);
 
   /**
    * Get the minimum value of the objective function
@@ -85,10 +82,9 @@ class NelderMead {
    * @param[in] objective_function Function to minimize
    * @return Location of minimum
    */
-  template <typename Tfunc_returntype, typename... Tfunc_args>
   std::vector<double> minimize(
       const std::vector<std::vector<double>>& initial_simplex,
-      std::function<Tfunc_returntype(Tfunc_args...)>& objective_function);
+      std::function<double(const std::vector<double>&)>& objective_function);
 
  private:
   /**
@@ -96,27 +92,13 @@ class NelderMead {
    * @param[in] simplex Matrix describing simplex
    * @return Vector containing centroids
    */
-  inline std::vector<double> calc_centroid(const std::vector<std::vector<double>>& simplex) const {
-    std::vector<double> centroids(num_dimensions_);
-    
-    for (unsigned int j = 0; j <= num_dimensions_; ++j) {
-      double sum = 0.0;
-
-      for (unsigned int i = 0; i < num_points_; ++i) {
-	sum += simplex_[i][j];
-      }
-
-      centroids[j] = sum;
-    }
-
-    return centroids;
-  };
+  std::vector<double> calc_centroid(
+      const std::vector<std::vector<double>>& simplex,
+      unsigned int num_dimensions, unsigned int num_points) const;
 
   /**
    * Exptrapolate by input factor through the face of the simplex across from
    * the high point. Replaces high point if the new point is better.
-   * @tparam Tfunc_returntype Return type of objective function
-   * @tparam Tfunc_args Objective function arguments
    * @param[in] simplex Matrix describing simplex
    * @param[in] objective_vals Vector of objective values based on simplex
    * @param[in] centroids Vector containing centroids
@@ -125,12 +107,11 @@ class NelderMead {
    * @param[in] objective_function Objective function to minimize
    * @return Objective value
    */
-  template <typename Tfunc_returntype, typename... Tfunc_args>
   double reflect(
       std::vector<std::vector<double>>& simplex,
       std::vector<double>& objective_vals, std::vector<double>& centroids,
       unsigned int index_worst, double factor,
-      std::function<Tfunc_returntype(Tfunc_args...)>& objective_function);
+      std::function<double(const std::vector<double>&)>& objective_function);
 
   double function_tol_;           /**< Function tolerance for convergence */
   unsigned int num_evals_;        /**< Number of function evaluations */
@@ -140,10 +121,8 @@ class NelderMead {
   std::vector<double> func_vals_; /**< Function values at vertices */
   std::vector<std::vector<double>> simplex_; /**< Current simplex */
   const double EPSILON_ = 1.0e-10;           /**< Tolerance */
-  const unsigned int MAX_ITERS_ = 5000; /**< Maximum number of iterations */
+  const unsigned int MAX_ITERS_ = 10000; /**< Maximum number of iterations */
 };
 }  // namespace optimization
-
-#include "nelder_mead.tcc"
 
 #endif  // _NELDER_MEAD_H_
