@@ -4,6 +4,7 @@
 #include <catch2/catch.hpp>
 #include <Eigen/Dense>
 #include <nlohmann/json.hpp>
+#include "dabaghi_der_kiureghian.h"
 #include "factory.h"
 #include "vlachos_et_al.h"
 #include "wittig_sinha.h"
@@ -312,5 +313,206 @@ TEST_CASE("Test Wittig & Sinha (1975) implementation", "[Stochastic][Wind]") {
     auto non_vector_case_history = non_vector_case->generate("NonVectorCase");
 
     REQUIRE(non_vector_case_history.get_library_json()["Events"][0]["timeSeries"].size() == 3);
+  }
+}
+
+TEST_CASE("Test Dabaghi & Der Kiureghian (2018) implementation", "[Stochastic][Seismic]") {
+  stochastic::FaultType faulting = stochastic::FaultType::StrikeSlip;
+  stochastic::SimulationType simulation_type =
+      stochastic::SimulationType::PulseAndNoPulse;
+  double moment_magnitude = 6.5, depth_to_rupt = 0.0, rupture_dist = 10.0,
+         vs30 = 760.0, s_or_d = 26.0, theta_or_phi = 0.0;
+  unsigned int num_sims = 2, num_realizations = 2;
+  bool truncate = true;
+
+  stochastic::DabaghiDerKiureghian test_model(
+      faulting, simulation_type, moment_magnitude, depth_to_rupt, rupture_dist,
+      vs30, s_or_d, theta_or_phi, num_sims, num_realizations, truncate);
+
+  SECTION("Test transformed model parameters calculation and tranformation "
+          "back to normal space") {
+    auto pulse_params = test_model.compute_transformed_model_parameters(true);
+    auto nopulse_params =
+        test_model.compute_transformed_model_parameters(false);
+
+    Eigen::VectorXd expected_pulse_params(19);
+    expected_pulse_params << 3.7842, 0.5417, 0, 0, 1.6636, 4.8294, 2.0845,
+        1.2670, 1.7060, 1.4614, -0.0761, 0.0938, 4.7012, 2.0450, 1.2181, 1.6696,
+        1.6212, -0.1735, -0.1250;
+
+    Eigen::VectorXd expected_nopulse_params(14);
+    expected_nopulse_params << 4.5267, 2.1629, 1.0427, 1.5920, 1.7794, 0.0068,
+        -0.0772, 3.9270, 2.3581, 0.9721, 1.5534, 1.9106, -0.2490, -0.0181;
+
+    for (unsigned int i = 0; i < expected_pulse_params.size(); ++i) {
+      REQUIRE(pulse_params(i) + 1.0 ==
+              Approx(expected_pulse_params(i) + 1.0).epsilon(0.01));
+    }
+
+    for (unsigned int i = 0; i < expected_nopulse_params.size(); ++i) {
+      REQUIRE(nopulse_params(i) + 1.0 ==
+              Approx(expected_nopulse_params(i) + 1.0).epsilon(0.01));
+    }
+
+    test_model.transform_parameters_from_normal_space(true, pulse_params);
+    test_model.transform_parameters_from_normal_space(false, nopulse_params);
+
+    Eigen::VectorXd expected_trans_pulse(19);
+    expected_trans_pulse << 44.0025, 1.7189, 2.2567, 1.0000, 5.2785, 125.1375,
+        8.0403, 3.5502, 5.5070, 4.3121, -0.0602, 0.1555, 110.0749, 7.7290,
+        3.3808, 5.3102, 5.0591, -0.0736, 0.1309;
+
+    Eigen::VectorXd expected_trans_nopulse(14);
+    expected_trans_nopulse << 92.4499, 8.6960, 2.8370, 4.9137, 5.9262, -0.0496,
+        0.1360, 50.7563, 10.5706, 2.6435, 4.7276, 6.7573, -0.0847, 0.1424;
+
+    for (unsigned int i = 0; i < expected_trans_pulse.size(); ++i) {
+      REQUIRE(pulse_params(i) + 1.0 ==
+              Approx(expected_trans_pulse(i) + 1.0).epsilon(0.01));
+    }
+
+    for (unsigned int i = 0; i < expected_trans_nopulse.size(); ++i) {
+      REQUIRE(nopulse_params(i) + 1.0 ==
+              Approx(expected_trans_nopulse(i) + 1.0).epsilon(0.01));
+    }
+  }
+
+  SECTION("Test model parameter transformation from normal space") {
+
+    auto pulse_params = test_model.compute_transformed_model_parameters(true);
+    auto nopulse_params =
+        test_model.compute_transformed_model_parameters(false);
+
+    test_model.transform_parameters_from_normal_space(true, pulse_params);
+    test_model.transform_parameters_from_normal_space(false, nopulse_params);
+  }
+
+  SECTION("Test model parameter simulation") {
+
+    auto pulse_params = test_model.simulate_model_parameters(true, 20);
+    auto nopulse_params = test_model.simulate_model_parameters(false, 18);
+
+    REQUIRE(pulse_params.rows() == 20);
+    REQUIRE(pulse_params.cols() == 19);
+    REQUIRE(nopulse_params.rows() == 18);
+    REQUIRE(nopulse_params.cols() == 14);
+  }
+
+  SECTION("Test backcalculation of modulating parameters") {
+    // These values are based on those presented in Table 4 of Dabaghi & Der
+    // Kiureghian (2017) - Stochastic model for simulation of near-fault ground
+    // motions
+    Eigen::VectorXd params(4);
+    params << 12.0, 14.0, 3.9, 5.7;
+    auto backcalced_params =
+        test_model.backcalculate_modulating_params(params, 1.7);
+
+    REQUIRE(backcalced_params(0) == Approx(2.1516).epsilon(0.01));
+    REQUIRE(backcalced_params(1) == Approx(0.1082).epsilon(0.01));
+    REQUIRE(backcalced_params(2) == Approx(6.5923).epsilon(0.01));
+    REQUIRE(backcalced_params(3) == Approx(0.0375).epsilon(0.01));
+
+    params << 9.0, 15.2, 3.9, 5.5;
+    backcalced_params = test_model.backcalculate_modulating_params(params, 1.7);
+
+    REQUIRE(backcalced_params(0) == Approx(4.4321).epsilon(0.01));
+    REQUIRE(backcalced_params(1) == Approx(0.0970).epsilon(0.01));
+    REQUIRE(backcalced_params(2) == Approx(5.7577).epsilon(0.01));
+    REQUIRE(backcalced_params(3) == Approx(0.0324).epsilon(0.01));
+  }
+
+  SECTION("Test modulating function, time-to-intensity, linear filter, and "
+          "frequency response filter calculations") {
+    double start_time = 0.0;
+    unsigned int num_steps = 5;
+    Eigen::VectorXd params(4);
+    params << 1.0, 2.0, 3.0, 4.0;
+    Eigen::VectorXd filter_params(2);
+    filter_params << 2.0, 3.0;
+
+    auto mod_func = test_model.calc_modulating_func(num_steps, start_time, params);
+    
+    REQUIRE(mod_func[0] + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(mod_func[1] == Approx(0.0067).epsilon(0.01));
+    REQUIRE(mod_func[2] == Approx(0.0133).epsilon(0.01));
+    REQUIRE(mod_func[3] == Approx(0.02).epsilon(0.01));
+    REQUIRE(mod_func[4] == Approx(0.0267).epsilon(0.01));
+
+    double t01 = test_model.calc_time_to_intensity(mod_func, 1.0);
+    double t30 = test_model.calc_time_to_intensity(mod_func, 30.0);
+    double t99 = test_model.calc_time_to_intensity(mod_func, 99.0);
+
+    REQUIRE(t01 == Approx(0.01).epsilon(0.01));
+    REQUIRE(t30 == Approx(0.02).epsilon(0.01));
+    REQUIRE(t99 == Approx(0.025).epsilon(0.01));
+
+    auto frequency_filter =
+        test_model.calc_linear_filter(num_steps, filter_params, t01, t30, t99);
+
+    REQUIRE(frequency_filter[0] == Approx(12.3779).epsilon(0.01));
+    REQUIRE(frequency_filter[1] == Approx(12.3779).epsilon(0.01));
+    REQUIRE(frequency_filter[2] == Approx(12.3779).epsilon(0.01));
+    REQUIRE(frequency_filter[3] == Approx(12.4721).epsilon(0.01));
+    REQUIRE(frequency_filter[4] == Approx(12.5664).epsilon(0.01));
+
+    Eigen::MatrixXd impulse_response = test_model.calc_impulse_response_filter(
+        num_steps, frequency_filter, 0.5);
+
+    Eigen::MatrixXd expected_response = Eigen::MatrixXd::Zero(num_steps, num_steps);
+    expected_response <<    
+      0,    1.0000,    0.8885,    0.7901,    0.7130,
+      0,         0,    0.4589,    0.5446,    0.5534,
+      0,         0,         0,    0.2813,    0.3814,
+      0,         0,         0,         0,    0.2000,
+      0,         0,         0,         0,         0;
+
+    REQUIRE(impulse_response.lpNorm<2>() ==
+            Approx(expected_response.lpNorm<2>()).epsilon(0.01));
+  }
+
+  SECTION("Test acceleration filter") {
+    double freq_corner = std::pow(10, 1.4071 - 0.3452 * moment_magnitude);
+    unsigned int filter_order = 4;
+    Eigen::VectorXd accel(6);
+    accel << 0.0, 1.0, -1.0, 2.0, -2.0, 3.0;
+
+    auto filtered_accel = test_model.filter_acceleration(accel, freq_corner, filter_order);
+
+    std::vector<double> expected_accel = {-0.5000, 0.5000,  -1.5000,
+                                          1.5000,  -2.5000, 2.5000};
+
+
+    REQUIRE(filtered_accel[0] == Approx(expected_accel[0]).epsilon(0.01));
+    REQUIRE(filtered_accel[1] == Approx(expected_accel[1]).epsilon(0.01));
+    REQUIRE(filtered_accel[2] == Approx(expected_accel[2]).epsilon(0.01));
+    REQUIRE(filtered_accel[3] == Approx(expected_accel[3]).epsilon(0.01));
+    REQUIRE(filtered_accel[4] == Approx(expected_accel[4]).epsilon(0.01));
+    REQUIRE(filtered_accel[5] == Approx(expected_accel[5]).epsilon(0.01));    
+  }
+
+  SECTION("Test pulse acceleration calculation") {
+    Eigen::VectorXd params(5);
+    params << 2.0, 3.0, 4.0, 5.0, 6.0;
+    unsigned int num_steps = 8;
+
+    auto pulse_accel = test_model.calc_pulse_acceleration(num_steps, params);
+    Eigen::VectorXd expected_accel(8);
+    expected_accel << 0, -0.0699, -0.2095, -0.3491, -0.4884, -0.6274, -0.7659,
+        -0.9040;
+    expected_accel = expected_accel * 1.0e-5;
+
+    REQUIRE(pulse_accel[0] + 1.0 ==
+            Approx(expected_accel[0] + 1.0).epsilon(0.01));
+    REQUIRE(pulse_accel[1] == Approx(expected_accel[1]).epsilon(0.01));
+    REQUIRE(pulse_accel[2] == Approx(expected_accel[2]).epsilon(0.01));
+    REQUIRE(pulse_accel[3] == Approx(expected_accel[3]).epsilon(0.01));
+    REQUIRE(pulse_accel[4] == Approx(expected_accel[4]).epsilon(0.01));
+    REQUIRE(pulse_accel[5] == Approx(expected_accel[5]).epsilon(0.01));
+    REQUIRE(pulse_accel[6] == Approx(expected_accel[6]).epsilon(0.01));
+    REQUIRE(pulse_accel[7] == Approx(expected_accel[7]).epsilon(0.01));
+  }
+  
+  SECTION("Test JSON generation") {
+    bool success = test_model.generate("BlahBlah", "./dabaghi_test.json", true);
   }
 }

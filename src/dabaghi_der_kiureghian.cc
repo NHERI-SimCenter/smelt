@@ -316,20 +316,20 @@ utilities::JsonObject stochastic::DabaghiDerKiureghian::generate(
 
   // Create vectors for pulse-like and non-pulse-like motions
   std::vector<std::vector<std::vector<double>>> pulse_motions_comp1(
-      num_realizations_,
-      std::vector<std::vector<double>>(num_sims_pulse_, std::vector<double>()));
+      num_sims_pulse_, std::vector<std::vector<double>>(num_realizations_,
+                                                        std::vector<double>()));
 
   std::vector<std::vector<std::vector<double>>> pulse_motions_comp2(
-      num_realizations_,
-      std::vector<std::vector<double>>(num_sims_pulse_, std::vector<double>()));
+      num_sims_pulse_, std::vector<std::vector<double>>(num_realizations_,
+                                                        std::vector<double>()));
 
   std::vector<std::vector<std::vector<double>>> nopulse_motions_comp1(
-      num_realizations_, std::vector<std::vector<double>>(
-                             num_sims_nopulse_, std::vector<double>()));
+      num_sims_nopulse_, std::vector<std::vector<double>>(
+                             num_realizations_, std::vector<double>()));
 
   std::vector<std::vector<std::vector<double>>> nopulse_motions_comp2(
-      num_realizations_, std::vector<std::vector<double>>(
-                             num_sims_nopulse_, std::vector<double>()));
+      num_sims_nopulse_, std::vector<std::vector<double>>(
+                             num_realizations_, std::vector<double>()));
 
   // Generated simulated acceleration time histories
   try {
@@ -339,21 +339,18 @@ utilities::JsonObject stochastic::DabaghiDerKiureghian::generate(
     Eigen::MatrixXd parameters_nopulse =
         simulate_model_parameters(false, num_sims_nopulse_);
 
-    std::cout << "\nTotal pulse params size: " << parameters_pulse.rows() << " x " << parameters_pulse.cols() << std::endl;
-    
     // Simulate pulse-like motions
-    for (unsigned int i = 0; i < num_realizations_; ++i) {
-      std::cout << "\nPulse params row size: " << parameters_pulse.row(i) << std::endl;
-      simulate_near_fault_ground_motion(true, parameters_pulse.row(i),
-                                        pulse_motions_comp1[i],
-                                        pulse_motions_comp2[i]);
-    }
+    for (unsigned int i = 0; i < num_sims_pulse_; ++i) {
+        simulate_near_fault_ground_motion(
+            true, parameters_pulse.row(i), pulse_motions_comp1[i],
+            pulse_motions_comp2[i], num_realizations_);
+    } 
 
     // Simulate non-pulse-like motions
-    for (unsigned int i = 0; i < num_realizations_; ++i) {
-      simulate_near_fault_ground_motion(false, parameters_nopulse.row(i),
-                                        nopulse_motions_comp1[i],
-                                        nopulse_motions_comp2[i]);
+    for (unsigned int i = 0; i < num_sims_nopulse_; ++i) {
+      simulate_near_fault_ground_motion(
+          false, parameters_nopulse.row(i), nopulse_motions_comp1[i],
+          nopulse_motions_comp2[i], num_realizations_);
     }
 
     // If requested, truncate and baseline correct time histories
@@ -361,25 +358,29 @@ utilities::JsonObject stochastic::DabaghiDerKiureghian::generate(
     unsigned int fit_order = 5;
     if (truncate_) {
       // First truncate motions
-      for (unsigned int i = 0; i < num_realizations_; ++i) {
+      for (unsigned int i = 0; i < num_sims_pulse_; ++i) {
         truncate_time_histories(pulse_motions_comp1[i], pulse_motions_comp2[i],
                                 gfactor);
+      }
+
+      for (unsigned int i = 0; i < num_sims_nopulse_; ++i) {
         truncate_time_histories(nopulse_motions_comp1[i],
                                 nopulse_motions_comp2[i], gfactor);
       }
 
-      // Baseline correct truncated motions
-      for (unsigned int i = 0; i < num_realizations_; ++i) {
-        // Pulse-like motions
-        for (unsigned int j = 0; j < num_sims_pulse_; ++j) {
+      // Baseline correct truncated pulse-like motions
+      for (unsigned int i = 0; i < num_sims_pulse_; ++i) {
+        for (unsigned int j = 0; j < num_realizations_; ++j) {
           baseline_correct_time_history(pulse_motions_comp1[i][j], gfactor,
                                         fit_order);
           baseline_correct_time_history(pulse_motions_comp2[i][j], gfactor,
                                         fit_order);
         }
+      }
 
-        // Non-pulse-like motions
-        for (unsigned int j = 0; j < num_sims_nopulse_; ++j) {
+      // Baseline correct trunacted non-pulse-like motions
+      for (unsigned int i = 0; i < num_sims_nopulse_; ++i) {
+        for (unsigned int j = 0; j < num_realizations_; ++j) {
           baseline_correct_time_history(nopulse_motions_comp1[i][j], gfactor,
                                         fit_order);
           baseline_correct_time_history(nopulse_motions_comp2[i][j], gfactor,
@@ -409,12 +410,12 @@ utilities::JsonObject stochastic::DabaghiDerKiureghian::generate(
 
   // Create JSON for specific event
   auto event_data = utilities::JsonObject();
-  // Loop over number of realizations per parameter set realization
-  for (unsigned int i = 0; i < num_realizations_; ++i) {
-    // Loop over different simulations for current parameter set pulse-like
-    // motions
-    for (unsigned int j = 0; j < num_sims_pulse_; ++j) {
-      event_data.add_value("name", event_name + "_Spectra" + std::to_string(i) +
+  // Loop over simulations for different parameter sets for pulse-like
+  // motions
+  for (unsigned int i = 0; i < num_sims_pulse_; ++i) {
+    // Loop over number of realizations per parameter set realization    
+    for (unsigned int j = 0; j < num_realizations_; ++j) {
+      event_data.add_value("name", event_name + "_ParameterSetPulse" + std::to_string(i) +
                                        "_Sim" + std::to_string(j));
       event_data.add_value("type", "Seismic");
       event_data.add_value("dT", time_step_);
@@ -441,14 +442,18 @@ utilities::JsonObject stochastic::DabaghiDerKiureghian::generate(
       time_history_y.add_value("data", pulse_motions_comp2[i][j]);
       event_data.add_value("timeSeries", std::vector<utilities::JsonObject>{
                                              time_history_x, time_history_y});
-      events_array[i * (num_sims_pulse_ + num_sims_nopulse_) + j] = event_data;
+      events_array[i * num_realizations_ + j] = event_data;
       event_data.clear();
     }
+  }
+  
 
-    // Loop over different simulations for current parameter set non-pulse-like
-    // motions
-    for (unsigned int j = 0; j < num_sims_nopulse_; ++j) {
-      event_data.add_value("name", event_name + "_Spectra" + std::to_string(i) +
+  // Loop over different simulations for parameter sets non-pulse-like
+  // motions
+  for (unsigned int i = 0; i < num_sims_nopulse_; ++i) {
+    // Loop over number of realizations per parameter set realization
+    for (unsigned int j = 0; j < num_realizations_; ++j) {
+      event_data.add_value("name", event_name + "_ParameterSetNoPulse" + std::to_string(i) +
                                        "_Sim" + std::to_string(j + num_sims_pulse_));
       event_data.add_value("type", "Seismic");
       event_data.add_value("dT", time_step_);
@@ -475,8 +480,8 @@ utilities::JsonObject stochastic::DabaghiDerKiureghian::generate(
       time_history_y.add_value("data", nopulse_motions_comp2[i][j]);
       event_data.add_value("timeSeries", std::vector<utilities::JsonObject>{
                                              time_history_x, time_history_y});
-      events_array[i * (num_sims_pulse_ + num_sims_nopulse_) + j +
-                   num_sims_pulse_] = event_data;
+      events_array[i * num_realizations_ + j +
+                   num_realizations_ * num_sims_pulse_] = event_data;
       event_data.clear();
     }
   }
@@ -1484,9 +1489,9 @@ void stochastic::DabaghiDerKiureghian::baseline_correct_time_history(
 
 void stochastic::DabaghiDerKiureghian::convert_time_history_units(
     std::vector<double>& time_history, bool units) const {
-  double conversion_factor = units ? 981.0 : 100.0;
-
+  double conversion_factor = units ? 1.0 : 9.81;
+ 
   for (auto& val : time_history) {
-    val = val / conversion_factor;
+    val = val * conversion_factor;
   }
 }
