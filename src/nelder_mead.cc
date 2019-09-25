@@ -109,9 +109,10 @@ std::vector<double> optimization::NelderMead::minimize(
     if (num_evals_ >= MAX_ITERS_) {
       std::swap(func_vals_[0], func_vals_[index_low]);
       simplex_[0].swap(simplex_[index_low]);
-      simplex_mins = simplex_[0];
+      simplex_mins = simplex_[0]; 
       func_min_ = func_vals_[0];
-      std::cerr << "\nWARNING: Max iterations exceeded, returning current "
+      std::cerr << "\nWARNING: In optimization::NelderMead::minimize: Max "
+                   "iterations exceeded, returning current "
                    "minimum location with function value of "
                 << func_min_ << std::endl;
 

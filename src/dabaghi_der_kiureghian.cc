@@ -847,16 +847,18 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
 
   for (unsigned int i = 0; i < num_gms; ++i) {
     // Pad component 1
-    accel_padded_1.block(i, 0, i, num_pads) = Eigen::VectorXd(num_pads);
-    accel_padded_1.block(i, num_pads - 1, i, num_steps) = white_noise_1.row(i);
-    accel_padded_1.block(i, num_pads + num_steps - 1, i, num_pads) =
-        Eigen::VectorXd(num_pads);
+    accel_padded_1.block(i, 0, 1, num_pads) =
+        Eigen::RowVectorXd::Zero(num_pads);
+    accel_padded_1.block(i, num_pads - 1, 1, num_steps) = white_noise_1.row(i);
+    accel_padded_1.block(i, num_pads + num_steps - 1, 1, num_pads) =
+        Eigen::RowVectorXd::Zero(num_pads);
 
     // Pad component 2
-    accel_padded_2.block(i, 0, i, num_pads) = Eigen::VectorXd(num_pads);
-    accel_padded_2.block(i, num_pads - 1, i, num_steps) = white_noise_2.row(i);
-    accel_padded_2.block(i, num_pads + num_steps - 1, i, num_pads) =
-        Eigen::VectorXd(num_pads);
+    accel_padded_2.block(i, 0, 1, num_pads) =
+        Eigen::RowVectorXd::Zero(num_pads);
+    accel_padded_2.block(i, num_pads - 1, 1, num_steps) = white_noise_2.row(i);
+    accel_padded_2.block(i, num_pads + num_steps - 1, 1, num_pads) =
+        Eigen::RowVectorXd::Zero(num_pads);
   }
 
   // Apply filter to padded acceleration time histories
@@ -1295,7 +1297,7 @@ std::vector<double> stochastic::DabaghiDerKiureghian::calc_pulse_acceleration(
       velocity_history[i] = 0.0;
     }
   }
-
+  
   // Calculate pulse acceleration time history
   double previous_velocity = 0.0;
   double current_velocity = velocity_history[0];
