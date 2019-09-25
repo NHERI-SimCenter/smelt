@@ -339,8 +339,11 @@ utilities::JsonObject stochastic::DabaghiDerKiureghian::generate(
     Eigen::MatrixXd parameters_nopulse =
         simulate_model_parameters(false, num_sims_nopulse_);
 
+    std::cout << "\nTotal pulse params size: " << parameters_pulse.rows() << " x " << parameters_pulse.cols() << std::endl;
+    
     // Simulate pulse-like motions
     for (unsigned int i = 0; i < num_realizations_; ++i) {
+      std::cout << "\nPulse params row size: " << parameters_pulse.row(i) << std::endl;
       simulate_near_fault_ground_motion(true, parameters_pulse.row(i),
                                         pulse_motions_comp1[i],
                                         pulse_motions_comp2[i]);
@@ -625,6 +628,10 @@ Eigen::VectorXd
       moment_magnitude_ *
           std::log(std::sqrt(rupture_dist_ * rupture_dist_ + c6_ * c6_)),
       fault_parameter * depth_parameter, site_parameter, s_or_d_;
+
+  if (std::abs(moment_magnitude_ - magnitude_baseline_) < 1e-16) {
+    params_vector(2) = 0.0;
+  }
 
   // Calculate the mean predicted model parameters in normal space
   if (pulse_like) {
