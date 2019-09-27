@@ -3,7 +3,7 @@ import os
 
 class smeltConan(ConanFile):
     name = "smelt"
-    version = "1.1.0"
+    version = "1.2.0"
     description = "Stochastic, Modular, and Extensible Library for Time histories"
     license = "BSD 2-Clause"
     author = "Michael Gardner mhgardner@berkeley.edu"
@@ -27,7 +27,7 @@ class smeltConan(ConanFile):
 
     def source(self):
        git = tools.Git(folder="smelt")
-       git.clone("https://github.com/shellshocked2003/smelt.git", "stable/1.1.0")        
+       git.clone("https://github.com/shellshocked2003/smelt.git", "stable/1.2.0")        
 
     def configure(self):
         self.options["boost"].header_only = True            
