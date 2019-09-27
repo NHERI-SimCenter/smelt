@@ -45,7 +45,21 @@ stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
       time_step_{0.005}
 {
   model_name_ = "DabaghiDerKiureghian";
-  num_sims_pulse_ = simulate_pulse_type(num_sims);
+
+  switch (sim_type_) {
+    case stochastic::SimulationType::NoPulse:
+      num_sims_pulse_ = 0;
+      break;
+
+    case stochastic::SimulationType::Pulse:
+      num_sims_pulse_ = num_sims;
+      break;
+
+    case stochastic::SimulationType::PulseAndNoPulse:
+      num_sims_pulse_ = simulate_pulse_type(num_sims);
+      break;
+  }
+  
   num_sims_nopulse_ = num_sims - num_sims_pulse_;
 
   // Initialize multivariate normal generator without seed
@@ -188,7 +202,21 @@ stochastic::DabaghiDerKiureghian::DabaghiDerKiureghian(
       time_step_{0.005}
 {
   model_name_ = "DabaghiDerKiureghian";
-  num_sims_pulse_ = simulate_pulse_type(num_sims);
+
+  switch (sim_type_) {
+    case stochastic::SimulationType::NoPulse:
+      num_sims_pulse_ = 0;
+      break;
+
+    case stochastic::SimulationType::Pulse:
+      num_sims_pulse_ = num_sims;
+      break;
+
+    case stochastic::SimulationType::PulseAndNoPulse:
+      num_sims_pulse_ = simulate_pulse_type(num_sims);
+      break;
+  }
+  
   num_sims_nopulse_ = num_sims - num_sims_pulse_;
 
   // Initialize multivariate normal generator without seed
@@ -936,17 +964,12 @@ void stochastic::DabaghiDerKiureghian::simulate_near_fault_ground_motion(
   if (pulse_like) {
     // Calculate pulse acceleration
     auto pulse_accel = calc_pulse_acceleration(num_steps, parameters);
-    std::vector<double> padded_pulse(accel_comp_1[0].size(), 0.0);
-
-    // Pad pulse motion
-    for (unsigned int i = num_pads - 1; i < num_steps + num_pads; ++i) {
-      padded_pulse[i] = pulse_accel[i - num_pads + 1];
-    }
 
     // Add pulse motion to component 1
     for (unsigned int i = 0; i < num_gms; ++i) {
-      for (unsigned int j = 0; j < padded_pulse.size(); ++j) {
-  	accel_comp_1[i][j] = accel_comp_1[i][j] + padded_pulse[j]; 	
+      for (unsigned int j = 0; j < pulse_accel.size(); ++j) {
+        accel_comp_1[i][j + num_pads - 1] =
+            accel_comp_1[i][j + num_pads - 1] + pulse_accel[j];
       }
     }
   }
@@ -1311,17 +1334,7 @@ std::vector<double> stochastic::DabaghiDerKiureghian::calc_pulse_acceleration(
   }
   
   // Calculate pulse acceleration time history
-  double previous_velocity = 0.0;
-  double current_velocity = velocity_history[0];
-  velocity_history[0] = (current_velocity - previous_velocity) / (981 * time_step_);
-
-  for (unsigned int i = 1; i < velocity_history.size(); ++i) {
-    previous_velocity = current_velocity;
-    current_velocity = velocity_history[i];
-    velocity_history[i] = (current_velocity - previous_velocity) / (981 * time_step_);
-  }
-
-  return velocity_history;
+  return numeric_utils::derivative(velocity_history, 1.0 / (981.0 * time_step_), true);
 }
 
 void stochastic::DabaghiDerKiureghian::truncate_time_histories(

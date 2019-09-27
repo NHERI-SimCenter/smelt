@@ -318,6 +318,29 @@ Eigen::VectorXd polynomial_derivative(const Eigen::VectorXd& coefficients) {
   return derivative;
 }
 
+std::vector<double> derivative(const std::vector<double>& coefficients,
+                               double constant_factor, bool add_zero) {
+
+  if (add_zero) {
+    std::vector<double> derivative(coefficients.size());
+    derivative[0] = coefficients[0] * constant_factor;
+
+    for (unsigned int i = 1; i < derivative.size(); ++i) {
+      derivative[i] = (coefficients[i] - coefficients[i - 1]) * constant_factor;
+    }
+
+    return derivative;
+  } else {
+    std::vector<double> derivative(coefficients.size() - 1);
+
+    for (unsigned int i = 0; i < derivative.size(); ++i) {
+      derivative[i] = (coefficients[i + 1] - coefficients[i]) * constant_factor;
+    }
+
+    return derivative;
+  }
+}
+
 Eigen::VectorXd evaluate_polynomial(const Eigen::VectorXd& coefficients,
                                     const Eigen::VectorXd& points) {
   Eigen::VectorXd evaluations = Eigen::VectorXd::Zero(points.size());

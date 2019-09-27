@@ -130,6 +130,20 @@ Eigen::VectorXd polyfit_intercept(const Eigen::VectorXd& points,
 Eigen::VectorXd polynomial_derivative(const Eigen::VectorXd& coefficients);
 
 /**
+ * Approximates the derivative as differences between adjacent input points
+ * @param[in] coefficients Coefficients of polynomial terms ordered in
+ *                         descending power
+ * @param[in] constant_factor Constant factor to multiply coefficients by.
+ *                            Defaults to 1.0.
+ * @param[in] add_zero Boolean indicating to add leading zero to coefficients.
+ *                     Defaults to false.
+ * @return Vector of difference for input vector
+ */
+std::vector<double> derivative(
+    const std::vector<double>& coefficients, double constant_factor = 1.0,
+    bool add_zero = false);
+
+/**
  * Evaluate polynomial described by input coefficients at input points
  * @param[in] coefficients Coefficients of polynomial terms ordered in
  *                         descending power
