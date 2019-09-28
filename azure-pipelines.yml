@@ -5,9 +5,13 @@
 
 trigger:
 - master
+- conan
 
 pool:
   vmImage: 'vs2017-win2016'
+
+variables:
+    conda_path: "$(env:CONDA)"
 
 steps:
 - task: UsePythonVersion@0
@@ -16,21 +20,21 @@ steps:
     addToPath: true 
     architecture: 'x86'
 
+- powershell: Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+  displayName: Add conda to PATH
+
 - script: |
-    echo Downloading conda!
-    powershell -command "iwr -outf miniconda_installer.exe https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe"    
-    echo Installing conda!
-    start /wait "" miniconda_installer.exe /InstallationType=AllUsers /RegisterPython=0 /S /D=%UserProfile%\Miniconda3
-    echo Conda installed!
-    set PATH=%PATH%;%UserProfile%\Miniconda3\Scripts
+    conda update conda
     conda install -c intel mkl
-    conda install -c intel mkl-devel    
+    conda install -c intel mkl-static
+    conda install -c intel mkl-devel
     conda install -c intel mkl-include
     conda install -c intel ipp
-    conda install -c intel ipp-devel    
+    conda install -c intel ipp-static
+    conda install -c intel ipp-devel
     conda install -c intel ipp-include
-    set MKLROOT=%UserProfile%\Miniconda3
-    set IPPROOT=%UserProfile%\Miniconda3
+    set MKLROOT=%CONDA%
+    set IPPROOT=%CONDA%
     set PATH=%PATH%;%MKLROOT%\Library\bin
     set PATH=%PATH%;%IPPROOT%\Library\bin
     set PATH=%PATH%;%MKLROOT%\Library\lib

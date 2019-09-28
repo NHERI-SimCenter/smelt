@@ -1,58 +1,18 @@
+include(HelperFunctions)
 # Find Integrated Performance Primitives from Intel
 
 set(IPP_LIB "ippcore" "ippvm" "ipps")
 
-# For Linux and Mac
-function(ipp_libs_unix)
-  foreach(s ${ARGV})
-    find_library(${s}_LIBRARY
-      NAMES ${s}
-      PATHS $ENV{IPPROOT}/lib
-      $ENV{IPPROOT}/lib/intel64
-      $ENV{IPPROOT}/../compiler/lib/intel64
-      NO_DEFAULT_PATH)
-    if(NOT ${s}_LIBRARY)
-      message(FATAL_ERROR "NOT FOUND: " ${s})
-    endif()
-  
-    list(APPEND IPP_FOUND_LIBRARIES ${${s}_LIBRARY})
-  endforeach()
- 
-  set(IPP_INCLUDE_DIRS $ENV{IPPROOT}/include PARENT_SCOPE)
-  set(IPP_LIBRARIES ${IPP_FOUND_LIBRARIES} PARENT_SCOPE)
-
-endfunction()
-
-# For Windows. NOTE: Assumes conda was used to install IPP
-function(ipp_libs_windows)
-  set(CMAKE_FIND_LIBRARY_PREFIXES "")
-  set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib")
-  foreach(s ${ARGV})
-    find_library(${s}_LIBRARY
-      NAMES ${s}
-      PATHS $ENV{IPPROOT}/lib
-      $ENV{IPPROOT}/lib/intel64
-      $ENV{IPPROOT}/../compiler/lib/intel64
-      $ENV{IPPROOT}/Library/bin      
-      $ENV{IPPROOT}/Library/lib 
-      NO_DEFAULT_PATH)
-    if(NOT ${s}_LIBRARY)
-      message(FATAL_ERROR "NOT FOUND: " ${s})
-    endif()
-  
-    list(APPEND IPP_FOUND_LIBRARIES ${${s}_LIBRARY})
-  endforeach()
- 
-  set(IPP_INCLUDE_DIRS $ENV{IPPROOT}/include PARENT_SCOPE)
-  set(IPP_LIBRARIES ${IPP_FOUND_LIBRARIES} PARENT_SCOPE)
-
-endfunction()
-
-
-if(WIN32)
- ipp_libs_windows(${IPP_LIB})  
+if (BUILD_STATIC_LIBS)
+  if (WIN32)
+    set(IPP_LIB_WIN "ippcoremt" "ippvmmt" "ippsmt")
+    add_ipp_dependency(NAME ipp_static REQD_LIBS ${IPP_LIB_WIN} STATIC)
+  else()
+    add_ipp_dependency(NAME ipp_static REQD_LIBS ${IPP_LIB} STATIC)    
+  endif()
+    
 endif()
 
-if(NOT WIN32)
-  ipp_libs_unix(${IPP_LIB})
+if (BUILD_SHARED_LIBS)
+  add_ipp_dependency(NAME ipp_shared REQD_LIBS ${IPP_LIB})
 endif()

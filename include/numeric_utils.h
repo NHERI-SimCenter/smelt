@@ -63,6 +63,35 @@ bool inverse_fft(const Eigen::VectorXcd& input_vector,
                  std::vector<double>& output_vector);
 
 /**
+ * Computes the real portion of the 1-dimensional Fast Fourier Transform
+ * (FFT) of the input vector
+ * @param[in] input_vector Input vector to compute the FFT of
+ * @param[in, out] output_vector Vector to write output to
+ * @return Returns true if computations were successful, false otherwise
+ */
+bool fft(std::vector<double> input_vector,
+         std::vector<std::complex<double>>& output_vector);
+
+/**
+ * Computes the real portion of the 1-dimensional Fast Fourier Transform
+ * (FFT) of the input vector
+ * @param[in] input_vector Input vector to compute the FFT of
+ * @param[in, out] output_vector Vector to write output to
+ * @return Returns true if computations were successful, false otherwise
+ */
+bool fft(const Eigen::VectorXd& input_vector, Eigen::VectorXcd& output_vector);
+
+/**
+ * Computes the real portion of the 1-dimensional Fast Fourier Transform
+ * (FFT) of the input vector
+ * @param[in] input_vector Input vector to compute the FFT of
+ * @param[in, out] output_vector Vector to write output to
+ * @return Returns true if computations were successful, false otherwise
+ */
+bool fft(const Eigen::VectorXd& input_vector,
+         std::vector<std::complex<double>>& output_vector);
+
+/**
  * Calculate the integral of the input vector with uniform spacing
  * between data points
  * @param[in] input_vector Vector containing function values
@@ -79,6 +108,70 @@ double trapazoid_rule(const std::vector<double>& input_vector, double spacing);
  * @return Approximate value of function integral
  */
 double trapazoid_rule(const Eigen::VectorXd& input_vector, double spacing);
+
+/**
+ * Fit polynomial to data, forcing y-intercept to zero
+ * @param[in] points Vector of evaluation points
+ * @param[in] data Vector of data for evaluation points
+ * @param[in] intercept Value for y-intercept
+ * @param[in] degree Degree of of polynomial fit
+ */
+Eigen::VectorXd polyfit_intercept(const Eigen::VectorXd& points,
+                                  const Eigen::VectorXd& data,
+				  double intercept,
+                                  unsigned int degree);
+
+/**
+ * Take the derivative of a polynomial described by its coefficients
+ * @param[in] coefficients Coefficients of polynomial terms ordered in
+ *                         descending power
+ * @return Vector of coefficients for input polynomial derivative
+ */
+Eigen::VectorXd polynomial_derivative(const Eigen::VectorXd& coefficients);
+
+/**
+ * Approximates the derivative as differences between adjacent input points
+ * @param[in] coefficients Coefficients of polynomial terms ordered in
+ *                         descending power
+ * @param[in] constant_factor Constant factor to multiply coefficients by.
+ *                            Defaults to 1.0.
+ * @param[in] add_zero Boolean indicating to add leading zero to coefficients.
+ *                     Defaults to false.
+ * @return Vector of difference for input vector
+ */
+std::vector<double> derivative(
+    const std::vector<double>& coefficients, double constant_factor = 1.0,
+    bool add_zero = false);
+
+/**
+ * Evaluate polynomial described by input coefficients at input points
+ * @param[in] coefficients Coefficients of polynomial terms ordered in
+ *                         descending power
+ * @param[in] points Vector of points at which to evaluate polynomial
+ * @return Vector of polynomial values evaluated at input points
+ */
+Eigen::VectorXd evaluate_polynomial(const Eigen::VectorXd& coefficients,
+                                    const Eigen::VectorXd& points);
+
+/**
+ * Evaluate polynomial described by input coefficients at input points
+ * @param[in] coefficients Coefficients of polynomial terms ordered in
+ *                         descending power
+ * @param[in] points Vector of points at which to evaluate polynomial
+ * @return Vector of polynomial values evaluated at input points
+ */
+Eigen::VectorXd evaluate_polynomial(const Eigen::VectorXd& coefficients,
+                                    const std::vector<double>& points);
+
+/**
+ * Evaluate polynomial described by input coefficients at input points
+ * @param[in] coefficients Coefficients of polynomial terms ordered in
+ *                         descending power
+ * @param[in] points Vector of points at which to evaluate polynomial
+ * @return Vector of polynomial values evaluated at input points
+ */
+std::vector<double> evaluate_polynomial(const std::vector<double>& coefficients,
+                                        const std::vector<double>& points);
 
 /**
  * Abstract base class for random number generators

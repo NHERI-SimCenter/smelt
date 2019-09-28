@@ -1,7 +1,7 @@
 #include <cmath>
 #include <iostream>
 #include <vector>
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 #include <Eigen/Dense>
 #include "numeric_utils.h"
 
@@ -153,5 +153,161 @@ TEST_CASE("Test 1-D inverse Fast Fourier Transform", "[Helpers][FFT]") {
     REQUIRE(output_vector[2] == Approx(3.0).epsilon(0.01));
     REQUIRE(output_vector[3] == Approx(4.0).epsilon(0.01));
     REQUIRE(output_vector[4] == Approx(5.0).epsilon(0.01));
-  }  
+  }
+}
+
+TEST_CASE("Test 1-D Fast Fourier Transform", "[Helpers][FFT]") {
+  SECTION("Calculate one-dimesional FFT") {
+    std::vector<double> input_vector = {3.0, 1.0, 0.0, 0.0};
+
+    std::vector<std::complex<double>> output_vector(4);
+    auto status = numeric_utils::fft(input_vector, output_vector);
+
+    REQUIRE(status);
+    REQUIRE(real(output_vector[0]) == Approx(4.0).epsilon(0.01));
+    REQUIRE(imag(output_vector[0]) + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(real(output_vector[1]) == Approx(3.0).epsilon(0.01));
+    REQUIRE(imag(output_vector[1]) == Approx(-1.0).epsilon(0.01));
+    REQUIRE(real(output_vector[2]) == Approx(2.0).epsilon(0.01));
+    REQUIRE(imag(output_vector[2]) + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(real(output_vector[3]) == Approx(3.0).epsilon(0.01));
+    REQUIRE(imag(output_vector[3]) == Approx(1.0).epsilon(0.01));
+  }
+
+  SECTION("Calculate one-dimesional FFT") {
+    Eigen::VectorXd input_vector(4);
+    input_vector << 3.0, 1.0, 0.0, 0.0;
+
+    std::vector<std::complex<double>> output_vector(4);
+    auto status = numeric_utils::fft(input_vector, output_vector);
+
+    REQUIRE(status);
+    REQUIRE(real(output_vector[0]) == Approx(4.0).epsilon(0.01));
+    REQUIRE(imag(output_vector[0]) + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(real(output_vector[1]) == Approx(3.0).epsilon(0.01));
+    REQUIRE(imag(output_vector[1]) == Approx(-1.0).epsilon(0.01));
+    REQUIRE(real(output_vector[2]) == Approx(2.0).epsilon(0.01));
+    REQUIRE(imag(output_vector[2]) + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(real(output_vector[3]) == Approx(3.0).epsilon(0.01));
+    REQUIRE(imag(output_vector[3]) == Approx(1.0).epsilon(0.01));
+  }
+
+  SECTION("Calculate one-dimesional FFT") {
+    Eigen::VectorXd input_vector(4);
+    input_vector << 3.0, 1.0, 0.0, 0.0;
+
+    Eigen::VectorXcd output_vector(4);
+    auto status = numeric_utils::fft(input_vector, output_vector);
+
+    REQUIRE(status);
+    REQUIRE(real(output_vector(0)) == Approx(4.0).epsilon(0.01));
+    REQUIRE(imag(output_vector(0)) + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(real(output_vector(1)) == Approx(3.0).epsilon(0.01));
+    REQUIRE(imag(output_vector(1)) == Approx(-1.0).epsilon(0.01));
+    REQUIRE(real(output_vector(2)) == Approx(2.0).epsilon(0.01));
+    REQUIRE(imag(output_vector(2)) + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(real(output_vector(3)) == Approx(3.0).epsilon(0.01));
+    REQUIRE(imag(output_vector(3)) == Approx(1.0).epsilon(0.01));
+  }
+}
+
+TEST_CASE("Test polynomial curve fitting, derivatives, and evaluation",
+          "[Helpers][Polynomial]") {
+  SECTION("Fit polynomial with non-zero intercept--should be degree 0") {
+    Eigen::VectorXd points(4);
+    points << 1.0, 2.0, 3.0, 4.0;
+    Eigen::VectorXd data(4);
+    data << 4.0, 4.0, 4.0, 4.0;
+
+    auto poly_coeffs = numeric_utils::polyfit_intercept(points, data, 4.0, 3);
+
+    REQUIRE(poly_coeffs(0) + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(poly_coeffs(1) + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(poly_coeffs(2) + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(poly_coeffs(3) == Approx(4.0).epsilon(0.01));
+  }
+
+  SECTION("Fit polynomial with non-zero intercept--should be degree 0") {
+    Eigen::VectorXd points(4);
+    points << 1.0, 2.0, 3.0, 4.0;
+    Eigen::VectorXd data(4);
+    data << 4.0, 4.0, 4.0, 4.0;
+
+    auto poly_coeffs = numeric_utils::polyfit_intercept(points, data, 4.0, 2);
+
+    REQUIRE(poly_coeffs(0) + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(poly_coeffs(1) + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(poly_coeffs(2) == Approx(4.0).epsilon(0.01));
+  }
+
+  SECTION("Fit polynomial with zero intercept--should be degree 3") {
+    Eigen::VectorXd points(4);
+    points << 1.0, 2.0, 3.0, 4.0;
+    Eigen::VectorXd data(4);
+    data << 1.0, 8.0, 27.0, 64.0;
+
+    auto poly_coeffs = numeric_utils::polyfit_intercept(points, data, 0.0, 3);
+
+    REQUIRE(poly_coeffs(0) == Approx(1.0).epsilon(0.01));
+    REQUIRE(poly_coeffs(1) + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(poly_coeffs(2) + 1.0 == Approx(1.0).epsilon(0.01));
+    REQUIRE(poly_coeffs(3) + 1.0 == Approx(1.0).epsilon(0.01));
+  }
+
+  SECTION("Take derivative of polynomial") {
+    Eigen::VectorXd coefficients(4);
+    coefficients << 2.0, 2.0, 2.0, 2.0;
+
+    auto derivs = numeric_utils::polynomial_derivative(coefficients);
+
+    REQUIRE(coefficients.size() - 1 == derivs.size());
+    REQUIRE(derivs(0) == Approx(6.0).epsilon(0.01));
+    REQUIRE(derivs(1) == Approx(4.0).epsilon(0.01));
+    REQUIRE(derivs(2) == Approx(2.0).epsilon(0.01));
+  }
+
+  SECTION("Evaluate polynomial") {
+    Eigen::VectorXd coefficients(4);
+    coefficients << 2.0, 2.0, 2.0, 2.0;
+
+    Eigen::VectorXd points(4);
+    points << 1.0, 2.0, 3.0, 4.0;
+
+    auto evaluations = numeric_utils::evaluate_polynomial(coefficients, points);
+
+    REQUIRE(points.size() == evaluations.size());
+    REQUIRE(evaluations(0) == Approx(8.0).epsilon(0.01));
+    REQUIRE(evaluations(1) == Approx(30.0).epsilon(0.01));
+    REQUIRE(evaluations(2) == Approx(80.0).epsilon(0.01));
+    REQUIRE(evaluations(3) == Approx(170.0).epsilon(0.01));
+  }
+
+  SECTION("Evaluate polynomial") {
+    Eigen::VectorXd coefficients(4);
+    coefficients << 2.0, 2.0, 2.0, 2.0;
+
+    std::vector<double> points = {1.0, 2.0, 3.0, 4.0};
+
+    auto evaluations = numeric_utils::evaluate_polynomial(coefficients, points);
+
+    REQUIRE(points.size() == evaluations.size());
+    REQUIRE(evaluations(0) == Approx(8.0).epsilon(0.01));
+    REQUIRE(evaluations(1) == Approx(30.0).epsilon(0.01));
+    REQUIRE(evaluations(2) == Approx(80.0).epsilon(0.01));
+    REQUIRE(evaluations(3) == Approx(170.0).epsilon(0.01));
+  }
+
+  SECTION("Evaluate polynomial") {
+    std::vector<double> coefficients = {2.0, 2.0, 2.0, 2.0};
+
+    std::vector<double> points = {1.0, 2.0, 3.0, 4.0};
+
+    auto evaluations = numeric_utils::evaluate_polynomial(coefficients, points);
+
+    REQUIRE(points.size() == evaluations.size());
+    REQUIRE(evaluations[0] == Approx(8.0).epsilon(0.01));
+    REQUIRE(evaluations[1] == Approx(30.0).epsilon(0.01));
+    REQUIRE(evaluations[2] == Approx(80.0).epsilon(0.01));
+    REQUIRE(evaluations[3] == Approx(170.0).epsilon(0.01));
+  }    
 }

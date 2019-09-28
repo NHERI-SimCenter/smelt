@@ -1,7 +1,7 @@
 #include <functional>
 #include <iostream>
 #include <vector>
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 #include <Eigen/Dense>
 #include "function_dispatcher.h"
 

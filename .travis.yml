@@ -1,46 +1,42 @@
-language:
-  - cpp
+linux: &linux
+   os: linux
+   sudo: true   
+   dist: xenial
+   language: python
+   python: "3.7"
+   services:
+     - docker
+     
+osx: &osx
+   os: osx
+   language: generic
+
 branches:
   only:
     - master
+    - /^stable\/.*$/
+
+env:
+   global:
+     - CONAN_REMOTES: "https://api.bintray.com/conan/conan-community/conan,https://api.bintray.com/conan/bincrafters/public-conan,https://api.bintray.com/conan/vthiery/conan-packages,https://api.bintray.com/conan/catchorg/Catch2"
 
 matrix:
-  fast_finish: true
-  include:
-    - os: osx
+   include:
+    - <<: *linux
+      env: CONAN_GCC_VERSIONS=7 CONAN_DOCKER_IMAGE=conanio/gcc7
+    - <<: *linux
+      env: CONAN_GCC_VERSIONS=8 CONAN_DOCKER_IMAGE=conanio/gcc8
+    - <<: *linux
+      env: CONAN_GCC_VERSIONS=9 CONAN_DOCKER_IMAGE=conanio/gcc9
+    - <<: *linux
+      env: CONAN_CLANG_VERSIONS=7.0 CONAN_DOCKER_IMAGE=conanio/clang7
+    - <<: *linux
+      env: CONAN_CLANG_VERSIONS=8 CONAN_DOCKER_IMAGE=conanio/clang8
+    - <<: *osx
       osx_image: xcode10.2
-      python: 3.4
-      sudo: true
-
-    - os: osx
-      osx_image: xcode10    
-      python: 3.4
-      env:
-        - MATRIX_EVAL="brew install gcc@7 && CC=gcc-7 && CXX=g++-7"
-      
+      env: CONAN_APPLE_CLANG_VERSIONS=10.0
     - os: linux
-      dist: xenial
-      sudo: true      
-      compiler:
-        - g++      
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - doxygen
-            - doxygen-doc
-            - doxygen-latex
-            - doxygen-gui
-            - graphviz
-            - cmake	  
-            - g++-7
-      env:
-        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
-
-    - os: linux
-      dist: xenial
-      sudo: true
+      dist: xenial    
       addons:
         apt:
           packages:
@@ -49,19 +45,27 @@ matrix:
             - doxygen-latex
             - doxygen-gui
             - graphviz
-            - cmake	  
-      env:
-        - MATRIX_EVAL="CC=clang && CXX=clang++"
 
-before_install:
-    - eval "${MATRIX_EVAL}"
+      env:
+      - BUILD_DOCS="YES"
+
+install:
+  - if [ "$BUILD_DOCS" != "YES" ]; then
+      chmod +x .travis/install.sh;
+      ./.travis/install.sh;
+    fi
 
 script:
-    - chmod +x .travis/build.sh
-    - .travis/build.sh
+  - if [ "$BUILD_DOCS" != "YES" ]; then
+      chmod +x .travis/run.sh;
+      ./.travis/run.sh;
+    fi
+  - if [ "$BUILD_DOCS" == "YES" ]; then
+      doxygen Doxyfile;
+    fi    
 
 deploy:
-  if: os = linux
+  if: env(BUILD_DOCS)="YES"
   provider: pages
   skip_cleanup: true
   local_dir: docs/html

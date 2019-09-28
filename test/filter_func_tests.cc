@@ -1,5 +1,5 @@
 #include <vector>
-#include <catch/catch.hpp>
+#include <catch2/catch.hpp>
 #include "function_dispatcher.h"
 
 TEST_CASE("Test filter functions", "[FilterFuncs][Helpers]") {

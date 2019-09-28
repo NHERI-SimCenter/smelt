@@ -1,6 +1,7 @@
 #include <Eigen/Dense>
-#include "configure.h"
 #include "beta_dist.h"
+#include "configure.h"
+#include "dabaghi_der_kiureghian.h"
 #include "factory.h"
 #include "filter.h"
 #include "function_dispatcher.h"
@@ -10,6 +11,7 @@
 #include "normal_dist.h"
 #include "normal_multivar.h"
 #include "students_t_dist.h"
+#include "uniform_dist.h"
 #include "vlachos_et_al.h"
 #include "wind_profile.h"
 #include "window.h"
@@ -45,6 +47,10 @@ void config::initialize() {
   static Register<stochastic::Distribution, stochastic::StudentstDistribution,
                   double, double, double>
       student_t_dist("StudentstDist");
+  // Register uniform distribution
+  static Register<stochastic::Distribution, stochastic::UniformDistribution,
+                  double, double>
+      uniform_dist("UniformDist");
 
   // STOCHASTIC MODELS
   // Earthquake
@@ -54,6 +60,17 @@ void config::initialize() {
   static Register<stochastic::StochasticModel, stochastic::VlachosEtAl, double,
                   double, double, double, unsigned int, unsigned int, int>
       vlachos_et_al_seed("VlachosSiteSpecificEQ");
+  static Register<stochastic::StochasticModel, stochastic::DabaghiDerKiureghian,
+                  stochastic::FaultType, stochastic::SimulationType, double,
+                  double, double, double, double, double, unsigned int,
+                  unsigned int, bool>
+      dabaghi_der_kiureghian("DabaghiDerKiureghianNFGM");
+  static Register<stochastic::StochasticModel, stochastic::DabaghiDerKiureghian,
+                  stochastic::FaultType, stochastic::SimulationType, double,
+                  double, double, double, double, double, unsigned int,
+                  unsigned int, bool, int>
+      dabaghi_der_kiureghian_seed("DabaghiDerKiureghianNFGM");
+
   // Wind
   static Register<stochastic::StochasticModel, stochastic::WittigSinha,
                   std::string, double, double, unsigned int, double>
@@ -81,13 +98,19 @@ void config::initialize() {
   // Register highpass Butterworth filter
   static DispatchRegister<std::vector<std::vector<double>>, int, double>
       hp_butterworth_function("HighPassButter",
-                              signal_processing::hp_butterworth);
+                              signal_processing::hp_butterworth());
 
   // Register filter impulse response
   static DispatchRegister<std::vector<double>, std::vector<double>,
                           std::vector<double>, int, int>
       filter_impulse_response("ImpulseResponse",
-                              signal_processing::impulse_response);
+                              signal_processing::impulse_response());
+
+  // Register acausal highpass Butterwork filter
+  static DispatchRegister<std::vector<double>, double, double, unsigned int,
+                          unsigned int>
+      acausal_highpass_filter("AcausalHighpassButterworth",
+                              signal_processing::acausal_highpass_filter());
 
   // WIND VELOCITY PROFILES
   // Exposure category-based velocity profile using power law
@@ -95,5 +118,5 @@ void config::initialize() {
                           const std::vector<double>&, double, double,
                           std::vector<double>&>
       exposure_category_vel("ExposureCategoryVel",
-                            wind::exposure_category_velocity);
+                            wind::exposure_category_velocity());
 }

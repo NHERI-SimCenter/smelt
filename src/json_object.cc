@@ -4,7 +4,7 @@
 #include <stdexcept>
 #include <string>
 // JSON for Modern C++ single-include header
-#include <nlohmann_json/json.hpp>
+#include <nlohmann/json.hpp>
 #include "json_object.h"
 
 utilities::JsonObject::JsonObject() { 

@@ -28,8 +28,9 @@ class Dispatcher {
    * @param[in] key Register key
    * @param[in] new_function New function to register with the dispatcher
    */
-  void register_function(const std::string& key, std::function<Treturntype(Targs...)> new_function) {
-    if (!this->check(key)) {    
+  void register_function(const std::string& key,
+                         std::function<Treturntype(Targs...)> new_function) {
+    if (!this->check(key)) {
       registry[key] = std::move(new_function);
     } else {
       throw std::runtime_error("Duplicate key: " + key +
