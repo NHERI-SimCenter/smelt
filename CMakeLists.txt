@@ -25,21 +25,11 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 # Bring in dependencies from Conan
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(TARGETS)
+conan_basic_setup()
 
 # Add link library and include directories for MKL and IPP
 find_package(MKL)
 find_package(IPP)
-
-# Add external headers to include path
-include_directories(${CONAN_INCLUDE_DIRS_MKL-INCLUDE})
-include_directories(${CONAN_INCLUDE_DIRS_IPP-INCLUDE})
-include_directories(${CONAN_INCLUDE_DIRS_EIGEN})
-include_directories(${CONAN_INCLUDE_DIRS_CLARA})
-include_directories(${CONAN_INCLUDE_DIRS_JSONFORMODERNCPP})
-include_directories(${CONAN_INCLUDE_DIRS_CATCH2})
-include_directories(${CONAN_INCLUDE_DIRS_BOOST})
-message(STATUS "This is the Eigen include path: ${CONAN_INCLUDE_DIRS_EIGEN}")
 
 # Include directories
 include_directories(BEFORE
@@ -133,11 +123,11 @@ if (BUILD_TESTING)
     add_test(NAME run_static_unit_tests COMMAND unit_tests_static)    
   endif()
 
-  if (BUILD_SHARED_LIBS)
-    add_executable(unit_tests_shared ${TEST_SOURCES})
-    target_link_libraries(unit_tests_shared smelt_shared CONAN_PKG::intel-openmp)    
-    add_test(NAME run_shared_unit_tests COMMAND unit_tests_shared)
-  endif()
+  # if (BUILD_SHARED_LIBS)
+  #   add_executable(unit_tests_shared ${TEST_SOURCES})
+  #   target_link_libraries(unit_tests_shared smelt_shared CONAN_PKG::intel-openmp)    
+  #   add_test(NAME run_shared_unit_tests COMMAND unit_tests_shared)
+  # endif()
 
   enable_testing()
 endif()  
