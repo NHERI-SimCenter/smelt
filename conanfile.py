@@ -53,7 +53,7 @@ class smeltConan(ConanFile):
             cmake.definitions["BUILD_SHARED_LIBS"] = "OFF"
             cmake.definitions["BUILD_STATIC_LIBS"] = "ON"
 
-        cmake.configure(source_folder="smelt")
+        cmake.configure(source_folder="smelt", msbuild_verbosity='detailed')
         return cmake
     
     def build(self):
