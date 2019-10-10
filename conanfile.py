@@ -42,7 +42,7 @@ class smeltConan(ConanFile):
             self.build_requires("ipp-static/2019.4@simcenter/stable")
             
     def configure_cmake(self):
-        cmake = CMake(self)
+        cmake = CMake(self, msbuild_verbosity='detailed')
         
         # put definitions here so that they are re-used in cmake between
         # build() and package()
@@ -53,7 +53,7 @@ class smeltConan(ConanFile):
             cmake.definitions["BUILD_SHARED_LIBS"] = "OFF"
             cmake.definitions["BUILD_STATIC_LIBS"] = "ON"
 
-        cmake.configure(source_folder="smelt", msbuild_verbosity='detailed')
+        cmake.configure(source_folder="smelt")
         return cmake
     
     def build(self):
