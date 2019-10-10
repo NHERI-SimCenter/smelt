@@ -32,9 +32,6 @@ find_package(MKL)
 find_package(IPP)
 
 # Add external headers to include path
-include_directories(${EIGEN_INCLUDE_DIR})
-include_directories(${BOOST_INCLUDE_DIR})
-include_directories(${JSON_INCLUDE_DIR})
 include_directories(${CONAN_INCLUDE_DIRS_MKL-INCLUDE})
 include_directories(${CONAN_INCLUDE_DIRS_IPP-INCLUDE})
 include_directories(${CONAN_INCLUDE_DIRS_EIGEN})
@@ -42,6 +39,7 @@ include_directories(${CONAN_INCLUDE_DIRS_CLARA})
 include_directories(${CONAN_INCLUDE_DIRS_JSONFORMODERNCPP})
 include_directories(${CONAN_INCLUDE_DIRS_CATCH2})
 include_directories(${CONAN_INCLUDE_DIRS_BOOST})
+message(STATUS "This is the Eigen include path: ${CONAN_INCLUDE_DIRS_EIGEN}")
 
 # Include directories
 include_directories(BEFORE
