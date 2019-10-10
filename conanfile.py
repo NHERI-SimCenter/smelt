@@ -19,8 +19,7 @@ class smeltConan(ConanFile):
                "clara/1.1.5@bincrafters/stable", \
                "jsonformoderncpp/3.7.0@vthiery/stable", \
                "Catch2/2.9.2@catchorg/stable", \
-               "boost/1.71.0@conan/stable", \
-               "intel-openmp/2019.4@simcenter/stable"
+               "boost/1.71.0@conan/stable"
 
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = "source_subfolder"
@@ -37,7 +36,7 @@ class smeltConan(ConanFile):
         if self.options.shared:
             self.build_requires("mkl-shared/2019.4@simcenter/stable")
             self.build_requires("ipp-shared/2019.4@simcenter/stable")
-            # self.build_requires("intel-openmp/2019.4@simcenter/stable")
+            self.build_requires("intel-openmp/2019.4@simcenter/stable")
         else:
             self.build_requires("mkl-static/2019.4@simcenter/stable")
             self.build_requires("ipp-static/2019.4@simcenter/stable")
