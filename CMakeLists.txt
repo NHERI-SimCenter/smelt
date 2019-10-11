@@ -5,7 +5,7 @@ project(smelt LANGUAGES CXX)
 # Require C++11-compliant compiler
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_COLOR_MAKEFILE ON)
-set(CMAKE_VERBOSE_MAKEFILE OF)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 include(CMakeParseArguments)
 
@@ -123,11 +123,11 @@ if (BUILD_TESTING)
     add_test(NAME run_static_unit_tests COMMAND unit_tests_static)    
   endif()
 
-  if (BUILD_SHARED_LIBS)
-    add_executable(unit_tests_shared ${TEST_SOURCES})
-    target_link_libraries(unit_tests_shared smelt_shared CONAN_PKG::intel-openmp)    
-    add_test(NAME run_shared_unit_tests COMMAND unit_tests_shared)
-  endif()
+  # if (BUILD_SHARED_LIBS)
+  #   add_executable(unit_tests_shared ${TEST_SOURCES})
+  #   target_link_libraries(unit_tests_shared smelt_shared CONAN_PKG::intel-openmp)    
+  #   add_test(NAME run_shared_unit_tests COMMAND unit_tests_shared)
+  # endif()
 
   enable_testing()
 endif()  
