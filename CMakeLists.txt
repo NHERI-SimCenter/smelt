@@ -18,7 +18,7 @@ ENDIF (NOT CMAKE_BUILD_TYPE)
 # Provide option for building testing
 option(BUILD_TESTING "Enable testing for smelt" ON)
 option(BUILD_STATIC_LIBS "Build the static library" ON)
-option(BUILD_SHARED_LIBS "Build the shared library" ON)
+option(BUILD_SHARED_LIBS "Build the shared library" OFF)
 
 # CMake Modules
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
@@ -123,11 +123,11 @@ if (BUILD_TESTING)
     add_test(NAME run_static_unit_tests COMMAND unit_tests_static)    
   endif()
 
-  # if (BUILD_SHARED_LIBS)
-  #   add_executable(unit_tests_shared ${TEST_SOURCES})
-  #   target_link_libraries(unit_tests_shared smelt_shared CONAN_PKG::intel-openmp)    
-  #   add_test(NAME run_shared_unit_tests COMMAND unit_tests_shared)
-  # endif()
+  if (BUILD_SHARED_LIBS)
+    add_executable(unit_tests_shared ${TEST_SOURCES})
+    target_link_libraries(unit_tests_shared smelt_shared CONAN_PKG::intel-openmp)    
+    add_test(NAME run_shared_unit_tests COMMAND unit_tests_shared)
+  endif()
 
   enable_testing()
 endif()  
