@@ -5,7 +5,7 @@ project(smelt LANGUAGES CXX)
 # Require C++11-compliant compiler
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_COLOR_MAKEFILE ON)
-set(CMAKE_VERBOSE_MAKEFILE OF)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 include(CMakeParseArguments)
 
@@ -18,7 +18,7 @@ ENDIF (NOT CMAKE_BUILD_TYPE)
 # Provide option for building testing
 option(BUILD_TESTING "Enable testing for smelt" ON)
 option(BUILD_STATIC_LIBS "Build the static library" ON)
-option(BUILD_SHARED_LIBS "Build the shared library" ON)
+option(BUILD_SHARED_LIBS "Build the shared library" OFF)
 
 # CMake Modules
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
