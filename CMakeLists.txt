@@ -5,7 +5,7 @@ project(smelt LANGUAGES CXX)
 # Require C++11-compliant compiler
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_COLOR_MAKEFILE ON)
-set(CMAKE_VERBOSE_MAKEFILE OF)
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 include(CMakeParseArguments)
 
@@ -18,30 +18,18 @@ ENDIF (NOT CMAKE_BUILD_TYPE)
 # Provide option for building testing
 option(BUILD_TESTING "Enable testing for smelt" ON)
 option(BUILD_STATIC_LIBS "Build the static library" ON)
-option(BUILD_SHARED_LIBS "Build the shared library" ON)
+option(BUILD_SHARED_LIBS "Build the shared library" OFF)
 
 # CMake Modules
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 
 # Bring in dependencies from Conan
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(TARGETS)
+conan_basic_setup()
 
 # Add link library and include directories for MKL and IPP
 find_package(MKL)
 find_package(IPP)
-
-# Add external headers to include path
-include_directories(${EIGEN_INCLUDE_DIR})
-include_directories(${BOOST_INCLUDE_DIR})
-include_directories(${JSON_INCLUDE_DIR})
-include_directories(${CONAN_INCLUDE_DIRS_MKL-INCLUDE})
-include_directories(${CONAN_INCLUDE_DIRS_IPP-INCLUDE})
-include_directories(${CONAN_INCLUDE_DIRS_EIGEN})
-include_directories(${CONAN_INCLUDE_DIRS_CLARA})
-include_directories(${CONAN_INCLUDE_DIRS_JSONFORMODERNCPP})
-include_directories(${CONAN_INCLUDE_DIRS_CATCH2})
-include_directories(${CONAN_INCLUDE_DIRS_BOOST})
 
 # Include directories
 include_directories(BEFORE
@@ -135,11 +123,11 @@ if (BUILD_TESTING)
     add_test(NAME run_static_unit_tests COMMAND unit_tests_static)    
   endif()
 
-  if (BUILD_SHARED_LIBS)
-    add_executable(unit_tests_shared ${TEST_SOURCES})
-    target_link_libraries(unit_tests_shared smelt_shared CONAN_PKG::intel-openmp)    
-    add_test(NAME run_shared_unit_tests COMMAND unit_tests_shared)
-  endif()
+  # if (BUILD_SHARED_LIBS)
+  #   add_executable(unit_tests_shared ${TEST_SOURCES})
+  #   target_link_libraries(unit_tests_shared smelt_shared CONAN_PKG::intel-openmp)    
+  #   add_test(NAME run_shared_unit_tests COMMAND unit_tests_shared)
+  # endif()
 
   enable_testing()
 endif()  
