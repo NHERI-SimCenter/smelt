@@ -25,9 +25,16 @@ class smeltConan(ConanFile):
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
 
-    def source(self):
-       git = tools.Git(folder="smelt")
-       git.clone("https://github.com/shellshocked2003/smelt.git", "stable/1.2.0")        
+    scm = {
+        "type": "git",  # Use "type": "svn", if local repo is managed using SVN
+        "subfolder": _source_subfolder,
+        "url": "auto",
+        "revision": "auto"
+    }
+    
+    # def source(self):
+    #    git = tools.Git(folder="smelt")
+    #    git.clone("https://github.com/shellshocked2003/smelt.git", "stable/1.2.0")        
 
     def configure(self):
         self.options["boost"].header_only = True            
@@ -53,7 +60,7 @@ class smeltConan(ConanFile):
             cmake.definitions["BUILD_SHARED_LIBS"] = "OFF"
             cmake.definitions["BUILD_STATIC_LIBS"] = "ON"
 
-        cmake.configure(source_folder="smelt")
+        cmake.configure(source_folder=self._source_subfolder)
         return cmake
     
     def build(self):

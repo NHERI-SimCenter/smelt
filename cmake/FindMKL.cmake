@@ -3,9 +3,9 @@ include(HelperFunctions)
 
 if (BUILD_STATIC_LIBS)
   if (APPLE)
-    set(MKL_LIB "mkl_intel_ilp64" "mkl_sequential" "mkl_core")
+    set(MKL_LIB "mkl_intel_lp64" "mkl_sequential" "mkl_core")
   else()
-    set(MKL_LIB "mkl_intel_ilp64" "mkl_sequential" "mkl_core")
+    set(MKL_LIB "mkl_intel_lp64" "mkl_sequential" "mkl_core")
   endif()
   
   add_mkl_dependency(NAME mkl_static REQD_LIBS ${MKL_LIB} STATIC)
