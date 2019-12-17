@@ -25,16 +25,16 @@ class smeltConan(ConanFile):
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
 
-    scm = {
-        "type": "git",  # Use "type": "svn", if local repo is managed using SVN
-        "subfolder": _source_subfolder,
-        "url": "auto",
-        "revision": "auto"
-    }
+    # scm = {
+    #     "type": "git",  # Use "type": "svn", if local repo is managed using SVN
+    #     "subfolder": _source_subfolder,
+    #     "url": "auto",
+    #     "revision": "auto"
+    # }
     
-    # def source(self):
-    #    git = tools.Git(folder="smelt")
-    #    git.clone("https://github.com/shellshocked2003/smelt.git", "stable/1.2.0")        
+    def source(self):
+       git = tools.Git(folder=self._source_subfolder)
+       git.clone("https://github.com/shellshocked2003/smelt.git", "stable/1.2.0")        
 
     def configure(self):
         self.options["boost"].header_only = True            
