@@ -12,6 +12,7 @@ if (BUILD_STATIC_LIBS)
 endif()
 
 if (BUILD_SHARED_LIBS)
-  set(MKL_LIB "mkl_rt")
+  set(MKL_LIB "mkl_intel_lp64" "mkl_sequential" "mkl_core")  
+  # set(MKL_LIB "mkl_rt")
   add_mkl_dependency(NAME mkl_shared REQD_LIBS ${MKL_LIB})  
 endif()
