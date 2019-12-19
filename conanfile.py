@@ -10,7 +10,7 @@ class smeltConan(ConanFile):
     url = "https://github.com/NHERI-SimCenter/smelt"
     settings = {"os": None, "build_type": None, "compiler": None, "arch": ["x86_64"]}
     options = {"shared": [True, False]}
-    default_options = {"shared": False}    
+    default_options = {"shared": False}
     generators = "cmake"
     build_policy = "missing"
     requires = "mkl-include/2019.4@simcenter/stable", \
@@ -124,4 +124,4 @@ class smeltConan(ConanFile):
                 else:
                     self.cpp_info.exelinkflags = ["-static-libstdc++", "-lpthread", "-lm", "-ldl"]
         # C++ compilation flags
-        self.cpp_info.cxxflags = ["-DMKL_ILP64", "-m64"]
+        self.cpp_info.cxxflags = ["-m64"]
