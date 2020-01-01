@@ -116,12 +116,5 @@ class smeltConan(ConanFile):
             self.env_info.LD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))
             self.env_info.DYLD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))
 
-        else:
-            if self.settings.os == "Linux":
-                # linker flags
-                if self.settings.compiler == "gcc":
-                    self.cpp_info.exelinkflags = ["-static-libgcc", "-static-libstdc++", "-lpthread", "-lm", "-ldl"]
-                else:
-                    self.cpp_info.exelinkflags = ["-static-libstdc++", "-lpthread", "-lm", "-ldl"]
         # C++ compilation flags
         self.cpp_info.cxxflags = ["-m64"]
