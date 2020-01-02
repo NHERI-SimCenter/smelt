@@ -27,11 +27,10 @@ set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
-# Add link library and include directories for MKL and IPP
-find_package(MKL)
-find_package(IPP)
-
 # Include directories
+include_directories(BEFORE
+	${CONAN_INCLUDE_DIRS}
+	)
 include_directories(BEFORE
 	${PROJECT_SOURCE_DIR}/include/
 	)
@@ -59,12 +58,11 @@ set(SOURCES
 # Add library as target and add libraries to link target to
 if (BUILD_STATIC_LIBS)
   add_library(smelt_static STATIC ${SOURCES})
-  set_target_properties(smelt_static PROPERTIES OUTPUT_NAME smelt)
-  target_link_libraries(smelt_static ${mkl_static_LIBRARIES} ${ipp_static_LIBRARIES})  
+  set_target_properties(smelt_static PROPERTIES OUTPUT_NAME smelt) 
+  target_link_libraries(smelt_static CONAN_PKG::ipp-static CONAN_PKG::mkl-static)    
 endif()
 
 if (BUILD_SHARED_LIBS)
-  # Adding MATH defines for M_PI when building on Windows
   if (WIN32)  
     add_library(smelt_shared STATIC ${SOURCES})
   else()
@@ -72,7 +70,7 @@ if (BUILD_SHARED_LIBS)
   endif()
   
   set_target_properties(smelt_shared PROPERTIES OUTPUT_NAME smelt)
-  target_link_libraries(smelt_shared ${mkl_shared_LIBRARIES} ${ipp_shared_LIBRARIES})  
+  target_link_libraries(smelt_shared CONAN_PKG::ipp-shared CONAN_PKG::mkl-shared)    
 endif()
 
 # Adding MATH defines for M_PI when building on Windows
@@ -99,33 +97,13 @@ if (BUILD_TESTING)
 
   if (BUILD_STATIC_LIBS)
     add_executable(unit_tests_static ${TEST_SOURCES})    
-
-    if (APPLE)
-      set(STATIC_COMPILE_FLAGS "-DMKL_ILP64 -m64")
-      set_target_properties(unit_tests_static PROPERTIES COMPILE_OPTIONS ${STATIC_COMPILE_FLAGS})
-    elseif (WIN32)
-      set(STATIC_COMPILE_FLAGS "/DMKL_ILP64")
-      set_target_properties(unit_tests_static PROPERTIES COMPILE_OPTIONS ${STATIC_COMPILE_FLAGS})
-    else()
-      if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-	set(STATIC_COMPILE_FLAGS "-DMKL_ILP64 -m64")
-	set(STATIC_LINK_FLAGS "-static-libgcc" "-static-libstdc++" "-lpthread" "-lm" "-ldl")
-	set_target_properties(unit_tests_static PROPERTIES LINK_OPTIONS ${STATIC_LINK_FLAGS})	
-      else()
-	set(STATIC_COMPILE_FLAGS "-DMKL_ILP64 -m64")      
-	set(STATIC_LINK_FLAGS "-static-libstdc++" "-lpthread" "-lm" "-ldl")
-	set_target_properties(unit_tests_static PROPERTIES LINK_OPTIONS "${STATIC_LINK_FLAGS}")	
-      endif()
-      set_target_properties(unit_tests_static PROPERTIES COMPILE_OPTIONS ${STATIC_COMPILE_FLAGS})
-    endif()
-
-    target_link_libraries(unit_tests_static smelt_static ${mkl_static_LIBRARIES} ${ipp_static_LIBRARIES} ${STATIC_LINK_FLAGS})
+    target_link_libraries(unit_tests_static smelt_static CONAN_PKG::ipp-static CONAN_PKG::mkl-static)    
     add_test(NAME run_static_unit_tests COMMAND unit_tests_static)    
   endif()
 
   # if (BUILD_SHARED_LIBS)
   #   add_executable(unit_tests_shared ${TEST_SOURCES})
-  #   target_link_libraries(unit_tests_shared smelt_shared CONAN_PKG::intel-openmp)    
+  #   target_link_libraries(unit_tests_shared smelt_shared)    
   #   add_test(NAME run_shared_unit_tests COMMAND unit_tests_shared)
   # endif()
 

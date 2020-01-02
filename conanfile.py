@@ -10,7 +10,7 @@ class smeltConan(ConanFile):
     url = "https://github.com/NHERI-SimCenter/smelt"
     settings = {"os": None, "build_type": None, "compiler": None, "arch": ["x86_64"]}
     options = {"shared": [True, False]}
-    default_options = {"shared": False}    
+    default_options = {"shared": False}
     generators = "cmake"
     build_policy = "missing"
     requires = "mkl-include/2019.4@simcenter/stable", \
@@ -25,8 +25,15 @@ class smeltConan(ConanFile):
     _source_subfolder = "source_subfolder"
     _build_subfolder = "build_subfolder"
 
+    # scm = {
+    #     "type": "git",  # Use "type": "svn", if local repo is managed using SVN
+    #     "subfolder": _source_subfolder,
+    #     "url": "auto",
+    #     "revision": "auto"
+    # }
+    
     def source(self):
-       git = tools.Git(folder="smelt")
+       git = tools.Git(folder=self._source_subfolder)
        git.clone("https://github.com/shellshocked2003/smelt.git", "stable/1.2.0")        
 
     def configure(self):
@@ -36,10 +43,13 @@ class smeltConan(ConanFile):
         if self.options.shared:
             self.build_requires("mkl-shared/2019.4@simcenter/stable")
             self.build_requires("ipp-shared/2019.4@simcenter/stable")
-            self.build_requires("intel-openmp/2019.4@simcenter/stable")
+            self.default_options.update({"mkl-shared:single_lib": True})
+            self.default_options.update({"ipp-shared:signal_and_vector_math": True})
+            # self.build_requires("intel-openmp/2019.4@simcenter/stable")
         else:
             self.build_requires("mkl-static/2019.4@simcenter/stable")
             self.build_requires("ipp-static/2019.4@simcenter/stable")
+            self.default_options.update({"mkl-static:threaded": False})            
             
     def configure_cmake(self):
         cmake = CMake(self, msbuild_verbosity='detailed')
@@ -53,7 +63,7 @@ class smeltConan(ConanFile):
             cmake.definitions["BUILD_SHARED_LIBS"] = "OFF"
             cmake.definitions["BUILD_STATIC_LIBS"] = "ON"
 
-        cmake.configure(source_folder="smelt")
+        cmake.configure(source_folder=self._source_subfolder)
         return cmake
     
     def build(self):
@@ -76,8 +86,8 @@ class smeltConan(ConanFile):
 
     def package(self):
         self.copy(pattern="LICENSE", dst="licenses", src=self._source_subfolder)
-        self.copy("*.h", dst="include", src="smelt/include")
-        self.copy("*.tcc", dst="include", src="smelt/include")
+        self.copy("*.h", dst="include", src=self._source_subfolder + "/include")
+        self.copy("*.tcc", dst="include", src=self._source_subfolder + "/include")
         if self.settings.build_type == "Release":
             if self.options.shared == "True":
                 self.copy("*.dll", dst="bin", keep_path=False)
@@ -109,12 +119,5 @@ class smeltConan(ConanFile):
             self.env_info.LD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))
             self.env_info.DYLD_LIBRARY_PATH.append(os.path.join(self.package_folder, "lib"))
 
-        else:
-            if self.settings.os == "Linux":
-                # linker flags
-                if self.settings.compiler == "gcc":
-                    self.cpp_info.exelinkflags = ["-static-libgcc", "-static-libstdc++", "-lpthread", "-lm", "-ldl"]
-                else:
-                    self.cpp_info.exelinkflags = ["-static-libstdc++", "-lpthread", "-lm", "-ldl"]
         # C++ compilation flags
-        self.cpp_info.cxxflags = ["-DMKL_ILP64", "-m64"]
+        self.cpp_info.cxxflags = ["-m64"]
