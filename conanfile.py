@@ -43,10 +43,13 @@ class smeltConan(ConanFile):
         if self.options.shared:
             self.build_requires("mkl-shared/2019.4@simcenter/stable")
             self.build_requires("ipp-shared/2019.4@simcenter/stable")
+            self.default_options.update({"mkl-shared:single_lib": True})
+            self.default_options.update({"ipp-shared:signal_and_vector_math": True})
             # self.build_requires("intel-openmp/2019.4@simcenter/stable")
         else:
             self.build_requires("mkl-static/2019.4@simcenter/stable")
             self.build_requires("ipp-static/2019.4@simcenter/stable")
+            self.default_options.update({"mkl-static:threaded": False})            
             
     def configure_cmake(self):
         cmake = CMake(self, msbuild_verbosity='detailed')
