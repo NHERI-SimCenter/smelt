@@ -15,11 +15,11 @@ class smeltConan(ConanFile):
     build_policy = "missing"
     requires = "mkl-include/2019.4@simcenter/stable", \
                "ipp-include/2019.4@simcenter/stable", \
-               "eigen/3.3.7@conan/stable", \
-               "clara/1.1.5@bincrafters/stable", \
-               "jsonformoderncpp/3.7.0@vthiery/stable", \
-               "Catch2/2.9.2@catchorg/stable", \
-               "boost/1.71.0@conan/stable"
+               "eigen/3.3.7", \
+               "clara/1.1.5", \
+               "jsonformoderncpp/3.7.0", \
+               "catch2/2.9.2", \
+               "boost/1.71.0"
 
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = "source_subfolder"
