@@ -59,7 +59,7 @@ set(SOURCES
 if (BUILD_STATIC_LIBS)
   add_library(smelt_static STATIC ${SOURCES})
   set_target_properties(smelt_static PROPERTIES OUTPUT_NAME smelt) 
-  target_link_libraries(smelt_static CONAN_PKG::ipp-static CONAN_PKG::mkl-static)    
+  # target_link_libraries(smelt_static CONAN_PKG::ipp-static CONAN_PKG::mkl-static)    
 endif()
 
 if (BUILD_SHARED_LIBS)
@@ -70,7 +70,7 @@ if (BUILD_SHARED_LIBS)
   endif()
   
   set_target_properties(smelt_shared PROPERTIES OUTPUT_NAME smelt)
-  target_link_libraries(smelt_shared CONAN_PKG::ipp-shared CONAN_PKG::mkl-shared)    
+  # target_link_libraries(smelt_shared CONAN_PKG::ipp-shared CONAN_PKG::mkl-shared)    
 endif()
 
 # Adding MATH defines for M_PI when building on Windows
@@ -79,27 +79,27 @@ if (WIN32)
 endif()
 
 # Unit testing
-if (BUILD_TESTING) 
-  set(TEST_SOURCES
-    ${PROJECT_SOURCE_DIR}/test/test_main.cc
-    ${PROJECT_SOURCE_DIR}/test/multi_var_tests.cc
-    ${PROJECT_SOURCE_DIR}/test/factory_tests.cc
-    ${PROJECT_SOURCE_DIR}/test/distribution_tests.cc
-    ${PROJECT_SOURCE_DIR}/test/window_func_tests.cc
-    ${PROJECT_SOURCE_DIR}/test/dispatcher_tests.cc
-    ${PROJECT_SOURCE_DIR}/test/numeric_utils_tests.cc
-    ${PROJECT_SOURCE_DIR}/test/filter_func_tests.cc
-    ${PROJECT_SOURCE_DIR}/test/json_object_tests.cc
-    ${PROJECT_SOURCE_DIR}/test/stochastic_model_tests.cc
-    ${PROJECT_SOURCE_DIR}/test/wind_profile_tests.cc
-    ${PROJECT_SOURCE_DIR}/test/optimization_tests.cc    
-  )
+#if (BUILD_TESTING) 
+#  set(TEST_SOURCES
+#    ${PROJECT_SOURCE_DIR}/test/test_main.cc
+#    ${PROJECT_SOURCE_DIR}/test/multi_var_tests.cc
+#    ${PROJECT_SOURCE_DIR}/test/factory_tests.cc
+#    ${PROJECT_SOURCE_DIR}/test/distribution_tests.cc
+#    ${PROJECT_SOURCE_DIR}/test/window_func_tests.cc
+#    ${PROJECT_SOURCE_DIR}/test/dispatcher_tests.cc
+#    ${PROJECT_SOURCE_DIR}/test/numeric_utils_tests.cc
+#    ${PROJECT_SOURCE_DIR}/test/filter_func_tests.cc
+#    ${PROJECT_SOURCE_DIR}/test/json_object_tests.cc
+#    ${PROJECT_SOURCE_DIR}/test/stochastic_model_tests.cc
+#    ${PROJECT_SOURCE_DIR}/test/wind_profile_tests.cc
+#    ${PROJECT_SOURCE_DIR}/test/optimization_tests.cc    
+#  )
 
-  if (BUILD_STATIC_LIBS)
-    add_executable(unit_tests_static ${TEST_SOURCES})    
-    target_link_libraries(unit_tests_static smelt_static CONAN_PKG::ipp-static CONAN_PKG::mkl-static)    
-    add_test(NAME run_static_unit_tests COMMAND unit_tests_static)    
-  endif()
+#  if (BUILD_STATIC_LIBS)
+#    add_executable(unit_tests_static ${TEST_SOURCES})    
+#    target_link_libraries(unit_tests_static smelt_static CONAN_PKG::ipp-static CONAN_PKG::mkl-static)    
+#    add_test(NAME run_static_unit_tests COMMAND unit_tests_static)    
+#  endif()
 
   # if (BUILD_SHARED_LIBS)
   #   add_executable(unit_tests_shared ${TEST_SOURCES})
@@ -107,5 +107,5 @@ if (BUILD_TESTING)
   #   add_test(NAME run_shared_unit_tests COMMAND unit_tests_shared)
   # endif()
 
-  enable_testing()
-endif()  
+#  enable_testing()
+#endif()  

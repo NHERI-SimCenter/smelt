@@ -13,13 +13,12 @@ class smeltConan(ConanFile):
     default_options = {"shared": False}
     generators = "cmake"
     build_policy = "missing"
-    requires = "mkl-include/2019.4@simcenter/stable", \
-               "ipp-include/2019.4@simcenter/stable", \
-               "eigen/3.3.7", \
+    requires = "eigen/3.3.7@conan/stable", \
+               "jsonformoderncpp/3.7.0@vthiery/stable", \
                "clara/1.1.5", \
-               "jsonformoderncpp/3.7.0", \
-               "catch2/2.9.2", \
-               "boost/1.71.0"
+               "catch2/3.5.2", \
+               "boost/1.71.0", \
+               "kissfft/131.1.0",
 
     # Custom attributes for Bincrafters recipe conventions
     _source_subfolder = "source_subfolder"
@@ -39,17 +38,17 @@ class smeltConan(ConanFile):
     def configure(self):
         self.options["boost"].header_only = True            
 
-    def build_requirements(self):
-        if self.options.shared:
-            self.build_requires("mkl-shared/2019.4@simcenter/stable")
-            self.build_requires("ipp-shared/2019.4@simcenter/stable")
-            self.default_options.update({"mkl-shared:single_lib": True})
-            self.default_options.update({"ipp-shared:signal_and_vector_math": True})
-            # self.build_requires("intel-openmp/2019.4@simcenter/stable")
-        else:
-            self.build_requires("mkl-static/2019.4@simcenter/stable")
-            self.build_requires("ipp-static/2019.4@simcenter/stable")
-            self.default_options.update({"mkl-static:threaded": False})            
+    # def build_requirements(self):
+    #     if self.options.shared:
+    #         # self.build_requires("mkl-shared/2019.4@simcenter/stable")
+    #         # self.build_requires("ipp-shared/2019.4@simcenter/stable")
+    #         # self.default_options.update({"mkl-shared:single_lib": True})
+    #         # self.default_options.update({"ipp-shared:signal_and_vector_math": True})
+    #         # self.build_requires("intel-openmp/2019.4@simcenter/stable")
+    #     else:
+    #         # self.build_requires("mkl-static/2019.4@simcenter/stable")
+    #         #self.build_requires("ipp-static/2019.4@simcenter/stable")
+    #         # self.default_options.update({"mkl-static:threaded": False})            
             
     def configure_cmake(self):
         cmake = CMake(self, msbuild_verbosity='detailed')
